@@ -188,7 +188,11 @@ public class LaptopModelServiceImpl implements LaptopModelService {
                 field.setAccessible(true);
 
                 if (newValue != null) {
-                    if (field.getType().isEnum()) {
+                    if (field.getType().equals(BigDecimal.class)) {
+                        // Chuyển đổi BigDecimal
+                        field.set(laptopModel, new BigDecimal(newValue.toString()));
+                    } else if (field.getType().isEnum()) {
+                        // Xử lý Enum (Color)
                         try {
                             Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
                             field.set(laptopModel, enumValue);
@@ -196,6 +200,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
                             throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
                         }
                     } else {
+                        // Cập nhật các kiểu dữ liệu khác
                         field.set(laptopModel, newValue);
                     }
                 }

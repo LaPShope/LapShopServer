@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,9 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
                 field.setAccessible(true);
 
                 if (newValue != null) {
+                    if (field.getType().equals(Integer.class)) {
+                        field.set(laptopOnCart, Integer.parseInt(newValue.toString()));
+                    }
                     field.set(laptopOnCart, newValue);
                 }
             } catch (NoSuchFieldException e) {

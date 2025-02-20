@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -124,6 +126,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new EntityNotFoundException("Order with ID " + id + " not found!"));
 
         Class<?> clazz = order.getClass();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); // Định dạng chuẩn ISO 8601
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
             String fieldName = entry.getKey();
@@ -135,13 +138,23 @@ public class OrderServiceImpl implements OrderService {
 
                 if (newValue != null) {
                     if (field.getType().isEnum()) {
+                        // Xử lý Enum
                         try {
                             Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
                             field.set(order, enumValue);
                         } catch (IllegalArgumentException e) {
                             throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
                         }
+                    } else if (field.getType().equals(Date.class)) {
+                        // Xử lý Date
+                        try {
+                            Date parsedDate = dateFormat.parse(newValue.toString());
+                            field.set(order, parsedDate);
+                        } catch (ParseException e) {
+                            throw new IllegalArgumentException("Invalid date format for field: " + fieldName);
+                        }
                     } else {
+                        // Cập nhật các kiểu dữ liệu khác
                         field.set(order, newValue);
                     }
                 }
