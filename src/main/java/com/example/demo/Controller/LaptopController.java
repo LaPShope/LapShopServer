@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.LaptopDTO;
+import com.example.demo.DTO.Response.LaptopResponse;
 import com.example.demo.Service.LaptopService;
 
 import org.springframework.http.HttpStatus;
@@ -82,4 +83,14 @@ public class LaptopController {
                 .message("Laptop deleted successfully")
                 .build());
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<DataResponse<List<LaptopResponse>>> searchLaptops(@RequestParam Map<String, Object> filters) {
+        return ResponseEntity.ok(DataResponse.<List<LaptopResponse>>builder()
+                .success(true)
+                .message("Laptops found")
+                .data(laptopService.searchLaptops(filters))
+                .build());
+    }
+
 }

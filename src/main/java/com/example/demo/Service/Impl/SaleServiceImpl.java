@@ -1,6 +1,9 @@
 package com.example.demo.Service.Impl;
 
+import com.example.demo.Common.ConvertDate;
+import com.example.demo.Common.ConvertSnakeToCamel;
 import com.example.demo.DTO.CommentDTO;
+import com.example.demo.DTO.Response.SaleResponse;
 import com.example.demo.DTO.SaleDTO;
 import com.example.demo.Models.Comment;
 import com.example.demo.Models.LaptopModel;
@@ -34,9 +37,9 @@ public class SaleServiceImpl implements SaleService {
     //Lấy danh sách tất cả Sale
     @Transactional
     @Override
-    public List<SaleDTO> getAllSales() {
+    public List<SaleResponse> getAllSales() {
         return saleRepository.findAll().stream()
-                .map(SaleMapper::convertToDTO)
+                .map(SaleMapper::convertToResponse)
                 .collect(Collectors.toList());
 
     }
@@ -44,16 +47,16 @@ public class SaleServiceImpl implements SaleService {
     //Lấy Sale theo ID
     @Transactional
     @Override
-    public SaleDTO getSaleById(UUID id) {
+    public SaleResponse getSaleById(UUID id) {
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sale not found with ID: " + id));
-        return SaleMapper.convertToDTO(sale);
+        return SaleMapper.convertToResponse(sale);
     }
 
     //Tạo mới một Sale
     @Transactional
     @Override
-    public SaleDTO createSale(SaleDTO saleDTO) {
+    public SaleResponse createSale(SaleDTO saleDTO) {
         Sale sale = Sale.builder()
                 .id(null)
                 .event_description(saleDTO.getEventDescription())
@@ -71,19 +74,20 @@ public class SaleServiceImpl implements SaleService {
         }
         Sale saleExisting = saleRepository.save(sale);
 
-        return SaleMapper.convertToDTO(sale);
+        return SaleMapper.convertToResponse(sale);
     }
 
     //cap nhat sale
     @Transactional
     @Override
-    public SaleDTO updateSale(UUID saleId, SaleDTO saleDTO) {
+    public SaleResponse updateSale(UUID saleId, SaleDTO saleDTO) {
         Sale sale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new EntityNotFoundException("Sale not found"));
 
         sale.setId(saleId);
         sale.setDiscount(saleDTO.getDiscount());
         sale.setEndAt(saleDTO.getStartAt());
+        sale.setEndAt(saleDTO.getEndAt());
         sale.setEvent_description(saleDTO.getEventDescription());
 
         if (saleDTO.getLaptopModelIds() != null) {
@@ -95,12 +99,12 @@ public class SaleServiceImpl implements SaleService {
         }
 
         Sale saleExisting = saleRepository.save(sale);
-        return SaleMapper.convertToDTO(saleExisting);
+        return SaleMapper.convertToResponse(saleExisting);
     }
 
     @Transactional
     @Override
-    public SaleDTO partialUpdateSale(UUID id, Map<String, Object> fieldsToUpdate) {
+    public SaleResponse partialUpdateSale(UUID id, Map<String, Object> fieldsToUpdate) {
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Sale with ID " + id + " not found!"));
 
@@ -108,6 +112,9 @@ public class SaleServiceImpl implements SaleService {
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
             String fieldName = entry.getKey();
+            if (fieldName.equals("start_at") || fieldName.equals("end_at")){
+                fieldName= ConvertSnakeToCamel.snakeToCamel(fieldName);
+            }
             Object newValue = entry.getValue();
 
             try {
@@ -116,14 +123,11 @@ public class SaleServiceImpl implements SaleService {
 
                 if (newValue != null) {
                     if (field.getType().equals(Date.class)) {
-                        field.set(sale, new Date((Long) newValue)); // Chuyển timestamp thành `Date`
+                        Date parsedDate = ConvertDate.convertToDate(newValue);
+                        field.set(sale,parsedDate );
                     } else if (field.getType().equals(Float.class)) {
                         field.set(sale, Float.parseFloat(newValue.toString()));
-                    } else if (field.getType().equals(List.class) && fieldName.equals("laptopModelList")) {
-                        List<UUID> laptopModelIds = (List<UUID>) newValue;
-                        List<LaptopModel> laptopModels = laptopModelRepository.findAllById(laptopModelIds);
-                        field.set(sale, laptopModels);
-                    } else {
+                    }  else {
                         field.set(sale, newValue);
                     }
                 }
@@ -135,7 +139,7 @@ public class SaleServiceImpl implements SaleService {
         }
 
         Sale updatedSale = saleRepository.save(sale);
-        return SaleMapper.convertToDTO(updatedSale);
+        return SaleMapper.convertToResponse(updatedSale);
     }
 
 

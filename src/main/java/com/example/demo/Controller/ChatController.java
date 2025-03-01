@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.ChatDTO;
+import com.example.demo.DTO.Response.ChatResponse;
 import com.example.demo.Service.ChatService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +24,9 @@ public class ChatController {
 
     // Lấy tất cả chat
     @GetMapping("/{accountId}")
-    public ResponseEntity<DataResponse<List<ChatDTO>>> getAllChatsByAccountId(@PathVariable UUID accountId) {
+    public ResponseEntity<DataResponse<List<ChatResponse>>> getAllChatsByAccountId(@PathVariable UUID accountId) {
 
-            return ResponseEntity.ok(DataResponse.<List<ChatDTO>>builder()
+            return ResponseEntity.ok(DataResponse.<List<ChatResponse>>builder()
                     .success(true)
                     .message("Chat retrieved successfully")
                     .data(chatService.getAllChatsByAccountId(accountId))
@@ -52,7 +53,7 @@ public class ChatController {
     @PostMapping
     public ResponseEntity<?> createChat(@RequestBody ChatDTO chatDTO) {
 
-            return ResponseEntity.ok(DataResponse.<ChatDTO>builder()
+            return ResponseEntity.ok(DataResponse.<ChatResponse>builder()
                     .success(true)
                     .message("Chat created successfully")
                     .data(chatService.createChat(chatDTO))
@@ -63,7 +64,7 @@ public class ChatController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateChat(@PathVariable UUID id, @RequestBody ChatDTO chatDTO) {
 
-        return ResponseEntity.ok(DataResponse.<ChatDTO>builder()
+        return ResponseEntity.ok(DataResponse.<ChatResponse>builder()
                 .success(true)
                 .message("Chat updated successfully")
                 .data(chatService.updateChat(id, chatDTO))
@@ -71,16 +72,14 @@ public class ChatController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<DataResponse<ChatDTO>> partialUpdateChat(
+    public ResponseEntity<DataResponse<ChatResponse>> partialUpdateChat(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> fieldsToUpdate) {
 
-        ChatDTO updatedChat = chatService.partialUpdateChat(id, fieldsToUpdate);
-
-        return ResponseEntity.ok(DataResponse.<ChatDTO>builder()
+        return ResponseEntity.ok(DataResponse.<ChatResponse>builder()
                 .success(true)
                 .message("Chat updated successfully!")
-                .data(updatedChat)
+                .data(chatService.partialUpdateChat(id, fieldsToUpdate))
                 .build());
     }
 

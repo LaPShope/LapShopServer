@@ -1,7 +1,9 @@
 package com.example.demo.DTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,9 +13,17 @@ import java.util.UUID;
 @Setter
 @Builder
 public class CustomerDTO {
+    @JsonProperty("customer_id")
     private UUID customerId;
-    private List<UUID> addressIds;
-    private List<UUID> paymentIds;
-    private List<UUID> orderIds;
-    private List<UUID> cartIds;
+
+    private String gender;
+
+    @JsonProperty("born_date")
+    private Date bornDate;
+
+    private String phone;
+
+    private String avatar;
+
+
 }

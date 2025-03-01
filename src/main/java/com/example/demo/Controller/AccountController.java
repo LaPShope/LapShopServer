@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.AccountDTO;
+import com.example.demo.DTO.Response.AccountResponse;
 import com.example.demo.Service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +24,9 @@ public class AccountController {
 
     // Lấy tất cả tài khoản
     @GetMapping
-    public ResponseEntity<DataResponse<List<AccountDTO>>> getAllAccounts() {
+    public ResponseEntity<DataResponse<List<AccountResponse>>> getAllAccounts() {
 
-            return ResponseEntity.ok(DataResponse.<List<AccountDTO>>builder()
+            return ResponseEntity.ok(DataResponse.<List<AccountResponse>>builder()
                     .success(true)
                     .message("Account retrieved successfully")
                     .data(accountService.getAllAccounts())
@@ -35,12 +36,11 @@ public class AccountController {
 
     // Lấy tài khoản theo id
     @GetMapping("/{id}")
-    public ResponseEntity<DataResponse<AccountDTO>> getAccountById(@PathVariable UUID id) {
-        AccountDTO accountDTO = accountService.getAccountById(id);
-        return ResponseEntity.ok(DataResponse.<AccountDTO>builder()
+    public ResponseEntity<DataResponse<AccountResponse>> getAccountById(@PathVariable UUID id) {
+        return ResponseEntity.ok(DataResponse.<AccountResponse>builder()
                 .success(true)
                 .message("Account retrieved successfully")
-                .data(accountDTO)
+                .data(accountService.getAccountById(id))
                 .build());
     }
 
@@ -49,7 +49,7 @@ public class AccountController {
     public ResponseEntity<DataResponse<?>> createAccount(@RequestBody AccountDTO accountDTO) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(DataResponse.<AccountDTO>builder()
+                .body(DataResponse.<AccountResponse>builder()
                         .success(true)
                         .message("Account created successfully!")
                         .data(accountService.createAccount(accountDTO))
@@ -59,7 +59,7 @@ public class AccountController {
     // Cập nhật tài khoản
     @PutMapping("/{id}")
     public ResponseEntity<DataResponse<?>> updateAccount(@PathVariable UUID id, @RequestBody AccountDTO updatedAccount) {
-            return ResponseEntity.ok(DataResponse.<AccountDTO>builder()
+            return ResponseEntity.ok(DataResponse.<AccountResponse>builder()
                     .success(true)
                     .message("Account updated successfully!")
                     .data(accountService.updateAccount(id, updatedAccount))
@@ -71,7 +71,7 @@ public class AccountController {
             @PathVariable UUID id,
             @RequestBody Map<String, Object> fieldsToUpdate ) {
 
-        return ResponseEntity.ok(DataResponse.<AccountDTO>builder()
+        return ResponseEntity.ok(DataResponse.<AccountResponse>builder()
                 .success(true)
                 .message("Account updated successfully!")
                 .data(accountService.partialUpdateAccount(id, fieldsToUpdate ))

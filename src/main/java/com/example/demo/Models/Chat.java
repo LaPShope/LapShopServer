@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -15,7 +16,8 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name="chat")
-public class Chat {
+public class
+Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "BINARY(16)")
@@ -33,5 +35,5 @@ public class Chat {
     private String message;
 
     @Column(name = "create_at", nullable = false)
-    private LocalDateTime createAt;
+    private Date createAt;
 }

@@ -59,6 +59,7 @@ public class LaptopModel {
     @OneToMany(mappedBy = "laptopModel",cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,
+            CascadeType.REMOVE,
             CascadeType.PERSIST,
             CascadeType.REFRESH
     })
@@ -67,6 +68,7 @@ public class LaptopModel {
     @OneToMany(mappedBy = "laptopModel", cascade = {
             CascadeType.DETACH,
             CascadeType.MERGE,
+            CascadeType.REMOVE,
             CascadeType.PERSIST,
             CascadeType.REFRESH
     })
@@ -75,6 +77,7 @@ public class LaptopModel {
     @ManyToMany(mappedBy = "laptopModelList",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
             CascadeType.MERGE,
+            CascadeType.REMOVE,
             CascadeType.REFRESH})
     private List<Image> imageList;
 
@@ -88,12 +91,14 @@ public class LaptopModel {
     @OneToMany(mappedBy = "laptopModel",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
             CascadeType.MERGE,
+            CascadeType.REMOVE,
             CascadeType.REFRESH},orphanRemoval = true)
     private List<OrderDetail> orderDetailList;
 
     @JsonIgnore
     @OneToMany(mappedBy = "laptopModel",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
+            CascadeType.REMOVE,
             CascadeType.MERGE,
             CascadeType.REFRESH},orphanRemoval = true)
     private List<LaptopOnCart> laptopOnCartList;

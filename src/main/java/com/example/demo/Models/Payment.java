@@ -25,7 +25,7 @@ public class Payment {
     @JoinColumn(name = "customer_id",nullable = false)
     private Customer customer;
 
-    @ManyToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
+    @OneToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     @JoinColumn(name = "order_id",nullable = false)
     private Order order;
 

@@ -1,6 +1,7 @@
 package com.example.demo.Service.Impl;
 
 import com.example.demo.DTO.LaptopOnCartDTO;
+import com.example.demo.DTO.Response.LaptopOnCartResponse;
 import com.example.demo.DTO.SaleDTO;
 import com.example.demo.Models.Cart;
 import com.example.demo.Models.LaptopModel;
@@ -43,24 +44,24 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
     // 1. Lấy tất cả LaptopOnCart
     @Override
-    public List<LaptopOnCartDTO> getAllLaptopOnCarts() {
+    public List<LaptopOnCartResponse> getAllLaptopOnCarts() {
         return laptopOnCartRepository.findAll().stream()
-                .map(LaptopOnCartMapper::convertToDTO)
+                .map(LaptopOnCartMapper::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     // 2. Lấy LaptopOnCart theo ID
     @Override
-    public LaptopOnCartDTO getLaptopOnCartById(UUID id) {
+    public LaptopOnCartResponse getLaptopOnCartById(UUID id) {
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("LaptopOnCart with ID " + id + " not found!"));
 
-        return LaptopOnCartMapper.convertToDTO(laptopOnCart);
+        return LaptopOnCartMapper.convertToResponse(laptopOnCart);
     }
 
     // 3. Tạo mới LaptopOnCart
     @Override
-    public LaptopOnCartDTO createLaptopOnCart(LaptopOnCartDTO laptopOnCartDTO) {
+    public LaptopOnCartResponse createLaptopOnCart(LaptopOnCartDTO laptopOnCartDTO) {
         Cart cart = cartRepository.findById(laptopOnCartDTO.getCartId())
                 .orElseThrow(() -> new EntityNotFoundException("Cart not found!"));
 
@@ -74,12 +75,12 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
                 .build();
 
         LaptopOnCart laptopOnCartExisting = laptopOnCartRepository.save(laptopOnCart);
-        return LaptopOnCartMapper.convertToDTO(laptopOnCartExisting);
+        return LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
     }
 
     // 4. Cập nhật LaptopOnCart
     @Override
-    public LaptopOnCartDTO updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO) {
+    public LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO) {
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
 
@@ -95,11 +96,11 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         LaptopOnCart laptopOnCartExisting = laptopOnCartRepository.save(laptopOnCart);
 
-        return LaptopOnCartMapper.convertToDTO(laptopOnCartExisting);
+        return LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
     }
 
     @Override
-    public LaptopOnCartDTO partialUpdateLaptopOnCart(UUID id, Map<String, Object> fieldsToUpdate) {
+    public LaptopOnCartResponse partialUpdateLaptopOnCart(UUID id, Map<String, Object> fieldsToUpdate) {
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
 
@@ -127,7 +128,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
         }
 
         LaptopOnCart updatedLaptopOnCart = laptopOnCartRepository.save(laptopOnCart);
-        return LaptopOnCartMapper.convertToDTO(updatedLaptopOnCart);
+        return LaptopOnCartMapper.convertToResponse(updatedLaptopOnCart);
     }
 
     // 5. Xóa LaptopOnCart

@@ -1,6 +1,7 @@
 package com.example.demo.Service.Impl;
 
 
+import com.example.demo.DTO.Response.AddressResponse;
 import com.example.demo.Models.Address;
 import com.example.demo.Models.Customer;
 import com.example.demo.Repository.AddressRepository;
@@ -34,26 +35,26 @@ public class AddressServiceImpl implements AddressService{
     // Lấy tất cả địa chỉ của một khách hàng
     @Transactional
     @Override
-    public List<AddressDTO> getAllAddress(UUID customerId) {
+    public List<AddressResponse> getAllAddress(UUID customerId) {
         List<Address> addresses = addressRepository.findByCustomerId(customerId);
         return addresses.stream()
-            .map(AddressMapper::convertToDTO)
+            .map(AddressMapper::convertToResponse)
             .collect(Collectors.toList());
     }
 
     // Lấy địa chỉ theo ID
     @Transactional
     @Override
-    public AddressDTO getAddressById(UUID id) {
+    public AddressResponse getAddressById(UUID id) {
         Address address = addressRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Address not found"));
-        return AddressMapper.convertToDTO(address);
+        return AddressMapper.convertToResponse(address);
     }
     
     // Tạo mới địa chỉ
     @Transactional
     @Override
-    public AddressDTO createAddress(AddressDTO addressDTO) {
+    public AddressResponse createAddress(AddressDTO addressDTO) {
         Customer  customer = customerRepository.findById(addressDTO.getCustomerId())
                            .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
@@ -71,13 +72,13 @@ public class AddressServiceImpl implements AddressService{
 
         Address addressExisting = addressRepository.save(address);
 
-        return AddressMapper.convertToDTO(addressExisting);
+        return AddressMapper.convertToResponse(addressExisting);
     }
     
     // Cập nhật thông tin địa chỉ
     @Transactional
     @Override
-    public AddressDTO updateAddress(UUID idToUpdate, AddressDTO updatedAddress) {
+    public AddressResponse updateAddress(UUID idToUpdate, AddressDTO updatedAddress) {
         Customer customer = customerRepository.findById(updatedAddress.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
@@ -95,10 +96,11 @@ public class AddressServiceImpl implements AddressService{
 
         Address addressExisting = addressRepository.save(addressToUpdate);
 
-        return AddressMapper.convertToDTO(addressExisting);
+        return AddressMapper.convertToResponse(addressExisting);
     }
 
-    public AddressDTO partialUpdateAddress(UUID id, Map<String, Object> fieldsToUpdate) {
+    @Override
+    public AddressResponse partialUpdateAddress(UUID id, Map<String, Object> fieldsToUpdate) {
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Address with ID " + id + " not found!"));
 
@@ -123,7 +125,7 @@ public class AddressServiceImpl implements AddressService{
         }
 
         Address updatedAddress = addressRepository.save(address);
-        return AddressMapper.convertToDTO(updatedAddress);
+        return AddressMapper.convertToResponse(updatedAddress);
     }
 
     // Xóa địa chỉ

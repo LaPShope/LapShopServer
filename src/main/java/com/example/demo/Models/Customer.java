@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +27,17 @@ public class Customer {
     @OneToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     @JoinColumn(name = "id")
     private Account customerId;
+
+//    @Column(nullable = false)
+    private String gender;
+
+    @Column(name = "born_date")
+    private Date bornDate;
+
+//    @Column(nullable = false)
+    private String phone;
+
+    private String avatar;
 
     @JsonIgnore
     @OneToMany(mappedBy = "customer",cascade = {CascadeType.PERSIST,

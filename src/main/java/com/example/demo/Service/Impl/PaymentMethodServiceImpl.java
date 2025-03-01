@@ -117,7 +117,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                 if (newValue != null) {
                     if (field.getType().isEnum()) {
                         try {
-                            Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString().toUpperCase());
+                            Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
                             field.set(paymentMethod, enumValue);
                         } catch (IllegalArgumentException e) {
                             throw new IllegalArgumentException("Invalid enum value '" + newValue + "' for field: " + fieldName);
