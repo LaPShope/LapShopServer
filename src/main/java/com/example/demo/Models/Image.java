@@ -23,7 +23,7 @@ public class Image {
     @Column(name="image_url",nullable = false)
     private String imageUrl;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE})
+    @ManyToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REMOVE})
     @JoinTable(
             name = "laptop_on_image",
             joinColumns = @JoinColumn(name = "image_id"),

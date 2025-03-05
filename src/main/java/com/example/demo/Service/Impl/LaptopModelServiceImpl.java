@@ -147,13 +147,6 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found"));
 
-        laptopModel.getSaleList().forEach(sale -> sale.setLaptopModelList(null));
-        laptopModel.getLaptopList().forEach(laptop -> laptop.setLaptopModel(null));
-        laptopModel.getImageList().forEach(image -> image.setLaptopModelList(null));
-        laptopModel.getCommentList().forEach(comment -> comment.setLaptopModel(null));
-        laptopModel.getLaptopOnCartList().forEach(laptopOnCart -> laptopOnCart.setLaptopModel(null));
-        laptopModel.getOrderDetailList().forEach(orderDetail -> orderDetail.setLaptopModel(null));
-
         laptopModelRepository.delete(laptopModel);
     }
 

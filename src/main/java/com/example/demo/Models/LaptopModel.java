@@ -83,6 +83,7 @@ public class LaptopModel {
 
     @ManyToMany(mappedBy = "laptopModelList",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
+            CascadeType.REMOVE,
             CascadeType.MERGE,
             CascadeType.REFRESH})
     private List<Sale> saleList;

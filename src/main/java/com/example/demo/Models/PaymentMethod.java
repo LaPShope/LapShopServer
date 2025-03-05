@@ -38,6 +38,7 @@ public class PaymentMethod {
     @OneToMany(mappedBy = "paymentMethod",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
             CascadeType.MERGE,
+            CascadeType.REMOVE,
             CascadeType.REFRESH})
     private List<Payment> paymentList;
 }

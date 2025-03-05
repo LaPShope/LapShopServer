@@ -143,7 +143,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     public void deletePaymentMethod(UUID id) {
         PaymentMethod paymentMethod = paymentMethodRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("PaymentMethod with ID " + id + " not found!"));
-        paymentMethod.getPaymentList().clear();
+//        paymentMethod.getPaymentList().clear();
         paymentMethodRepository.delete(paymentMethod);
     }
 
