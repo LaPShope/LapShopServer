@@ -1,5 +1,6 @@
 package com.example.demo.mapper;
 
+import com.example.demo.DTO.Response.SaleResponse;
 import com.example.demo.DTO.SaleDTO;
 import com.example.demo.Models.LaptopModel;
 import com.example.demo.Models.Sale;
@@ -15,9 +16,23 @@ public class SaleMapper {
                 .endAt(sale.getEndAt())
                 .startAt(sale.getStartAt())
                 .eventDescription(sale.getEvent_description() == null ? null : sale.getEvent_description())
-                .laptopModelIds(sale.getLaptopModelList() == null ? Collections.emptyList() :
+//                .laptopModelIds(sale.getLaptopModelList() == null ? Collections.emptyList() :
+//                        sale.getLaptopModelList().stream()
+//                                .map(LaptopModel::getId)
+//                                .collect(Collectors.toList()))
+                .build();
+    }
+
+    public static SaleResponse convertToResponse(Sale sale) {
+        return SaleResponse.builder()
+                .id(sale.getId())
+                .discount(sale.getDiscount())
+                .endAt(sale.getEndAt())
+                .startAt(sale.getStartAt())
+                .eventDescription(sale.getEvent_description() == null ? null : sale.getEvent_description())
+                .laptopModelList(sale.getLaptopModelList() == null ? Collections.emptyList() :
                         sale.getLaptopModelList().stream()
-                                .map(LaptopModel::getId)
+                                .map(LaptopModelMapper::convertToDTO)
                                 .collect(Collectors.toList()))
                 .build();
     }

@@ -1,37 +1,46 @@
 package com.example.demo.Service.Impl;
 
+import com.example.demo.Common.ConvertDate;
+import com.example.demo.Common.Enums;
 import com.example.demo.DTO.CommentDTO;
 import com.example.demo.DTO.LaptopDTO;
+import com.example.demo.DTO.Response.LaptopResponse;
 import com.example.demo.Models.Comment;
 import com.example.demo.Models.Laptop;
 import com.example.demo.Models.LaptopModel;
+import com.example.demo.Repository.LaptopQueryRepository;
 import com.example.demo.Repository.LaptopRepository;
 import com.example.demo.Repository.LaptopModelRepository;
 import com.example.demo.Service.LaptopService;
 
 import com.example.demo.mapper.LaptopMapper;
-import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
 @Service
 public class LaptopServiceImpl implements LaptopService {
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    private final LaptopQueryRepository laptopQueryRepository;
     private final LaptopRepository laptopRepository;
     private final LaptopModelRepository laptopModelRepository;
 
-    public LaptopServiceImpl(LaptopRepository laptopRepository, LaptopModelRepository laptopModelRepository) {
+    public LaptopServiceImpl(LaptopQueryRepository laptopQueryRepository, LaptopRepository laptopRepository, LaptopModelRepository laptopModelRepository) {
         this.laptopRepository = laptopRepository;
         this.laptopModelRepository = laptopModelRepository;
+        this.laptopQueryRepository = laptopQueryRepository;
     }
 
     // **1. Lấy danh sách tất cả Laptop**
@@ -57,7 +66,7 @@ public class LaptopServiceImpl implements LaptopService {
     @Override
     public LaptopDTO createLaptop(LaptopDTO laptopDTO) {
         Laptop laptop = Laptop.builder()
-                .MFG(laptopDTO.getMfg())
+                .MFG(laptopDTO.getMFG())
                 .status(laptopDTO.getStatus())
                 .build();
 
@@ -87,14 +96,14 @@ public class LaptopServiceImpl implements LaptopService {
         LaptopModel newModel = laptopModelRepository.findById(updatedLaptopDTO.getLaptopModelId())
                 .orElseThrow(() -> new EntityNotFoundException("LaptopModel not found"));
 
-        if(existingLaptop.getLaptopModel() == null){
+        if(updatedLaptopDTO.getLaptopModelId() == null){
             throw  new IllegalArgumentException("LaptopModel cannot be null");
         }
-        else if (!existingLaptop.getLaptopModel().getId().equals(updatedLaptopDTO.getLaptopModelId())) {
+        else if (existingLaptop.getLaptopModel() == null ||!existingLaptop.getLaptopModel().getId().equals(updatedLaptopDTO.getLaptopModelId())) {
             existingLaptop.setLaptopModel(newModel);
         }
 
-        existingLaptop.setMFG(updatedLaptopDTO.getMfg());
+        existingLaptop.setMFG(updatedLaptopDTO.getMFG());
         existingLaptop.setStatus(updatedLaptopDTO.getStatus());
 
         Laptop laptopExisting = laptopRepository.save(existingLaptop);
@@ -124,7 +133,11 @@ public class LaptopServiceImpl implements LaptopService {
                         } catch (IllegalArgumentException e) {
                             throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
                         }
-                    } else {
+                    }
+                    else if (field.getType().equals(Date.class)){
+                        Date parsedDate = ConvertDate.convertToDate(newValue);
+                        field.set(laptop, parsedDate);
+                    }else {
                         field.set(laptop, newValue);
                     }
                 }
@@ -151,6 +164,14 @@ public class LaptopServiceImpl implements LaptopService {
 
         laptopRepository.deleteById(id);
     }
+
+    public List<LaptopResponse> searchLaptops(Map<String, Object> filters) {
+        return laptopQueryRepository.searchLaptopsByLaptopModelAndLaptop(filters);
+
+    }
+
+
+
 
 
 }

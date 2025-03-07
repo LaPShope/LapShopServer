@@ -3,6 +3,7 @@ package com.example.demo.Service.Impl;
 
 import com.example.demo.Common.Enums;
 import com.example.demo.DTO.AccountDTO;
+import com.example.demo.DTO.Response.AccountResponse;
 import com.example.demo.Models.Account;
 import com.example.demo.Models.Admin;
 import com.example.demo.Models.Customer;
@@ -39,24 +40,25 @@ public class AccountServiceImpl implements AccountService {
     // Lấy danh sách tài khoản
     @Transactional
     @Override
-    public List<AccountDTO> getAllAccounts() {
+    public List<AccountResponse> getAllAccounts() {
         return accountRepository.findAll().stream()
-            .map(AccountMapper::convertToDTO)
+            .map(AccountMapper::convertToResponse)
             .collect(Collectors.toList());
     }
 
     // Lấy chi tiết một tài khoản
     @Transactional
     @Override
-    public AccountDTO getAccountById(UUID id) {
+    public AccountResponse getAccountById(UUID id) {
         Account account = accountRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Account not found"));
-        return AccountMapper.convertToDTO(account);
+        return AccountMapper.convertToResponse(account);
     }
+
     // Tạo mới tài khoản
     @Transactional
     @Override
-    public AccountDTO createAccount(AccountDTO accountDTO) {
+    public AccountResponse createAccount(AccountDTO accountDTO) {
         if (accountRepository.findByEmail(accountDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("Email already exists!");
         }
@@ -82,14 +84,14 @@ public class AccountServiceImpl implements AccountService {
 
         Account accountExisting = accountRepository.save(account);
 
-        return AccountMapper.convertToDTO(accountExisting);
+        return AccountMapper.convertToResponse(accountExisting);
     }
 
 
     // Cập nhật thông tin tài khoản
     @Transactional
     @Override
-    public AccountDTO updateAccount(UUID id, AccountDTO updatedAccount) {
+    public AccountResponse updateAccount(UUID id, AccountDTO updatedAccount) {
         Account existingAccount = accountRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
@@ -108,11 +110,11 @@ public class AccountServiceImpl implements AccountService {
 
         Account account = accountRepository.save(existingAccount);
 
-        return AccountMapper.convertToDTO(account);
+        return AccountMapper.convertToResponse(account);
     }
 
     @Override
-    public AccountDTO partialUpdateAccount(UUID id, Map<String, Object> fieldsToUpdate) {
+    public AccountResponse partialUpdateAccount(UUID id, Map<String, Object> fieldsToUpdate) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account with ID " + id + " not found!"));
 
@@ -147,7 +149,7 @@ public class AccountServiceImpl implements AccountService {
         }
 
         Account updatedAccount = accountRepository.save(account);
-        return AccountMapper.convertToDTO(updatedAccount);
+        return AccountMapper.convertToResponse(updatedAccount);
     }
 
 

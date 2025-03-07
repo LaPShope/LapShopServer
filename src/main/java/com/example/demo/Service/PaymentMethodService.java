@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface PaymentMethodService {
-    PaymentMethodDTO partialUpdatePaymentMethod(UUID id, Map<String,Object> fieldsToUpdate);
+    PaymentMethodDTO partialUpdatePaymentMethod(UUID id, Map<String,Object> fieldsToUpdate) ;
 
     List<PaymentMethodDTO> getAllPaymentMethods();
 

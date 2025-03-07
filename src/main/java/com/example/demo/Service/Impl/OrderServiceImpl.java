@@ -1,8 +1,10 @@
 package com.example.demo.Service.Impl;
 
+import com.example.demo.Common.ConvertDate;
+import com.example.demo.Common.ConvertSnakeToCamel;
 import com.example.demo.Common.Enums;
 import com.example.demo.DTO.OrderDTO;
-import com.example.demo.DTO.OrderDetailDTO;
+import com.example.demo.DTO.Response.OrderResponse.OrderResponse;
 import com.example.demo.Models.*;
 import com.example.demo.Repository.*;
 import com.example.demo.Service.OrderService;
@@ -13,12 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.Map;
 
 
@@ -37,44 +36,44 @@ public class OrderServiceImpl implements OrderService {
         this.paymentRepository=paymentRepository;
     }
 
-    public List<OrderDTO> getAllOrders() {
+    public List<OrderResponse> getAllOrders() {
         return orderRepository.findAll().stream()
-                .map(OrderMapper::convertToDTO)
+                .map(OrderMapper::convertToResponse)
                 .collect(Collectors.toList());
     }
 
 
     @Override
-    public OrderDTO getOrderById(UUID id) {
+    public OrderResponse getOrderById(UUID id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
-        return OrderMapper.convertToDTO(order);
+        return OrderMapper.convertToResponse(order);
     }
 
     @Transactional
     @Override
-    public OrderDTO createOrder(OrderDTO orderDTO) {
+    public OrderResponse createOrder(OrderDTO orderDTO) {
         Customer customer = customerRepository.findById(orderDTO.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
         Order order = Order.builder()
                 .customer(customer)
-                .dateCreate(LocalDateTime.now())
+                .dateCreate(new Date())
                 .orderDetailList(null)
-                .paymentList(null)
+                .payment(null)
                 .status(Enums.OrderStatus.Pending)
                 .build();
 
         Order orderExisting = orderRepository.save(order);
 
-        return OrderMapper.convertToDTO(orderExisting);
+        return OrderMapper.convertToResponse(orderExisting);
     }
 
 
     @Transactional
     @Override
-    public OrderDTO updateOrder(UUID id, OrderDTO orderDTO) {
+    public OrderResponse updateOrder(UUID id, OrderDTO orderDTO) {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
@@ -99,29 +98,22 @@ public class OrderServiceImpl implements OrderService {
         }
 
         if (orderDTO.getPayments() == null || orderDTO.getPayments().isEmpty()) {
-            existingOrder.getPaymentList().forEach(orderDetail -> orderDetail.setOrder(null));
+            existingOrder.getPayment().setOrder(null);
         } else {
-            List<Payment> newPayments = orderDTO.getPayments().stream()
-                    .map(paymentId -> paymentRepository.findById(paymentId)
-                            .orElseThrow(() -> new EntityNotFoundException("Payment not found"))).toList();
+            Payment newPayments =  paymentRepository.findById(orderDTO.getCustomerId())
+                            .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
 
-            existingOrder.getPaymentList().removeIf(payment -> !newPayments.contains(payment));
+            existingOrder.setPayment(newPayments);
 
-            newPayments.forEach(payment -> {
-                if (!existingOrder.getPaymentList().contains(payment)) {
-                    payment.setOrder(existingOrder);
-                    existingOrder.getPaymentList().add(payment);
-                }
-            });
         }
 
         Order order = orderRepository.save(existingOrder);
 
-        return OrderMapper.convertToDTO(order);
+        return OrderMapper.convertToResponse(order);
     }
 
     @Override
-    public OrderDTO partialUpdateOrder(UUID id, Map<String, Object> fieldsToUpdate) {
+    public OrderResponse partialUpdateOrder(UUID id, Map<String, Object> fieldsToUpdate) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order with ID " + id + " not found!"));
 
@@ -130,6 +122,9 @@ public class OrderServiceImpl implements OrderService {
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
             String fieldName = entry.getKey();
+            if(fieldName.equals("date_create")){
+                fieldName= ConvertSnakeToCamel.snakeToCamel(fieldName);
+            }
             Object newValue = entry.getValue();
 
             try {
@@ -138,7 +133,6 @@ public class OrderServiceImpl implements OrderService {
 
                 if (newValue != null) {
                     if (field.getType().isEnum()) {
-                        // Xử lý Enum
                         try {
                             Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
                             field.set(order, enumValue);
@@ -146,15 +140,9 @@ public class OrderServiceImpl implements OrderService {
                             throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
                         }
                     } else if (field.getType().equals(Date.class)) {
-                        // Xử lý Date
-                        try {
-                            Date parsedDate = dateFormat.parse(newValue.toString());
+                            Date parsedDate = ConvertDate.convertToDate(newValue);
                             field.set(order, parsedDate);
-                        } catch (ParseException e) {
-                            throw new IllegalArgumentException("Invalid date format for field: " + fieldName);
-                        }
                     } else {
-                        // Cập nhật các kiểu dữ liệu khác
                         field.set(order, newValue);
                     }
                 }
@@ -166,7 +154,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order updatedOrder = orderRepository.save(order);
-        return OrderMapper.convertToDTO(updatedOrder);
+        return OrderMapper.convertToResponse(updatedOrder);
     }
 
     @Override
@@ -174,8 +162,6 @@ public class OrderServiceImpl implements OrderService {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
-        existingOrder.getOrderDetailList().forEach(orderDetail -> orderDetail.setOrder(null));
-        existingOrder.getPaymentList().forEach(payment -> payment.setOrder(null));
         orderRepository.delete(existingOrder);
     }
 

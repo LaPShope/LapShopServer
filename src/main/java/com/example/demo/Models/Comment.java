@@ -25,12 +25,12 @@ public class Comment {
     @JoinColumn(name = "account_id",nullable = false)
     private Account account;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "parent",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parent",cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH, CascadeType.REFRESH})
     private List<Comment> replies;
 
     @Column(nullable = false)

@@ -1,6 +1,7 @@
 package com.example.demo.DTO;
 
 import com.example.demo.Common.Enums;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -23,10 +24,16 @@ public class LaptopModelDTO {
     private Enums.Color color;
     private BigDecimal price;
     private String description;
-    private List<UUID> commentIds;
-    private List<UUID> imageIds;
-    private List<UUID> saleIds;
-    private List<UUID> laptopIds;
-    private List<UUID> laptopOnCartIds;
-    private List<UUID> orderDetailIds;
+//    @JsonProperty("comment_ids")
+//    private List<UUID> commentIds;
+//    @JsonProperty("image_ids")
+//    private List<UUID> imageIds;
+//    @JsonProperty("sale_ids")
+//    private List<UUID> saleIds;
+//    @JsonProperty("laptop_ids")
+//    private List<UUID> laptopIds;
+//    @JsonProperty("laptop_on_cart_ids")
+//    private List<UUID> laptopOnCartIds;
+//    @JsonProperty("oder_detail_ids")
+//    private List<UUID> orderDetailIds;
 }

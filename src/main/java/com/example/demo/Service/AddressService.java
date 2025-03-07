@@ -6,12 +6,13 @@ import java.util.UUID;
 
 import com.example.demo.DTO.AccountDTO;
 import com.example.demo.DTO.AddressDTO;
+import com.example.demo.DTO.Response.AddressResponse;
 
 public interface AddressService {
-    public AddressDTO partialUpdateAddress(UUID id, Map<String,Object> fieldsToUpdate );
-    public List<AddressDTO> getAllAddress(UUID customerId);
-    public AddressDTO getAddressById(UUID id);
-    public AddressDTO createAddress(AddressDTO addressDTO);
-    public AddressDTO updateAddress(UUID idToUpdate, AddressDTO updatedAddressDTO);
+    public AddressResponse partialUpdateAddress(UUID id, Map<String,Object> fieldsToUpdate );
+    public List<AddressResponse> getAllAddress(UUID customerId);
+    public AddressResponse getAddressById(UUID id);
+    public AddressResponse createAddress(AddressDTO addressDTO);
+    public AddressResponse updateAddress(UUID idToUpdate, AddressDTO updatedAddressDTO);
     public void deleteAddress(UUID id);
 }

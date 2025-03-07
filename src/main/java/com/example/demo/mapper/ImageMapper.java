@@ -10,10 +10,10 @@ public class ImageMapper {
     public static ImageDTO convertToDTO(Image image) {
         return ImageDTO.builder()
                 .id(image.getId())
-                .laptopModelIds(image.getLaptopModelList() == null ? null
-                        : image.getLaptopModelList().stream()
-                        .map(LaptopModel::getId)
-                        .collect(Collectors.toList()))
+//                .laptopModelIds(image.getLaptopModelList() == null ? null
+//                        : image.getLaptopModelList().stream()
+//                        .map(LaptopModel::getId)
+//                        .collect(Collectors.toList()))
                 .imageUrl(image.getImageUrl())
                 .build();
     }

@@ -3,6 +3,7 @@ package com.example.demo.Service.Impl;
 import com.example.demo.DTO.ImageDTO;
 import com.example.demo.DTO.OrderDTO;
 import com.example.demo.DTO.OrderDetailDTO;
+import com.example.demo.DTO.Response.OrderDetailResponse;
 import com.example.demo.Models.Image;
 import com.example.demo.Models.LaptopModel;
 import com.example.demo.Models.Order;
@@ -41,24 +42,24 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
     @Transactional
     @Override
-    public List<OrderDetailDTO> getAllOrderDetails() {
+    public List<OrderDetailResponse> getAllOrderDetails() {
         return orderDetailRepository.findAll().stream()
-                .map(OrderDetailMapper::convertToDTO)
+                .map(OrderDetailMapper::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO getOrderDetailById(UUID id) {
+    public OrderDetailResponse getOrderDetailById(UUID id) {
         OrderDetail orderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found"));
 
-        return OrderDetailMapper.convertToDTO(orderDetail);
+        return OrderDetailMapper.convertToResponse(orderDetail);
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO createOrderDetail(OrderDetailDTO orderDetailDTO) {
+    public OrderDetailResponse createOrderDetail(OrderDetailDTO orderDetailDTO) {
         Order order = orderRepository.findById(orderDetailDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order  not found!"));
 
@@ -75,12 +76,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
         OrderDetail orderDetailExisting = orderDetailRepository.save(orderDetail);
 
-        return OrderDetailMapper.convertToDTO(orderDetailExisting);
+        return OrderDetailMapper.convertToResponse(orderDetailExisting);
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO updateOrderDetail(UUID id, OrderDetailDTO orderDetailDTO) {
+    public OrderDetailResponse updateOrderDetail(UUID id, OrderDetailDTO orderDetailDTO) {
         OrderDetail existingOrderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found!"));
 
@@ -97,12 +98,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
         OrderDetail orderDetailExisting = orderDetailRepository.save(existingOrderDetail);
 
-        return OrderDetailMapper.convertToDTO(orderDetailExisting);
+        return OrderDetailMapper.convertToResponse(orderDetailExisting);
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO partialUpdateOrderDetail(UUID id, Map<String, Object> fieldsToUpdate) {
+    public OrderDetailResponse partialUpdateOrderDetail(UUID id, Map<String, Object> fieldsToUpdate) {
         OrderDetail orderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail with ID " + id + " not found!"));
 
@@ -132,7 +133,7 @@ public class OrderDetailServiceImpl implements OrderDetailService {
             }
         }
         OrderDetail updatedOrderDetail = orderDetailRepository.save(orderDetail);
-        return OrderDetailMapper.convertToDTO(updatedOrderDetail);
+        return OrderDetailMapper.convertToResponse(updatedOrderDetail);
     }
 
     @Transactional

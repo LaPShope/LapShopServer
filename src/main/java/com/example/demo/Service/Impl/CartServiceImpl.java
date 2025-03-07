@@ -1,10 +1,8 @@
 package com.example.demo.Service.Impl;
 
-import com.example.demo.DTO.AddressDTO;
 import com.example.demo.DTO.CartDTO;
-import com.example.demo.DTO.LaptopOnCartDTO;
+import com.example.demo.DTO.Response.CartResponse.CartResponse;
 import com.example.demo.Models.*;
-import com.example.demo.Repository.AccountRepository;
 import com.example.demo.Repository.CartRepository;
 import com.example.demo.Repository.CustomerRepository;
 import com.example.demo.Repository.LaptopOnCartRepository;
@@ -34,25 +32,25 @@ public class CartServiceImpl implements CartService {
 
     // Lấy tất cả Cart
     @Override
-    public List<CartDTO> getAllCarts() {
+    public List<CartResponse> getAllCarts() {
 
         return cartRepository.findAll().stream()
-                .map(CartMapper::convertToDTO)
+                .map(CartMapper::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     // Lấy Cart theo ID
     @Override
-    public CartDTO getCartById(UUID id) {
+    public CartResponse getCartById(UUID id) {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
 
-        return CartMapper.convertToDTO(cart);
+        return CartMapper.convertToResponse(cart);
     }
 
     // Tạo mới Cart
     @Override
-    public CartDTO createCart(CartDTO cartDTO) {
+    public CartResponse createCart(CartDTO cartDTO) {
         Customer customer = customerRepository.findById(cartDTO.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
@@ -61,12 +59,12 @@ public class CartServiceImpl implements CartService {
                 .build();
         Cart cartExisting = cartRepository.save(cart);
 
-        return CartMapper.convertToDTO(cartExisting);
+        return CartMapper.convertToResponse(cartExisting);
     }
 
     // Cập nhật Cart theo ID
     @Override
-    public CartDTO updateCart(UUID id, CartDTO cartDTO) {
+    public CartResponse updateCart(UUID id, CartDTO cartDTO) {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cart not found!"));
 
@@ -87,10 +85,10 @@ public class CartServiceImpl implements CartService {
         cart.getLaptopOnCarts().addAll(laptopOnCarts);
 
         Cart cartExisting = cartRepository.save(cart);
-        return CartMapper.convertToDTO(cartExisting);
+        return CartMapper.convertToResponse(cartExisting);
     }
 
-    public CartDTO partialUpdateCart(UUID id, Map<String, Object> fieldsToUpdate) {
+    public CartResponse partialUpdateCart(UUID id, Map<String, Object> fieldsToUpdate) {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cart with ID " + id + " not found!"));
 
@@ -115,7 +113,7 @@ public class CartServiceImpl implements CartService {
         }
 
         Cart updatedCart = cartRepository.save(cart);
-        return CartMapper.convertToDTO(updatedCart);
+        return CartMapper.convertToResponse(updatedCart);
     }
 
 

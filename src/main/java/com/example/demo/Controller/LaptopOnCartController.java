@@ -1,7 +1,9 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Common.DataResponse;
+import com.example.demo.DTO.LaptopDTO;
 import com.example.demo.DTO.LaptopOnCartDTO;
+import com.example.demo.DTO.Response.LaptopOnCartResponse;
 import com.example.demo.DTO.SaleDTO;
 import com.example.demo.Service.LaptopOnCartService;
 import org.springframework.http.HttpStatus;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -25,7 +28,7 @@ public class LaptopOnCartController {
     @GetMapping
     public ResponseEntity<?> getAllLaptopOnCarts() {
 
-        return ResponseEntity.ok(DataResponse.<List<LaptopOnCartDTO>>builder()
+        return ResponseEntity.ok(DataResponse.<List<LaptopOnCartResponse>>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
                 .data( laptopOnCartService.getAllLaptopOnCarts())
@@ -36,7 +39,7 @@ public class LaptopOnCartController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getLaptopOnCartById(@PathVariable UUID id) {
 
-        return ResponseEntity.ok(DataResponse.<LaptopOnCartDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
                 .data(laptopOnCartService.getLaptopOnCartById(id))
@@ -48,7 +51,7 @@ public class LaptopOnCartController {
     @PostMapping
     public ResponseEntity<?> createLaptopOnCart(@RequestBody LaptopOnCartDTO laptopOnCartDTO) {
 
-        return ResponseEntity.ok(DataResponse.<LaptopOnCartDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
                 .success(true)
                 .message("Sale created successfully")
                 .data(laptopOnCartService.createLaptopOnCart(laptopOnCartDTO))
@@ -60,7 +63,7 @@ public class LaptopOnCartController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateLaptopOnCart(@PathVariable UUID id, @RequestBody LaptopOnCartDTO laptopOnCartDTO) {
 
-        return ResponseEntity.ok(DataResponse.<LaptopOnCartDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
                 .success(true)
                 .message("Sale updated successfully")
                 .data(laptopOnCartService.updateLaptopOnCart(id, laptopOnCartDTO))
@@ -78,5 +81,14 @@ public class LaptopOnCartController {
                 .message("Sale retrieved successfully")
                 .build());
 
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> partialUpdateLaptopOnCart(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
+        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
+                .success(true)
+                .message("Laptop updated successfully")
+                .data(laptopOnCartService.partialUpdateLaptopOnCart(id, fieldsToUpdate))
+                .build());
     }
 }
