@@ -1,0 +1,40 @@
+
+version: "3"
+
+services:
+  db:
+    container_name: lapshope-mysql
+    image: mysql
+    networks:
+      - lapshope-network
+    restart: on-failure:3
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=lapshope
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - ./volumes/mysql:/var/lib/mysql
+      - ./dockerfiles/mysql/lapshope.initdb.sql:/docker-entrypoint-initdb.d/lapshope.initdb.sql
+
+  phpmyadmin:
+    container_name: lapshope-phpmyadmin
+    image: phpmyadmin
+    networks:
+      - lapshope-network
+    restart: on-failure:3
+    ports:
+      - 9997:80
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=123456
+    depends_on:
+      - db
+
+networks:
+  lapshope-network:
+    name: lapshope-network
+    driver: bridge

@@ -1,0 +1,775 @@
+{
+	"info": {
+		"_postman_id": "93f5984a-a01b-4038-aa20-3f5f4b352d3b",
+		"name": "LapShope",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29805469"
+	},
+	"item": [
+		{
+			"name": "Account Management",
+			"item": [
+				{
+					"name": "Get All Accounts",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/accounts"
+					}
+				},
+				{
+					"name": "Get Account by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/accounts/{{account_id}}"
+					}
+				},
+				{
+					"name": "Create Account",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/accounts",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Account details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Account",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/accounts/{{account_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated account details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Account",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/accounts/{{account_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Account",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/accounts/{{account_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Address Management",
+			"item": [
+				{
+					"name": "Get All Addresses by Customer",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/addresses/customer/{{customer_id}}"
+					}
+				},
+				{
+					"name": "Get Address by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/addresses/{{address_id}}"
+					}
+				},
+				{
+					"name": "Create Address",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/addresses",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Address details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Address",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/addresses/{{address_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated address details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Address",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/addresses/{{address_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Address",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/addresses/{{address_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Laptop Management",
+			"item": [
+				{
+					"name": "Get All Laptops",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/laptops"
+					}
+				},
+				{
+					"name": "Get Laptop by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/laptops/{{laptop_id}}"
+					}
+				},
+				{
+					"name": "Create Laptop",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/laptops",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Laptop details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Laptop",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/laptops/{{laptop_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated laptop details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Laptop",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/laptops/{{laptop_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Laptop",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/laptops/{{laptop_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Order Management",
+			"item": [
+				{
+					"name": "Get All Orders",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/orders"
+					}
+				},
+				{
+					"name": "Get Order by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/orders/{{order_id}}"
+					}
+				},
+				{
+					"name": "Create Order",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/orders",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Order details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Order",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/orders/{{order_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated order details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Order",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/orders/{{order_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Order",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/orders/{{order_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Cart Management",
+			"item": [
+				{
+					"name": "Get All Carts",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/carts"
+					}
+				},
+				{
+					"name": "Get Cart by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/carts/{{cart_id}}"
+					}
+				},
+				{
+					"name": "Create Cart",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/carts",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Cart details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Cart",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/carts/{{cart_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated cart details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Cart",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/carts/{{cart_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Cart",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/carts/{{cart_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Comment Management",
+			"item": [
+				{
+					"name": "Get Comments by Account",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/comments/by-account/{{account_id}}"
+					}
+				},
+				{
+					"name": "Get Comment by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/comments/{{comment_id}}"
+					}
+				},
+				{
+					"name": "Create Comment",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/comments",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Comment details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Comment",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/comments/{{comment_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated comment details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Comment",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/comments/{{comment_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Comment",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/comments/{{comment_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Chat Management",
+			"item": [
+				{
+					"name": "Get Chats by Account",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/chats/{{account_id}}"
+					}
+				},
+				{
+					"name": "Create Chat",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/chats",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Chat details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Chat",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/chats/{{chat_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated chat details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Chat",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/chats/{{chat_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Chat",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/chats/{{chat_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Image Management",
+			"item": [
+				{
+					"name": "Get All Images",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/images"
+					}
+				},
+				{
+					"name": "Get Image by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/images/{{image_id}}"
+					}
+				},
+				{
+					"name": "Create Image",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/images",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Image details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Image",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/images/{{image_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated image details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Image",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/images/{{image_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Image",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/images/{{image_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Sale Management",
+			"item": [
+				{
+					"name": "Get All Sales",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/sales"
+					}
+				},
+				{
+					"name": "Get Sale by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/sales/{{sale_id}}"
+					}
+				},
+				{
+					"name": "Create Sale",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/sales",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Sale details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Sale",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/sales/{{sale_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated sale details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Sale",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/sales/{{sale_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Sale",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/sales/{{sale_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Payment Management",
+			"item": [
+				{
+					"name": "Get All Payments",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/payments"
+					}
+				},
+				{
+					"name": "Get Payment by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/payments/{{payment_id}}"
+					}
+				},
+				{
+					"name": "Create Payment",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/api/v1/payments",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Payment details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Update Payment",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/api/v1/payments/{{payment_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Updated payment details\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Partial Update Payment",
+					"request": {
+						"method": "PATCH",
+						"url": "{{base_url}}/api/v1/payments/{{payment_id}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    // Fields to update\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Delete Payment",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/payments/{{payment_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Customer Management",
+			"item": [
+				{
+					"name": "Get All Customers",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/customers"
+					}
+				},
+				{
+					"name": "Get Customer by ID",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/api/v1/customers/{{customer_id}}"
+					}
+				},
+				{
+					"name": "Delete Customer",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/api/v1/customers/{{customer_id}}"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080"
+		}
+	]
+}
