@@ -18,6 +18,10 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +44,7 @@ public class AccountServiceImpl implements AccountService {
     // Lấy danh sách tài khoản
     @Transactional
     @Override
+    @Cacheable(value = "accounts", key = "'all'")
     public List<AccountResponse> getAllAccounts() {
         return accountRepository.findAll().stream()
             .map(AccountMapper::convertToResponse)
@@ -49,6 +54,7 @@ public class AccountServiceImpl implements AccountService {
     // Lấy chi tiết một tài khoản
     @Transactional
     @Override
+    @Cacheable(value = "account", key = "#id")
     public AccountResponse getAccountById(UUID id) {
         Account account = accountRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Account not found"));
@@ -58,6 +64,8 @@ public class AccountServiceImpl implements AccountService {
     // Tạo mới tài khoản
     @Transactional
     @Override
+    @CacheEvict(value = "accounts", key = "'all'")
+    @Cacheable(value = "account", key = "#id")
     public AccountResponse createAccount(AccountDTO accountDTO) {
         if (accountRepository.findByEmail(accountDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("Email already exists!");
@@ -91,6 +99,11 @@ public class AccountServiceImpl implements AccountService {
     // Cập nhật thông tin tài khoản
     @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "accounts", key = "'all'"),
+            @CacheEvict(value = "account", key = "#id")
+    })
+    @CachePut(value = "account", key = "#id")
     public AccountResponse updateAccount(UUID id, AccountDTO updatedAccount) {
         Account existingAccount = accountRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Account not found"));
@@ -113,7 +126,13 @@ public class AccountServiceImpl implements AccountService {
         return AccountMapper.convertToResponse(account);
     }
 
+    @Transactional
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "accounts", key = "'all'"),
+            @CacheEvict(value = "account", key = "#id")
+    })
+    @CachePut( value = "account", key = "#id")
     public AccountResponse partialUpdateAccount(UUID id, Map<String, Object> fieldsToUpdate) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account with ID " + id + " not found!"));
