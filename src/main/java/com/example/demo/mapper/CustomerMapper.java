@@ -16,14 +16,6 @@ public class CustomerMapper {
                 .avatar(customer.getAvatar())
                 .gender(customer.getGender())
                 .bornDate(customer.getBornDate())
-//                .addressIds(customer.getAddressList().stream()
-//                        .map(Address::getId).collect(Collectors.toList()))
-//                .paymentIds(customer.getPaymentList().stream()
-//                        .map(Payment::getId).collect(Collectors.toList()))
-//                .orderIds(customer.getOderList().stream()
-//                        .map(Order::getId).collect(Collectors.toList()))
-//                .cartIds(customer.getCartList().stream()
-//                        .map(Cart::getId).collect(Collectors.toList()))
                 .build();
     }
 

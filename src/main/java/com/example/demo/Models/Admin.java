@@ -15,12 +15,10 @@ import java.util.UUID;
 @Table(name="admin")
 public class Admin {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
     @MapsId
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
     @JoinColumn(name = "account_id")
     private Account adminId;
 }

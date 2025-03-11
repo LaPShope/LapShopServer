@@ -10,6 +10,7 @@ import com.example.demo.Service.AddressService;
 import com.example.demo.DTO.AddressDTO;
 
 import com.example.demo.mapper.AddressMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -26,29 +27,50 @@ public class AddressServiceImpl implements AddressService{
 
     private final AddressRepository addressRepository;
     private final CustomerRepository customerRepository;
+    private final RedisService redisService;
 
-    public AddressServiceImpl(AddressRepository addressRepository, CustomerRepository customerRepository) {
+    public AddressServiceImpl(RedisService redisService, AddressRepository addressRepository, CustomerRepository customerRepository) {
         this.addressRepository = addressRepository;
         this.customerRepository = customerRepository;
+        this.redisService =redisService;
     }
 
     // Lấy tất cả địa chỉ của một khách hàng
     @Transactional
     @Override
     public List<AddressResponse> getAllAddress(UUID customerId) {
-        List<Address> addresses = addressRepository.findByCustomerId(customerId);
-        return addresses.stream()
+        List<AddressResponse> cachedAddress = redisService.getObject("allAddressCustomerId:" + customerId, new TypeReference<List<AddressResponse>>() {});
+
+        if(cachedAddress != null && !cachedAddress.isEmpty()){
+            return cachedAddress;
+        }
+
+        List<AddressResponse> addresses = addressRepository.findByCustomerId(customerId).stream()
             .map(AddressMapper::convertToResponse)
-            .collect(Collectors.toList());
+            .toList();
+
+        redisService.setObject("allAddressCustomerId:"+customerId,addresses,600);
+
+        return addresses;
     }
 
     // Lấy địa chỉ theo ID
     @Transactional
     @Override
     public AddressResponse getAddressById(UUID id) {
+        AddressResponse cachedAddress = redisService.getObject("addressId:" + id, new TypeReference<AddressResponse>() {});
+
+        if(cachedAddress != null){
+            return cachedAddress;
+        }
+
         Address address = addressRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Address not found"));
-        return AddressMapper.convertToResponse(address);
+        AddressResponse addressResponse = AddressMapper.convertToResponse(address);
+
+        redisService.setObject("addressId:"+id,addressResponse,600);
+
+        return addressResponse;
     }
     
     // Tạo mới địa chỉ
@@ -72,7 +94,13 @@ public class AddressServiceImpl implements AddressService{
 
         Address addressExisting = addressRepository.save(address);
 
-        return AddressMapper.convertToResponse(addressExisting);
+        AddressResponse addressResponse = AddressMapper.convertToResponse(addressExisting);
+
+        redisService.deleteByPattern("*customer*");
+
+        redisService.setObject("addressId:"+addressExisting.getId(),addressResponse,600);
+
+        return addressResponse;
     }
     
     // Cập nhật thông tin địa chỉ
@@ -96,7 +124,13 @@ public class AddressServiceImpl implements AddressService{
 
         Address addressExisting = addressRepository.save(addressToUpdate);
 
-        return AddressMapper.convertToResponse(addressExisting);
+        AddressResponse addressResponse = AddressMapper.convertToResponse(addressExisting);
+
+        redisService.deleteByPattern("*ustomer:"+idToUpdate+"*");
+
+        redisService.setObject("addressId:"+addressResponse.getId(), addressResponse,600);
+
+        return addressResponse;
     }
 
     @Override
@@ -125,7 +159,14 @@ public class AddressServiceImpl implements AddressService{
         }
 
         Address updatedAddress = addressRepository.save(address);
-        return AddressMapper.convertToResponse(updatedAddress);
+
+        AddressResponse addressResponse = AddressMapper.convertToResponse(updatedAddress);
+
+        redisService.deleteByPattern("*ustomer:"+address.getCustomer().getId()+"*");
+
+        redisService.setObject("addressId:"+id,addressResponse,600);
+
+        return addressResponse;
     }
 
     // Xóa địa chỉ
@@ -134,9 +175,8 @@ public class AddressServiceImpl implements AddressService{
     public void deleteAddress(UUID id) {
         Address addressExisting = addressRepository.findById(id)
                         .orElseThrow(() -> new EntityNotFoundException("Address not found"));
-//        Customer customerExisting = addressExisting.getCustomer();
-//
-//        customerExisting.getAddressList().remove(addressExisting);
+
+        redisService.deleteByPattern("*ustomer:"+addressExisting.getCustomer().getId()+"*");
 
         addressRepository.deleteById(id);
 

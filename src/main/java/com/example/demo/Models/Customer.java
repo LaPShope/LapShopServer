@@ -19,8 +19,6 @@ import java.util.UUID;
 @Table(name="customer")
 public class Customer {
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID)
-//    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
     @MapsId
@@ -28,13 +26,13 @@ public class Customer {
     @JoinColumn(name = "id")
     private Account customerId;
 
-//    @Column(nullable = false)
+    @Column(nullable = false)
     private String gender;
 
     @Column(name = "born_date")
     private Date bornDate;
 
-//    @Column(nullable = false)
+    @Column(nullable = false)
     private String phone;
 
     private String avatar;

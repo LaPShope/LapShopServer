@@ -1,102 +1,118 @@
 package com.example.demo.Service.Impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.params.ScanParams;
-import redis.clients.jedis.resps.ScanResult;
-
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class RedisService {
 
-    private final JedisPool jedisPool;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
-    public RedisService(JedisPool jedisPool) {
-        this.jedisPool = jedisPool;
+    public RedisService(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = new ObjectMapper();
     }
 
-    private Jedis getJedis() {
-        return jedisPool.getResource();
-    }
-
+    // Lưu chuỗi với thời gian hết hạn
     public void set(String key, String value, long expireSeconds) {
-        try (Jedis jedis = getJedis()) {
-            jedis.setex(key, expireSeconds, value);
+        redisTemplate.opsForValue().set(key, value, expireSeconds, TimeUnit.SECONDS);
+    }
+
+    // Lưu Object dưới dạng JSON
+    public <T> void setObject(String key, T object, long expireSeconds) {
+        try {
+            String jsonString = objectMapper.writeValueAsString(object);
+            redisTemplate.opsForValue().set(key, jsonString, expireSeconds, TimeUnit.SECONDS);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Lỗi khi chuyển object thành JSON", e);
         }
     }
 
+    // Lấy chuỗi
     public String get(String key) {
-        try (Jedis jedis = getJedis()) {
-            return jedis.get(key);
+        return (String) redisTemplate.opsForValue().get(key);
+    }
+
+    // Lấy Object từ JSON
+    public <T> T getObject(String key, TypeReference<T> typeRef) {
+        String jsonString = (String) redisTemplate.opsForValue().get(key);
+        if (jsonString == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(jsonString, typeRef);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Lỗi khi chuyển JSON thành object", e);
         }
     }
 
+    // Kiểm tra key có tồn tại không
     public boolean exists(String key) {
-        try (Jedis jedis = getJedis()) {
-            return jedis.exists(key);
-        }
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 
-    public void del(String key) {
-        try (Jedis jedis = getJedis()) {
-            jedis.del(key);
-        }
-    }
+    public void deleteByPattern(String pattern) {
+        List<String> keysToDelete = new ArrayList<>();
 
-    public void hset(String key, String field, String value) {
-        try (Jedis jedis = getJedis()) {
-            jedis.hset(key, field, value);
-        }
-    }
-
-    public ScanResult<String> scan(String cursor, String pattern, int count) {
-        try (Jedis jedis = getJedis()) {
-            ScanParams scanParams = new ScanParams().match(pattern).count(count);
-            return jedis.scan(cursor, scanParams);
-        }
-    }
-
-    public void sadd(String key, String value, long expireSeconds) {
-        try (Jedis jedis = getJedis()) {
-            if (jedis.smembers(key).isEmpty()) {
-                jedis.sadd(key, value);
-                jedis.expire(key, expireSeconds);
-            } else {
-                jedis.sadd(key, value);
+        try (Cursor<byte[]> cursor = redisTemplate.executeWithStickyConnection(
+                redisConnection -> redisConnection.scan(
+                        ScanOptions.scanOptions().match(pattern).count(1000).build()
+                ))) {
+            while (cursor.hasNext()) {
+                keysToDelete.add(new String(cursor.next()));
             }
+        } catch (Exception e) {
+            throw new RuntimeException("Error scanning keys", e);
         }
+
+        if (!keysToDelete.isEmpty()) {
+            redisTemplate.delete(keysToDelete);
+        }
+    }
+    // Xóa key
+    public void del(String key) {
+        redisTemplate.delete(key);
+    }
+
+    // Thiết lập thời gian hết hạn
+    public void expire(String key, long seconds) {
+        redisTemplate.expire(key, seconds, TimeUnit.SECONDS);
+    }
+
+    // Thao tác với Set
+    public void sadd(String key, String value, long expireSeconds) {
+        redisTemplate.opsForSet().add(key, value);
+        redisTemplate.expire(key, expireSeconds, TimeUnit.SECONDS);
     }
 
     public boolean sismember(String key, String value) {
-        try (Jedis jedis = getJedis()) {
-            return jedis.sismember(key, value);
-        }
+        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, value));
     }
 
     public void srem(String key, String value) {
-        try (Jedis jedis = getJedis()) {
-            jedis.srem(key, value);
-        }
+        redisTemplate.opsForSet().remove(key, value);
     }
 
-    public Set<String> smembers(String key) {
-        try (Jedis jedis = getJedis()) {
-            return jedis.smembers(key);
-        }
+    public Set<Object> smembers(String key) {
+        return redisTemplate.opsForSet().members(key);
     }
 
-    public void expire(String key, long seconds) {
-        try (Jedis jedis = getJedis()) {
-            jedis.expire(key, seconds);
-        }
+    // Hash Operations
+    public void hset(String key, String field, String value) {
+        redisTemplate.opsForHash().put(key, field, value);
     }
 
-
-    public Set<String> keys(String pattern) {
-        try (Jedis jedis = getJedis()) {
-            return jedis.keys(pattern);
-        }
+    public Object hget(String key, String field) {
+        return redisTemplate.opsForHash().get(key, field);
     }
 }

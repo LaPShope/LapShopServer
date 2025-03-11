@@ -25,5 +25,5 @@ public class AccountResponse {
 
     private Enums.role role;
 
-    private CustomerResponse customer;
+    private CustomerDTO customer;
 }
