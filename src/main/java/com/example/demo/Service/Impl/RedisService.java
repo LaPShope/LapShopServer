@@ -1,16 +1,20 @@
 package com.example.demo.Service.Impl;
 
+import com.example.demo.DTO.Response.ChatResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RedisService {
@@ -34,7 +38,7 @@ public class RedisService {
             String jsonString = objectMapper.writeValueAsString(object);
             redisTemplate.opsForValue().set(key, jsonString, expireSeconds, TimeUnit.SECONDS);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Lỗi khi chuyển object thành JSON", e);
+            throw new RuntimeException( e.getMessage());
         }
     }
 
@@ -56,29 +60,54 @@ public class RedisService {
         }
     }
 
+    // Lưu tin nhắn vào Redis (chuyển Object -> JSON)
+    public void saveChatList(String key, List<ChatResponse> chatList, long expireSeconds) {
+        try {
+            String json = objectMapper.writeValueAsString(chatList);
+            redisTemplate.opsForValue().set(key, json, expireSeconds, TimeUnit.SECONDS);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Lỗi khi chuyển danh sách ChatResponse thành JSON", e);
+        }
+    }
+
+    public List<ChatResponse> getChatList(String key) {
+        String json = (String) redisTemplate.opsForValue().get(key);
+        if (json == null) {
+            return List.of(); // Trả về danh sách rỗng nếu không có dữ liệu
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<ChatResponse>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Lỗi khi chuyển JSON thành danh sách ChatResponse", e);
+        }
+    }
+
     // Kiểm tra key có tồn tại không
     public boolean exists(String key) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 
-    public void deleteByPattern(String pattern) {
-        List<String> keysToDelete = new ArrayList<>();
+    public void deleteByPatterns(List<String> patterns) {
+        Set<String> keysToDelete = new HashSet<>();
 
-        try (Cursor<byte[]> cursor = redisTemplate.executeWithStickyConnection(
-                redisConnection -> redisConnection.scan(
-                        ScanOptions.scanOptions().match(pattern).count(1000).build()
-                ))) {
-            while (cursor.hasNext()) {
-                keysToDelete.add(new String(cursor.next()));
+        for (String pattern : patterns) {
+            try (Cursor<byte[]> cursor = redisTemplate.executeWithStickyConnection(
+                    redisConnection -> redisConnection.scan(
+                            ScanOptions.scanOptions().match(pattern).count(1000).build()
+                    ))) {
+                while (cursor.hasNext()) {
+                    keysToDelete.add(new String(cursor.next()));
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error scanning keys with pattern: " + pattern, e);
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error scanning keys", e);
         }
 
         if (!keysToDelete.isEmpty()) {
             redisTemplate.delete(keysToDelete);
         }
     }
+
     // Xóa key
     public void del(String key) {
         redisTemplate.delete(key);

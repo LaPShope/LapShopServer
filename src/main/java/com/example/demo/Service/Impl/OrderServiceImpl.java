@@ -9,6 +9,7 @@ import com.example.demo.Models.*;
 import com.example.demo.Repository.*;
 import com.example.demo.Service.OrderService;
 import com.example.demo.mapper.OrderMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Map;
@@ -24,31 +26,51 @@ import java.util.Map;
 @Service
 
 public class OrderServiceImpl implements OrderService {
+    private final RedisService redisService;
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository; // Repository để kiểm tra Customer tồn tại
     private final OrderDetailRepository orderDetailRepository;
     private final PaymentRepository paymentRepository;
 
-    public OrderServiceImpl(PaymentRepository paymentRepository,OrderRepository orderRepository, CustomerRepository customerRepository,OrderDetailRepository orderDetailRepository) {
+    public OrderServiceImpl(RedisService redisService, PaymentRepository paymentRepository,OrderRepository orderRepository, CustomerRepository customerRepository,OrderDetailRepository orderDetailRepository) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.orderDetailRepository=orderDetailRepository;
         this.paymentRepository=paymentRepository;
+        this.redisService = redisService;
     }
 
     public List<OrderResponse> getAllOrders() {
-        return orderRepository.findAll().stream()
+        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOder", new TypeReference<List<OrderResponse>>() {});
+        if(cachedOrderResponses != null && !cachedOrderResponses.isEmpty()){
+            return cachedOrderResponses;
+        }
+
+        List<OrderResponse> orderResponses = orderRepository.findAll().stream()
                 .map(OrderMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allOrder",orderResponses,600);
+
+        return orderResponses;
     }
 
 
     @Override
     public OrderResponse getOrderById(UUID id) {
+        OrderResponse cachedOrderResponse = redisService.getObject("order:" + id, new TypeReference<OrderResponse>() {});;
+        if (cachedOrderResponse != null){
+            return cachedOrderResponse;
+        }
+
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
-        return OrderMapper.convertToResponse(order);
+        OrderResponse orderResponse = OrderMapper.convertToResponse(order);
+
+        redisService.setObject("order:"+id,orderResponse,600);
+
+        return orderResponse;
     }
 
     @Transactional
@@ -67,7 +89,12 @@ public class OrderServiceImpl implements OrderService {
 
         Order orderExisting = orderRepository.save(order);
 
-        return OrderMapper.convertToResponse(orderExisting);
+        OrderResponse cachedOrderResponse = OrderMapper.convertToResponse(orderExisting);
+
+        redisService.deleteByPatterns(List.of("allOrder"));
+        redisService.setObject("oder:"+orderDTO.getId(),cachedOrderResponse,600);
+
+        return cachedOrderResponse;
     }
 
 
@@ -79,37 +106,42 @@ public class OrderServiceImpl implements OrderService {
 
         existingOrder.setStatus(orderDTO.getStatus());
         existingOrder.setDateCreate(orderDTO.getDateCreate());
-        //cap nhat danh sach orderdetail
-        if (orderDTO.getOrderDetails() == null || orderDTO.getOrderDetails().isEmpty()) {
-            existingOrder.getOrderDetailList().forEach(orderDetail -> orderDetail.setOrder(null));
-        } else {
-            List<OrderDetail> newOrderDetails = orderDTO.getOrderDetails().stream()
-                    .map(orderDetailId -> orderDetailRepository.findById(orderDetailId)
-                            .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found"))).toList();
-            //loai bo nhung orderdetail khong co trong danh sach dto
-            existingOrder.getOrderDetailList().removeIf(orderDetail -> !newOrderDetails.contains(orderDetail));
-            //them nhung orderdetail moi
-            newOrderDetails.forEach(orderDetail -> {
-                if (!existingOrder.getOrderDetailList().contains(orderDetail)) {
-                    orderDetail.setOrder(existingOrder);
-                    existingOrder.getOrderDetailList().add(orderDetail);
-                }
-            });
-        }
+//        //cap nhat danh sach orderdetail
+//        if (orderDTO.getOrderDetails() == null || orderDTO.getOrderDetails().isEmpty()) {
+//            existingOrder.getOrderDetailList().forEach(orderDetail -> orderDetail.setOrder(null));
+//        } else {
+//            List<OrderDetail> newOrderDetails = orderDTO.getOrderDetails().stream()
+//                    .map(orderDetailId -> orderDetailRepository.findById(orderDetailId)
+//                            .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found"))).toList();
+//            //loai bo nhung orderdetail khong co trong danh sach dto
+//            existingOrder.getOrderDetailList().removeIf(orderDetail -> !newOrderDetails.contains(orderDetail));
+//            //them nhung orderdetail moi
+//            newOrderDetails.forEach(orderDetail -> {
+//                if (!existingOrder.getOrderDetailList().contains(orderDetail)) {
+//                    orderDetail.setOrder(existingOrder);
+//                    existingOrder.getOrderDetailList().add(orderDetail);
+//                }
+//            });
+//        }
 
-        if (orderDTO.getPayments() == null || orderDTO.getPayments().isEmpty()) {
-            existingOrder.getPayment().setOrder(null);
-        } else {
-            Payment newPayments =  paymentRepository.findById(orderDTO.getCustomerId())
-                            .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
-
-            existingOrder.setPayment(newPayments);
-
-        }
+//        if (orderDTO.getPayments() == null || orderDTO.getPayments().isEmpty()) {
+//            existingOrder.getPayment().setOrder(null);
+//        } else {
+//            Payment newPayments =  paymentRepository.findById(orderDTO.getCustomerId())
+//                            .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+//
+//            existingOrder.setPayment(newPayments);
+//
+//        }
 
         Order order = orderRepository.save(existingOrder);
 
-        return OrderMapper.convertToResponse(order);
+        OrderResponse cachedorderResponse =  OrderMapper.convertToResponse(order);
+
+        redisService.deleteByPatterns(List.of("allOder","*der*"));
+        redisService.setObject("oder:"+id,cachedorderResponse,600);
+
+        return cachedorderResponse;
     }
 
     @Override
@@ -154,13 +186,20 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order updatedOrder = orderRepository.save(order);
-        return OrderMapper.convertToResponse(updatedOrder);
+        OrderResponse cachedorderResponse = OrderMapper.convertToResponse(updatedOrder);
+
+        redisService.deleteByPatterns(List.of("allOder","*der*"));
+        redisService.setObject("oder:"+id,cachedorderResponse,600);
+
+        return cachedorderResponse;
     }
 
     @Override
     public void deleteOrder(UUID id) {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
+
+        redisService.deleteByPatterns(List.of("allOder","*der*"));
 
         orderRepository.delete(existingOrder);
     }

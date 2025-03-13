@@ -10,15 +10,17 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface LaptopService {
-    LaptopDTO partialUpdateLaptop(UUID id, Map<String,Object> fieldsToUpdate);
+    LaptopResponse partialUpdateLaptop(UUID id, Map<String,Object> fieldsToUpdate);
 
-    List<LaptopDTO> getAllLaptops();
+    List<LaptopResponse> getAllLaptops();
 
-    LaptopDTO getLaptopById(UUID id);
+    LaptopResponse getLaptopById(UUID id);
 
-    LaptopDTO createLaptop(LaptopDTO laptopDTO);
+    LaptopResponse createLaptop(LaptopDTO laptopDTO);
 
-    LaptopDTO updateLaptop(UUID id, LaptopDTO updatedLaptop);
+    LaptopResponse updateLaptop(UUID id, LaptopDTO updatedLaptop);
+
+    List<LaptopResponse> searchLaptopsOnSale();
 
     void deleteLaptop(UUID id);
 

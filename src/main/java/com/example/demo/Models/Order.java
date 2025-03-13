@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +47,7 @@ public class Order {
                                             CascadeType.DETACH,
                                             CascadeType.REMOVE,
                                             CascadeType.MERGE,
-                                            CascadeType.REFRESH})
+                                            CascadeType.REFRESH},orphanRemoval = true)
     private Payment payment;
 
 }

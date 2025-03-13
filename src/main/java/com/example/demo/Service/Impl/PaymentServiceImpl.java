@@ -2,12 +2,14 @@ package com.example.demo.Service.Impl;
 
 import com.example.demo.Common.Enums;
 import com.example.demo.DTO.PaymentDTO;
+import com.example.demo.DTO.Response.PaymentResponse;
 import com.example.demo.DTO.SaleDTO;
 import com.example.demo.Models.*;
 import com.example.demo.Repository.*;
 import com.example.demo.Service.PaymentService;
 
 import com.example.demo.mapper.PaymentMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -22,13 +24,14 @@ import java.util.stream.Collectors;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
-
+    private final RedisService redisService;
     private final PaymentRepository paymentRepository;
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
     private final PaymentMethodRepository paymentMethodRepository;
 
     public PaymentServiceImpl(
+            RedisService redisService,
             PaymentRepository paymentRepository,
             CustomerRepository customerRepository,
             OrderRepository orderRepository,
@@ -38,25 +41,61 @@ public class PaymentServiceImpl implements PaymentService {
         this.customerRepository = customerRepository;
         this.orderRepository = orderRepository;
         this.paymentMethodRepository = paymentMethodRepository;
+        this.redisService = redisService;
     }
 
     @Override
-    public List<PaymentDTO> getAllPayments() {
-        return paymentRepository.findAll().stream()
-                .map(PaymentMapper::convertToDTO)
+    public List<PaymentResponse> getAllPaymentsByCustomerId(UUID id) {
+        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:"+id, new TypeReference<List<PaymentResponse>>() {});
+        if(cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()){
+            return cachedPaymentResponses;
+        }
+
+        List<PaymentResponse> paymentResponses = paymentRepository.findByCustomerId(id)
+                .stream()
+                .map(PaymentMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allPaymentByCustomerId:"+id,paymentResponses,600);
+
+        return paymentResponses;
     }
 
     @Override
-    public PaymentDTO getPaymentById(UUID id) {
+    public List<PaymentResponse> getAllPayments() {
+        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<List<PaymentResponse>>() {});
+        if(cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()){
+            return cachedPaymentResponses;
+        }
+
+         List<PaymentResponse> paymentResponses = paymentRepository.findAll().stream()
+                .map(PaymentMapper::convertToResponse)
+                .collect(Collectors.toList());
+
+        redisService.setObject("allPayment",paymentResponses,600);
+
+        return paymentResponses;
+    }
+
+    @Override
+    public PaymentResponse getPaymentById(UUID id) {
+        PaymentResponse cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<PaymentResponse>() {});
+        if(cachedPaymentResponses != null){
+            return cachedPaymentResponses;
+        }
+
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment with ID " + id + " not found!"));
 
-        return PaymentMapper.convertToDTO(payment);
+        PaymentResponse paymentResponse = PaymentMapper.convertToResponse(payment);
+
+        redisService.setObject("payment:"+id,paymentResponse,600);
+
+        return paymentResponse;
     }
 
     @Override
-    public PaymentDTO createPayment(PaymentDTO paymentDTO) {
+    public PaymentResponse createPayment(PaymentDTO paymentDTO) {
         Customer customer = customerRepository.findById(paymentDTO.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
@@ -77,11 +116,16 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment paymentExisting = paymentRepository.save(payment);
 
-        return PaymentMapper.convertToDTO(paymentExisting);
+        PaymentResponse cachedPayment = PaymentMapper.convertToResponse(paymentExisting);
+
+        redisService.deleteByPatterns(List.of("allPayment","allPaymentByCustomerId:"+paymentDTO.getCustomerId()));
+        redisService.setObject("payment:"+paymentDTO.getCustomerId(),cachedPayment,600);
+
+        return cachedPayment;
     }
 
     @Override
-    public PaymentDTO updatePayment(UUID id, PaymentDTO paymentDTO) {
+    public PaymentResponse updatePayment(UUID id, PaymentDTO paymentDTO) {
         Payment existingPayment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment not found!"));
 
@@ -104,11 +148,16 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = paymentRepository.save(existingPayment);
 
-        return PaymentMapper.convertToDTO(payment);
+        PaymentResponse cachedPaymentResponse = PaymentMapper.convertToResponse(payment);
+
+        redisService.deleteByPatterns(List.of("allPayment","payment:"+id,"allPaymentByCustomerId:+id"));
+        redisService.setObject("payment:"+id,cachedPaymentResponse,600);
+
+        return cachedPaymentResponse;
     }
 
     @Override
-    public PaymentDTO partialUpdatePayment(UUID id, Map<String, Object> fieldsToUpdate) {
+    public PaymentResponse partialUpdatePayment(UUID id, Map<String, Object> fieldsToUpdate) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment with ID " + id + " not found!"));
 
@@ -142,7 +191,12 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         Payment updatedPayment = paymentRepository.save(payment);
-        return PaymentMapper.convertToDTO(updatedPayment);
+        PaymentResponse cachedPaymentResponse = PaymentMapper.convertToResponse(updatedPayment);
+
+        redisService.deleteByPatterns(List.of("allPayment","payment:"+id,"allPaymentByCustomerId:+id"));
+        redisService.setObject("payment:"+id,cachedPaymentResponse,600);
+
+        return cachedPaymentResponse;
     }
 
 
@@ -150,6 +204,8 @@ public class PaymentServiceImpl implements PaymentService {
     public void deletePayment(UUID id) {
         Payment existingPayment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment not found!"));
+
+        redisService.deleteByPatterns(List.of("allPayment","payment:"+id,"allPaymentByCustomerId:+id"));
 
         paymentRepository.delete(existingPayment);
     }

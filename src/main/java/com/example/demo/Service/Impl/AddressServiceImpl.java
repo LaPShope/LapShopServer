@@ -68,7 +68,7 @@ public class AddressServiceImpl implements AddressService{
             .orElseThrow(() -> new EntityNotFoundException("Address not found"));
         AddressResponse addressResponse = AddressMapper.convertToResponse(address);
 
-        redisService.setObject("addressId:"+id,addressResponse,600);
+        redisService.setObject("address:"+id,addressResponse,600);
 
         return addressResponse;
     }
@@ -96,9 +96,9 @@ public class AddressServiceImpl implements AddressService{
 
         AddressResponse addressResponse = AddressMapper.convertToResponse(addressExisting);
 
-        redisService.deleteByPattern("*customer*");
+        redisService.deleteByPatterns(List.of("*ustomer:"+addressDTO.getCustomerId()+"*","allAddressCustomerId:"+addressDTO.getCustomerId()));
 
-        redisService.setObject("addressId:"+addressExisting.getId(),addressResponse,600);
+        redisService.setObject("address:"+addressExisting.getId(),addressResponse,600);
 
         return addressResponse;
     }
@@ -126,9 +126,9 @@ public class AddressServiceImpl implements AddressService{
 
         AddressResponse addressResponse = AddressMapper.convertToResponse(addressExisting);
 
-        redisService.deleteByPattern("*ustomer:"+idToUpdate+"*");
+        redisService.deleteByPatterns(List.of("*ustomer:"+updatedAddress.getCustomerId()+"*","*ddress:"+idToUpdate+"*"));
 
-        redisService.setObject("addressId:"+addressResponse.getId(), addressResponse,600);
+        redisService.setObject("address:"+addressResponse.getId(), addressResponse,600);
 
         return addressResponse;
     }
@@ -162,7 +162,7 @@ public class AddressServiceImpl implements AddressService{
 
         AddressResponse addressResponse = AddressMapper.convertToResponse(updatedAddress);
 
-        redisService.deleteByPattern("*ustomer:"+address.getCustomer().getId()+"*");
+        redisService.deleteByPatterns(List.of("*ustomer:"+address.getCustomer().getId()+"*","*ddress:"+id+"*"));
 
         redisService.setObject("addressId:"+id,addressResponse,600);
 
@@ -176,7 +176,7 @@ public class AddressServiceImpl implements AddressService{
         Address addressExisting = addressRepository.findById(id)
                         .orElseThrow(() -> new EntityNotFoundException("Address not found"));
 
-        redisService.deleteByPattern("*ustomer:"+addressExisting.getCustomer().getId()+"*");
+        redisService.deleteByPatterns(List.of("*ustomer:"+addressExisting.getCustomer().getId()+"*"));
 
         addressRepository.deleteById(id);
 

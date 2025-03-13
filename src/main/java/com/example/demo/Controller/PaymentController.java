@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.PaymentDTO;
+import com.example.demo.DTO.Response.PaymentResponse;
 import com.example.demo.DTO.SaleDTO;
 import com.example.demo.Service.PaymentService;
 import org.springframework.http.HttpStatus;
@@ -22,11 +23,21 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
+    @GetMapping("customer/{id}/payments")
+    public ResponseEntity<?> getAllPaymentsByCustomerId(@PathVariable UUID id) {
+
+        return ResponseEntity.ok(DataResponse.<List<PaymentResponse>>builder()
+                .success(true)
+                .message("Payment retrieved successfully")
+                .data(paymentService.getAllPaymentsByCustomerId(id))
+                .build());
+    }
+
     // 1. Get all payments
     @GetMapping
     public ResponseEntity<?> getAllPayments() {
 
-        return ResponseEntity.ok(DataResponse.<List<PaymentDTO>>builder()
+        return ResponseEntity.ok(DataResponse.<List<PaymentResponse>>builder()
                 .success(true)
                 .message("Payment retrieved successfully")
                 .data(paymentService.getAllPayments())
@@ -38,7 +49,7 @@ public class PaymentController {
     public ResponseEntity<?> getPaymentById(@PathVariable UUID id) {
 
 
-        return ResponseEntity.ok(DataResponse.<PaymentDTO>builder()
+        return ResponseEntity.ok(DataResponse.<PaymentResponse>builder()
                 .success(true)
                 .message("Payment retrieved successfully")
                 .data(paymentService.getPaymentById(id))
@@ -50,7 +61,7 @@ public class PaymentController {
     @PostMapping
     public ResponseEntity<?> createPayment(@RequestBody PaymentDTO paymentDTO) {
 
-        return ResponseEntity.ok(DataResponse.<PaymentDTO>builder()
+        return ResponseEntity.ok(DataResponse.<PaymentResponse>builder()
                 .success(true)
                 .message("Payment created successfully")
                 .data(paymentService.createPayment(paymentDTO))
@@ -61,7 +72,7 @@ public class PaymentController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePayment(@PathVariable UUID id, @RequestBody PaymentDTO paymentDTO) {
 
-        return ResponseEntity.ok(DataResponse.<PaymentDTO>builder()
+        return ResponseEntity.ok(DataResponse.<PaymentResponse>builder()
                 .success(true)
                 .message("Payment updated successfully")
                 .data(paymentService.updatePayment(id, paymentDTO))
@@ -71,7 +82,7 @@ public class PaymentController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdatePayment(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<PaymentDTO>builder()
+        return ResponseEntity.ok(DataResponse.<PaymentResponse>builder()
                 .success(true)
                 .message("Payment updated successfully")
                 .data(paymentService.partialUpdatePayment(id, fieldsToUpdate))

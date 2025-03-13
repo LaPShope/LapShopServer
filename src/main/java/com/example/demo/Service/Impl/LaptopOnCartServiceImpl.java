@@ -12,6 +12,7 @@ import com.example.demo.Repository.LaptopModelRepository;
 import com.example.demo.Repository.LaptopOnCartRepository;
 import com.example.demo.Service.LaptopOnCartService;
 import com.example.demo.mapper.LaptopOnCartMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -29,34 +30,56 @@ import java.util.stream.Collectors;
 @Transactional
 public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
+    private final RedisService redisService;
     private final LaptopOnCartRepository laptopOnCartRepository;
     private final CartRepository cartRepository;
     private final LaptopModelRepository laptopModelRepository;
 
     public LaptopOnCartServiceImpl(
+            RedisService redisService,
             LaptopOnCartRepository laptopOnCartRepository,
             CartRepository cartRepository,
             LaptopModelRepository laptopModelRepository) {
         this.laptopOnCartRepository = laptopOnCartRepository;
         this.cartRepository = cartRepository;
         this.laptopModelRepository = laptopModelRepository;
+        this.redisService = redisService;
     }
 
     // 1. Lấy tất cả LaptopOnCart
     @Override
     public List<LaptopOnCartResponse> getAllLaptopOnCarts() {
-        return laptopOnCartRepository.findAll().stream()
+        List<LaptopOnCartResponse> cachedLaptopOnCart = redisService.getObject("allLaptopOnCart", new TypeReference<List<LaptopOnCartResponse>>(){});
+
+        if(cachedLaptopOnCart != null && !cachedLaptopOnCart.isEmpty()){
+            return cachedLaptopOnCart;
+        }
+
+        List<LaptopOnCartResponse> laptopOnCartResponses = laptopOnCartRepository.findAll().stream()
                 .map(LaptopOnCartMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allLaptopOnCart",laptopOnCartResponses,600);
+
+        return laptopOnCartResponses;
     }
 
     // 2. Lấy LaptopOnCart theo ID
     @Override
     public LaptopOnCartResponse getLaptopOnCartById(UUID id) {
+        LaptopOnCartResponse cachedLaptopOnCart = redisService.getObject("allLaptopOnCart", new TypeReference<LaptopOnCartResponse>(){});
+
+        if(cachedLaptopOnCart != null){
+            return cachedLaptopOnCart;
+        }
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("LaptopOnCart with ID " + id + " not found!"));
 
-        return LaptopOnCartMapper.convertToResponse(laptopOnCart);
+        LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(laptopOnCart);
+
+        redisService.setObject("laptopOnCart:"+id,laptopOnCartResponse,600);
+
+        return  laptopOnCartResponse;
     }
 
     // 3. Tạo mới LaptopOnCart
@@ -75,12 +98,23 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
                 .build();
 
         LaptopOnCart laptopOnCartExisting = laptopOnCartRepository.save(laptopOnCart);
-        return LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
+
+        LaptopOnCartResponse cachedLaptopOnCart = LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
+
+        redisService.deleteByPatterns(List.of("*art:"+laptopOnCart.getCart().getId()+"*","allLaptopOnCart"));
+        redisService.setObject("laptopOnCartId:",cachedLaptopOnCart,600);
+
+        return cachedLaptopOnCart;
     }
 
     // 4. Cập nhật LaptopOnCart
     @Override
     public LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO) {
+        LaptopOnCartResponse cachLaptopOnCartResponse = redisService.getObject("laptopOnCart:" + id, new TypeReference<LaptopOnCartResponse>() {});
+        if(cachLaptopOnCartResponse != null){
+            return cachLaptopOnCartResponse;
+        }
+
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
 
@@ -96,11 +130,21 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         LaptopOnCart laptopOnCartExisting = laptopOnCartRepository.save(laptopOnCart);
 
-        return LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
+        LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
+
+        redisService.deleteByPatterns(List.of("*art:"+id+"*","allLaptopOnCart"));
+        redisService.setObject("laptopOnCart:"+id,laptopOnCartResponse,600);
+
+        return laptopOnCartResponse;
     }
 
     @Override
     public LaptopOnCartResponse partialUpdateLaptopOnCart(UUID id, Map<String, Object> fieldsToUpdate) {
+        LaptopOnCartResponse cachLaptopOnCartResponse = redisService.getObject("laptopOnCart:" + id, new TypeReference<LaptopOnCartResponse>() {});
+        if(cachLaptopOnCartResponse != null){
+            return cachLaptopOnCartResponse;
+        }
+
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
 
@@ -128,7 +172,12 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
         }
 
         LaptopOnCart updatedLaptopOnCart = laptopOnCartRepository.save(laptopOnCart);
-        return LaptopOnCartMapper.convertToResponse(updatedLaptopOnCart);
+        LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(updatedLaptopOnCart);
+
+        redisService.deleteByPatterns(List.of("*art:"+id+"*","allLaptopOnCart"));
+        redisService.setObject("laptopOnCart:"+id,laptopOnCartResponse,600);
+
+        return laptopOnCartResponse;
     }
 
     // 5. Xóa LaptopOnCart
@@ -136,6 +185,8 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
     public void deleteLaptopOnCart(UUID id) {
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
+
+        redisService.deleteByPatterns(List.of("*art:"+id+"*","allLaptopOnCart"));
 
         laptopOnCartRepository.delete(laptopOnCart);
     }
