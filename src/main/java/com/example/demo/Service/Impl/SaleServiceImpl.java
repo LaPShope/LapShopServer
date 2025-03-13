@@ -94,7 +94,7 @@ public class SaleServiceImpl implements SaleService {
 
         SaleResponse cachedSale = SaleMapper.convertToResponse(sale);
 
-        redisService.deleteByPatterns(List.of("allSale","*aptopModel*"));
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
         redisService.setObject("sale:"+cachedSale.getId(),cachedSale,600);
 
         return cachedSale;
@@ -124,7 +124,7 @@ public class SaleServiceImpl implements SaleService {
         Sale saleExisting = saleRepository.save(sale);
         SaleResponse cachedSale = SaleMapper.convertToResponse(saleExisting);
 
-        redisService.deleteByPatterns(List.of("allSale","*aptopModel*"));
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
         redisService.setObject("sale:id"+saleId,cachedSale,600);
 
         return cachedSale;
@@ -169,7 +169,7 @@ public class SaleServiceImpl implements SaleService {
         Sale updatedSale = saleRepository.save(sale);
         SaleResponse cachedSale = SaleMapper.convertToResponse(updatedSale);
 
-        redisService.deleteByPatterns(List.of("allSale","*aptopModel*"));
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
         redisService.setObject("sale:id"+id,cachedSale,600);
 
         return cachedSale;
@@ -185,7 +185,7 @@ public class SaleServiceImpl implements SaleService {
 
         sale.getLaptopModelList().forEach(laptopModel -> laptopModel.getSaleList().remove(sale));
 
-        redisService.deleteByPatterns(List.of("allSale","*aptopModel*"));
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
 
         saleRepository.delete(sale);
     }

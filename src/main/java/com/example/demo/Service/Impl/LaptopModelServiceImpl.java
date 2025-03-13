@@ -94,7 +94,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
         LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModelExisting);
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale"));
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","allLaptopOnSale"));
         redisService.setObject("laptopModel:"+laptopModelResponse.getId(),laptopModelResponse,600);
 
         return laptopModelResponse;
@@ -112,7 +112,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         LaptopModel laptopModel = laptopModelRepository.save(existingLaptopModel);
         LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModel);
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*"));
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
         redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
 
         return laptopModelResponse;
@@ -160,7 +160,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         LaptopModel updatedLaptopModel = laptopModelRepository.save(laptopModel);
         LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(updatedLaptopModel);
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*"));
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
         redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
 
         return laptopModelResponse;
@@ -173,7 +173,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found"));
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"orderDetail","*derDetail*"));
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"orderDetail","*derDetail*","allLaptopOnSale"));
 
         laptopModelRepository.delete(laptopModel);
     }

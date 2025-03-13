@@ -102,7 +102,7 @@ public class LaptopServiceImpl implements LaptopService {
 
         LaptopResponse laptopResponse = LaptopMapper.convertToResponse(laptopExisting);
 
-        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","*searchLaptop*"));
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","*searchLaptop*","allLaptopOnSale"));
         redisService.setObject("laptop:"+laptopResponse.getMacId(),laptopResponse,600);
 
         return laptopResponse;
@@ -132,7 +132,7 @@ public class LaptopServiceImpl implements LaptopService {
         Laptop laptopExisting = laptopRepository.save(existingLaptop);
         LaptopResponse laptopResponse = LaptopMapper.convertToResponse(laptopExisting);
 
-        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+laptopId,"*searchLaptop*"));
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+laptopId,"*searchLaptop*","allLaptopOnSale"));
         redisService.setObject("laptop:"+laptopId,laptopResponse,600);
 
         return laptopResponse;
@@ -179,7 +179,7 @@ public class LaptopServiceImpl implements LaptopService {
         Laptop updatedLaptop = laptopRepository.save(laptop);
         LaptopResponse laptopResponse = LaptopMapper.convertToResponse(updatedLaptop);
 
-        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+id,"*searchLaptop*"));
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+id,"*searchLaptop*","allLaptopOnSale"));
         redisService.setObject("laptop:"+id,laptopResponse,600);
 
         return laptopResponse;
@@ -195,7 +195,7 @@ public class LaptopServiceImpl implements LaptopService {
 
 //        LaptopModel laptopModel = laptop.getLaptopModel();
 //        laptopModel.removeLaptop(laptop);
-        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+id,"*searchLaptop*"));
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+id,"*searchLaptop*","allLaptopOnSale"));
 
         laptopRepository.deleteById(id);
     }
@@ -227,10 +227,17 @@ public class LaptopServiceImpl implements LaptopService {
 
 
     public List<LaptopResponse> searchLaptopsOnSale(){
+        List<LaptopResponse> cachedLaptopResponses = redisService.getObject("allLaptopOnSale", new TypeReference<List<LaptopResponse>>() {});;;
+        if(cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()){
+            return cachedLaptopResponses;
+        }
+
         List<LaptopResponse> laptopsOnSale = laptopRepository.findLaptopsOnSale(new Date())
                 .stream()
                 .map(LaptopMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allLaptopOnSale",cachedLaptopResponses,600);
 
         return laptopsOnSale;
     }
