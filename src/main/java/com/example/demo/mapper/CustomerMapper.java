@@ -1,5 +1,6 @@
 package com.example.demo.mapper;
 
+import com.example.demo.DTO.AccountDTO;
 import com.example.demo.DTO.CommentDTO;
 import com.example.demo.DTO.CustomerDTO;
 import com.example.demo.DTO.Response.CustomerResponse;
@@ -16,14 +17,7 @@ public class CustomerMapper {
                 .avatar(customer.getAvatar())
                 .gender(customer.getGender())
                 .bornDate(customer.getBornDate())
-//                .addressIds(customer.getAddressList().stream()
-//                        .map(Address::getId).collect(Collectors.toList()))
-//                .paymentIds(customer.getPaymentList().stream()
-//                        .map(Payment::getId).collect(Collectors.toList()))
-//                .orderIds(customer.getOderList().stream()
-//                        .map(Order::getId).collect(Collectors.toList()))
-//                .cartIds(customer.getCartList().stream()
-//                        .map(Cart::getId).collect(Collectors.toList()))
+//                .account(AccountMapper.convertToDTO(customer.getCustomerId()))
                 .build();
     }
 
@@ -34,6 +28,7 @@ public class CustomerMapper {
                 .avatar(customer.getAvatar())
                 .gender(customer.getGender())
                 .bornDate(customer.getBornDate())
+                .account(AccountMapper.convertToDTO(customer.getCustomerId()))
                 .addressList(customer.getAddressList() == null ? Collections.emptyList() :
                         customer.getAddressList().stream()
                         .map(AddressMapper::convertToDTO).collect(Collectors.toList()))

@@ -1,9 +1,6 @@
 package com.example.demo.DTO.Response;
 
-import com.example.demo.DTO.AddressDTO;
-import com.example.demo.DTO.CartDTO;
-import com.example.demo.DTO.OrderDTO;
-import com.example.demo.DTO.PaymentDTO;
+import com.example.demo.DTO.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +27,8 @@ public class CustomerResponse {
     private String phone;
 
     private String avatar;
+
+    private AccountDTO account;
 
     @JsonProperty("address_list")
     private List<AddressDTO> addressList;

@@ -13,6 +13,7 @@ import com.example.demo.Repository.SaleRepository;
 import com.example.demo.Service.SaleService;
 
 import com.example.demo.mapper.SaleMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
@@ -25,32 +26,49 @@ import java.util.stream.Collectors;
 
 @Service
 public class SaleServiceImpl implements SaleService {
-
+    private final RedisService redisService;
     private final SaleRepository saleRepository;
     private final LaptopModelRepository laptopModelRepository;
 
-    public SaleServiceImpl(SaleRepository saleRepository, LaptopModelRepository laptopModelRepository) {
+    public SaleServiceImpl(RedisService redisService, SaleRepository saleRepository, LaptopModelRepository laptopModelRepository) {
         this.saleRepository = saleRepository;
         this.laptopModelRepository = laptopModelRepository;
+        this.redisService = redisService;
     }
 
     //Lấy danh sách tất cả Sale
     @Transactional
     @Override
     public List<SaleResponse> getAllSales() {
-        return saleRepository.findAll().stream()
+        List<SaleResponse> cachedSales = redisService.getObject("allSale", new TypeReference<List<SaleResponse>>() {});
+        if(cachedSales != null && !cachedSales.isEmpty()){
+            return cachedSales;
+        }
+
+        List<SaleResponse> saleResponses = saleRepository.findAll().stream()
                 .map(SaleMapper::convertToResponse)
                 .collect(Collectors.toList());
 
+        redisService.setObject("allSale",saleResponses,600);
+
+        return saleResponses;
     }
 
     //Lấy Sale theo ID
     @Transactional
     @Override
     public SaleResponse getSaleById(UUID id) {
+        SaleResponse cachedSale = redisService.getObject("allSale", new TypeReference<SaleResponse>() {});
+        if(cachedSale != null){
+            return cachedSale;
+        }
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sale not found with ID: " + id));
-        return SaleMapper.convertToResponse(sale);
+        SaleResponse saleResponse = SaleMapper.convertToResponse(sale);
+
+        redisService.setObject("sale:"+id,saleResponse,600);
+
+        return saleResponse;
     }
 
     //Tạo mới một Sale
@@ -74,7 +92,12 @@ public class SaleServiceImpl implements SaleService {
         }
         Sale saleExisting = saleRepository.save(sale);
 
-        return SaleMapper.convertToResponse(sale);
+        SaleResponse cachedSale = SaleMapper.convertToResponse(sale);
+
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
+        redisService.setObject("sale:"+cachedSale.getId(),cachedSale,600);
+
+        return cachedSale;
     }
 
     //cap nhat sale
@@ -99,7 +122,12 @@ public class SaleServiceImpl implements SaleService {
         }
 
         Sale saleExisting = saleRepository.save(sale);
-        return SaleMapper.convertToResponse(saleExisting);
+        SaleResponse cachedSale = SaleMapper.convertToResponse(saleExisting);
+
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
+        redisService.setObject("sale:id"+saleId,cachedSale,600);
+
+        return cachedSale;
     }
 
     @Transactional
@@ -139,7 +167,12 @@ public class SaleServiceImpl implements SaleService {
         }
 
         Sale updatedSale = saleRepository.save(sale);
-        return SaleMapper.convertToResponse(updatedSale);
+        SaleResponse cachedSale = SaleMapper.convertToResponse(updatedSale);
+
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
+        redisService.setObject("sale:id"+id,cachedSale,600);
+
+        return cachedSale;
     }
 
 
@@ -151,6 +184,8 @@ public class SaleServiceImpl implements SaleService {
                 .orElseThrow(() -> new EntityNotFoundException("Sale not found"));
 
         sale.getLaptopModelList().forEach(laptopModel -> laptopModel.getSaleList().remove(sale));
+
+        redisService.deleteByPatterns(List.of("allSale","*aptopModel*","allLaptopOnSale"));
 
         saleRepository.delete(sale);
     }

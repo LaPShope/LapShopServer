@@ -25,8 +25,8 @@ public class LaptopController {
 
     // 1. Lấy tất cả Laptop
     @GetMapping
-    public ResponseEntity<DataResponse<List<LaptopDTO>>> getAllLaptops() {
-        return ResponseEntity.ok(DataResponse.<List<LaptopDTO>>builder()
+    public ResponseEntity<DataResponse<List<LaptopResponse>>> getAllLaptops() {
+        return ResponseEntity.ok(DataResponse.<List<LaptopResponse>>builder()
                 .success(true)
                 .message("Laptop retrieved successfully")
                 .data(laptopService.getAllLaptops())
@@ -36,7 +36,7 @@ public class LaptopController {
     // 2. Lấy Laptop chi tiết theo ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getLaptopById(@PathVariable UUID id) {
-        return ResponseEntity.ok(DataResponse.<LaptopDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopResponse>builder()
                 .success(true)
                 .message("Laptop retrieved successfully")
                 .data(laptopService.getLaptopById(id))
@@ -47,7 +47,7 @@ public class LaptopController {
     @PostMapping
     public ResponseEntity<?> createLaptop(@RequestBody LaptopDTO laptopDTO) {
             ;
-        return ResponseEntity.ok(DataResponse.<LaptopDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopResponse>builder()
                 .success(true)
                 .message("Laptop created successfully")
                 .data(laptopService.createLaptop(laptopDTO))
@@ -58,7 +58,7 @@ public class LaptopController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateLaptop(@PathVariable UUID id, @RequestBody LaptopDTO laptopDTO) {
 
-        return ResponseEntity.ok(DataResponse.<LaptopDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopResponse>builder()
                 .success(true)
                 .message("Laptop updated successfully")
                 .data(laptopService.updateLaptop(id,laptopDTO))
@@ -67,7 +67,7 @@ public class LaptopController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateLaptop(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<LaptopDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopResponse>builder()
                 .success(true)
                 .message("Laptop updated successfully")
                 .data(laptopService.partialUpdateLaptop(id, fieldsToUpdate))
@@ -90,6 +90,15 @@ public class LaptopController {
                 .success(true)
                 .message("Laptops found")
                 .data(laptopService.searchLaptops(filters))
+                .build());
+    }
+
+    @GetMapping("/search/on-sale")
+    public ResponseEntity<DataResponse<List<LaptopResponse>>> searchLaptopsOnSale() {
+        return ResponseEntity.ok(DataResponse.<List<LaptopResponse>>builder()
+                .success(true)
+                .message("Laptops found")
+                .data(laptopService.searchLaptopsOnSale())
                 .build());
     }
 

@@ -14,13 +14,13 @@ import com.example.demo.Repository.AccountRepository;
 import com.example.demo.Repository.ChatRepository;
 import com.example.demo.Service.ChatService;
 import com.example.demo.mapper.ChatMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,16 +29,23 @@ import java.util.stream.Collectors;
 public class ChatServiceImpl implements ChatService {
     private final ChatRepository chatRepository;
     private final AccountRepository accountRepository;
+    private final  RedisService redisService;
 
-    public ChatServiceImpl(ChatRepository chatRepository, AccountRepository accountRepository  ) {
+    public ChatServiceImpl(RedisService redisService, ChatRepository chatRepository, AccountRepository accountRepository  ) {
         this.chatRepository = chatRepository;
         this.accountRepository = accountRepository;
-
+        this.redisService = redisService;
     }
 
     @Transactional
     @Override
     public List<ChatResponse> getAllChatsByAccountId(UUID accountId) {
+
+        List<ChatResponse> cachedMessages = redisService.getChatList("allChatAccountId:"+accountId);
+        if (!cachedMessages.isEmpty()) {
+            return cachedMessages;
+        }
+
         Account account = accountRepository.findById(accountId).orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
         List<ChatResponse> chatResponsesList = chatRepository.findBySenderId(account).stream()
@@ -49,15 +56,27 @@ public class ChatServiceImpl implements ChatService {
                 .map(ChatMapper::convertToResponse)
                 .forEach(chatResponsesList::add);
 
+        redisService.saveChatList("allChatAccountId:"+accountId, chatResponsesList, 1000);
+
         return chatResponsesList;
     }
 
     @Transactional
     @Override
     public ChatResponse getChatById(UUID id) {
+        ChatResponse cachedChat = redisService.getObject("chat:", new TypeReference<ChatResponse>() {});
+        if (cachedChat != null) {
+            return cachedChat;
+        }
+
         Chat chat = chatRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Chat not found with ID: " + id));
-        return ChatMapper.convertToResponse(chat);
+
+        ChatResponse chatResponse = ChatMapper.convertToResponse(chat);
+
+        redisService.setObject("chat:"+id, chatResponse, 600); // 600 giây = 10 phút
+
+        return chatResponse;
     }
 
     @Transactional
@@ -72,7 +91,7 @@ public class ChatServiceImpl implements ChatService {
                 .receiverId(receiver)
                 .senderId(sender)
                 .message(chatDTO.getMessage())
-                .createAt(new Date())
+                .createAt(new Date() )
                 .build();
 
         Chat chatExisting = chatRepository.save(chat);
@@ -83,7 +102,18 @@ public class ChatServiceImpl implements ChatService {
         accountRepository.save(sender);
         accountRepository.save(receiver);
 
-        return ChatMapper.convertToResponse(chatExisting);
+        ChatResponse chatResponse = ChatMapper.convertToResponse(chatExisting);
+
+        List<ChatResponse> senderChatList = redisService.getChatList("allChatAccountId:"+chatDTO.getSenderId());
+        List<ChatResponse> receiverChatList = redisService.getChatList("allCChatAccountId:"+chatDTO.getReceiverId());
+
+        senderChatList.add(chatResponse);
+        receiverChatList.add(chatResponse);
+
+        redisService.saveChatList("allChatAccountId:"+chatDTO.getSenderId(), senderChatList, 600);
+        redisService.saveChatList("allCChatAccountId:"+chatDTO.getReceiverId(), receiverChatList, 600);
+
+        return chatResponse;
     }
 
     @Transactional
@@ -103,9 +133,15 @@ public class ChatServiceImpl implements ChatService {
 
         chatRepository.save(chat);
 
-        return ChatMapper.convertToResponse(chat);
+        ChatResponse cachedChat = ChatMapper.convertToResponse(chat);
+
+        updateChatInRedis("allChatAccountId:"+chatDTO.getReceiverId(), chatId, cachedChat);
+        updateChatInRedis("allChatAccountId:"+chatDTO.getSenderId(), chatId, cachedChat);
+
+        return cachedChat;
     }
 
+    @Transactional
     @Override
     public ChatResponse partialUpdateChat(UUID id, Map<String, Object> fieldsToUpdate) {
         Chat chat = chatRepository.findById(id)
@@ -141,7 +177,13 @@ public class ChatServiceImpl implements ChatService {
         }
 
         Chat updatedChat = chatRepository.save(chat);
-        return ChatMapper.convertToResponse(updatedChat);
+
+        ChatResponse cachedChat = ChatMapper.convertToResponse(updatedChat);
+
+        updateChatInRedis("allChatAccountId:" + chat.getReceiverId().getId(), id, cachedChat);
+        updateChatInRedis("allChatAccountId:" + chat.getSenderId().getId(), id, cachedChat);
+
+        return cachedChat;
     }
 
     @Transactional
@@ -156,7 +198,25 @@ public class ChatServiceImpl implements ChatService {
         sender.getChatSend().remove(chat);
         receiver.getChatReceive().remove(chat);
 
+        redisService.deleteByPatterns(List.of("allChatAccount:"+chat.getSenderId().getId(),"allChatAccount:"+chat.getReceiverId().getId()));
+
         chatRepository.delete(chat);
+    }
+
+    private void updateChatInRedis(String redisKey, UUID chatId, ChatResponse updatedChatResponse) {
+        List<ChatResponse> chatList = redisService.getChatList(redisKey);
+
+        if (chatList == null || chatList.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < chatList.size(); i++) {
+            if (chatList.get(i).getId().equals(chatId)) {
+                chatList.set(i, updatedChatResponse); // Cập nhật tin nhắn
+                redisService.saveChatList(redisKey, chatList, 20); // Lưu lại vào Redis
+                return;
+            }
+        }
     }
 
 

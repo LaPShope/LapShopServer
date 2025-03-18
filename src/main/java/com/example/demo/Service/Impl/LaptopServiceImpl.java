@@ -14,6 +14,7 @@ import com.example.demo.Repository.LaptopModelRepository;
 import com.example.demo.Service.LaptopService;
 
 import com.example.demo.mapper.LaptopMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.*;
 import jakarta.transaction.Transactional;
 
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,42 +31,58 @@ import java.util.stream.Collectors;
 
 @Service
 public class LaptopServiceImpl implements LaptopService {
-
-    @PersistenceContext
-    private EntityManager entityManager;
-
+    private final RedisService redisService;
     private final LaptopQueryRepository laptopQueryRepository;
     private final LaptopRepository laptopRepository;
     private final LaptopModelRepository laptopModelRepository;
 
-    public LaptopServiceImpl(LaptopQueryRepository laptopQueryRepository, LaptopRepository laptopRepository, LaptopModelRepository laptopModelRepository) {
+    public LaptopServiceImpl( RedisService redisService, LaptopQueryRepository laptopQueryRepository, LaptopRepository laptopRepository, LaptopModelRepository laptopModelRepository) {
         this.laptopRepository = laptopRepository;
         this.laptopModelRepository = laptopModelRepository;
         this.laptopQueryRepository = laptopQueryRepository;
+        this.redisService = redisService;
     }
 
     // **1. Lấy danh sách tất cả Laptop**
     @Transactional
     @Override
-    public List<LaptopDTO> getAllLaptops() {
-        return laptopRepository.findAll().stream()
-                .map(LaptopMapper::convertToDTO)
+    public List<LaptopResponse> getAllLaptops() {
+        List<LaptopResponse> cachedLaptopResponses = redisService.getObject("allLaptop", new TypeReference<List<LaptopResponse>>() {});
+        if(cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()){
+            return cachedLaptopResponses;
+        }
+
+        List<LaptopResponse> laptopResponses = laptopRepository.findAll().stream()
+                .map(LaptopMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allLaptop",laptopResponses,600);
+
+        return laptopResponses;
     }
 
     // **2. Lấy Laptop chi tiết theo ID**
     @Transactional
     @Override
-    public LaptopDTO getLaptopById(UUID id) {
+    public LaptopResponse getLaptopById(UUID id) {
+        LaptopResponse cachedLaptopResponses = redisService.getObject("allLaptop", new TypeReference<LaptopResponse>() {});
+        if(cachedLaptopResponses != null){
+            return cachedLaptopResponses;
+        }
+
         Laptop laptop = laptopRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Laptop not found!"));
-        return LaptopMapper.convertToDTO(laptop);
+        LaptopResponse laptopResponse = LaptopMapper.convertToResponse(laptop);
+
+        redisService.setObject("laptop:"+id,laptopResponse,600);
+
+        return laptopResponse;
     }
 
     // **3. Tạo mới Laptop**
     @Transactional
     @Override
-    public LaptopDTO createLaptop(LaptopDTO laptopDTO) {
+    public LaptopResponse createLaptop(LaptopDTO laptopDTO) {
         Laptop laptop = Laptop.builder()
                 .MFG(laptopDTO.getMFG())
                 .status(laptopDTO.getStatus())
@@ -82,13 +100,18 @@ public class LaptopServiceImpl implements LaptopService {
 
         Laptop laptopExisting = laptopRepository.save(laptop);
 
-        return LaptopMapper.convertToDTO(laptopExisting);
+        LaptopResponse laptopResponse = LaptopMapper.convertToResponse(laptopExisting);
+
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","*searchLaptop*","allLaptopOnSale"));
+        redisService.setObject("laptop:"+laptopResponse.getMacId(),laptopResponse,600);
+
+        return laptopResponse;
     }
 
     // **4. Cập nhật Laptop**
     @Override
     @Transactional
-    public LaptopDTO updateLaptop(UUID laptopId, LaptopDTO updatedLaptopDTO) {
+    public LaptopResponse updateLaptop(UUID laptopId, LaptopDTO updatedLaptopDTO) {
 
         Laptop existingLaptop = laptopRepository.findById(laptopId)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop not found"));
@@ -107,11 +130,16 @@ public class LaptopServiceImpl implements LaptopService {
         existingLaptop.setStatus(updatedLaptopDTO.getStatus());
 
         Laptop laptopExisting = laptopRepository.save(existingLaptop);
-        return LaptopMapper.convertToDTO(laptopExisting);
+        LaptopResponse laptopResponse = LaptopMapper.convertToResponse(laptopExisting);
+
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+laptopId,"*searchLaptop*","allLaptopOnSale"));
+        redisService.setObject("laptop:"+laptopId,laptopResponse,600);
+
+        return laptopResponse;
     }
 
     @Override
-    public LaptopDTO partialUpdateLaptop(UUID id, Map<String, Object> fieldsToUpdate) {
+    public LaptopResponse partialUpdateLaptop(UUID id, Map<String, Object> fieldsToUpdate) {
         Laptop laptop = laptopRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop with ID " + id + " not found!"));
 
@@ -149,8 +177,14 @@ public class LaptopServiceImpl implements LaptopService {
         }
 
         Laptop updatedLaptop = laptopRepository.save(laptop);
-        return LaptopMapper.convertToDTO(updatedLaptop);
+        LaptopResponse laptopResponse = LaptopMapper.convertToResponse(updatedLaptop);
+
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+id,"*searchLaptop*","allLaptopOnSale"));
+        redisService.setObject("laptop:"+id,laptopResponse,600);
+
+        return laptopResponse;
     }
+
 
     // **5. Xóa Laptop theo ID**
     @Transactional
@@ -161,16 +195,52 @@ public class LaptopServiceImpl implements LaptopService {
 
 //        LaptopModel laptopModel = laptop.getLaptopModel();
 //        laptopModel.removeLaptop(laptop);
+        redisService.deleteByPatterns(List.of("allLaptop","allLaptopModel","laptop:"+id,"*searchLaptop*","allLaptopOnSale"));
 
         laptopRepository.deleteById(id);
     }
 
+    @Transactional
+    @Override
     public List<LaptopResponse> searchLaptops(Map<String, Object> filters) {
-        return laptopQueryRepository.searchLaptopsByLaptopModelAndLaptop(filters);
+        String cacheKey = "searchLaptop";
 
+        if (!filters.isEmpty()) {
+            cacheKey += filters.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(entry -> entry.getKey() + ":" + entry.getValue())
+                    .collect(Collectors.joining("|"));
+        }
+
+        List<LaptopResponse> cachedLaptopResponses = redisService.getObject(cacheKey, new TypeReference<List<LaptopResponse>>() {});
+
+        if(cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()){
+            return cachedLaptopResponses;
+        }
+
+        List<LaptopResponse> laptopResponses = laptopQueryRepository.searchLaptopsByLaptopModelAndLaptop(filters);
+
+        redisService.setObject(cacheKey,laptopResponses,600);
+
+        return laptopResponses;
     }
 
 
+    public List<LaptopResponse> searchLaptopsOnSale(){
+        List<LaptopResponse> cachedLaptopResponses = redisService.getObject("allLaptopOnSale", new TypeReference<List<LaptopResponse>>() {});;;
+        if(cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()){
+            return cachedLaptopResponses;
+        }
+
+        List<LaptopResponse> laptopsOnSale = laptopRepository.findLaptopsOnSale(new Date())
+                .stream()
+                .map(LaptopMapper::convertToResponse)
+                .collect(Collectors.toList());
+
+        redisService.setObject("allLaptopOnSale",cachedLaptopResponses,600);
+
+        return laptopsOnSale;
+    }
 
 
 

@@ -11,6 +11,7 @@ import com.example.demo.Repository.PaymentMethodRepository;
 import com.example.demo.Service.PaymentMethodService;
 
 import com.example.demo.mapper.PaymentMethodMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,18 +29,24 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class PaymentMethodServiceImpl implements PaymentMethodService {
-
+    private final RedisService redisService;
     private final PaymentMethodRepository paymentMethodRepository;
 
-    public PaymentMethodServiceImpl(PaymentMethodRepository paymentMethodRepository) {
+    public PaymentMethodServiceImpl(RedisService redisService, PaymentMethodRepository paymentMethodRepository) {
         this.paymentMethodRepository = paymentMethodRepository;
+        this.redisService = redisService;
     }
 
 
     // Lấy danh sách tất cả PaymentMethod
     @Override
     public List<PaymentMethodDTO> getAllPaymentMethods() {
-        return paymentMethodRepository.findAll().stream()
+        List<PaymentMethodDTO> cachedPaymentMethods = redisService.getObject("allPaymentMethod", new TypeReference<List<PaymentMethodDTO>>() {});
+        if(cachedPaymentMethods != null && !cachedPaymentMethods.isEmpty()){
+            return cachedPaymentMethods;
+        }
+
+        List<PaymentMethodDTO> paymentMethodDTOs = paymentMethodRepository.findAll().stream()
                 .map(paymentMethod -> {
 
                     Map<String, Object> dataMap = paymentMethod.getData();
@@ -51,21 +58,34 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
                             .build();
                 })
                 .collect(Collectors.toList());
+
+        redisService.setObject("allPaymentMethod",paymentMethodDTOs,600);
+
+        return paymentMethodDTOs;
     }
 
     // Lấy chi tiết PaymentMethod theo ID
     @Override
     public PaymentMethodDTO getPaymentMethodById(UUID id) {
+        PaymentMethodDTO cachedPaymentMethods = redisService.getObject("allPaymentMethod", new TypeReference<PaymentMethodDTO>() {});
+        if(cachedPaymentMethods != null){
+            return cachedPaymentMethods;
+        }
+
         PaymentMethod paymentMethod = paymentMethodRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("PaymentMethod with ID " + id + " not found!"));
 
         Map<String, Object> dataMap = paymentMethod.getData();
 
-        return PaymentMethodDTO.builder()
+        PaymentMethodDTO paymentMethodDTO = PaymentMethodDTO.builder()
                 .id(paymentMethod.getId())
                 .data(dataMap)
                 .type(paymentMethod.getType())
                 .build();
+
+        redisService.setObject("paymentMethod:"+id,paymentMethodDTO,600);
+
+        return paymentMethodDTO;
     }
 
 
@@ -81,7 +101,12 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
 
         PaymentMethod paymentMethodExisting = paymentMethodRepository.save(paymentMethod);
 
-        return PaymentMethodMapper.convertToDTO(paymentMethodExisting);
+        PaymentMethodDTO cachedPaymentMethod = PaymentMethodMapper.convertToDTO(paymentMethodExisting);
+
+        redisService.deleteByPatterns(List.of("allPaymentMethod"));
+        redisService.setObject("paymentMethod:"+cachedPaymentMethod.getId(),cachedPaymentMethod,600);
+
+        return cachedPaymentMethod;
     }
 
     // Cập nhật PaymentMethod
@@ -96,7 +121,12 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         existingPaymentMethod.setType(Enums.PaymentType.valueOf(paymentMethodDTO.getType().name()));
 
         PaymentMethod paymentMethodExisting = paymentMethodRepository.save(existingPaymentMethod);
-        return PaymentMethodMapper.convertToDTO(paymentMethodExisting);
+        PaymentMethodDTO cachedPaymentMethod = PaymentMethodMapper.convertToDTO(paymentMethodExisting);
+
+        redisService.deleteByPatterns(List.of("allPaymentMethod","paymentMethod:"+id));
+        redisService.setObject("paymentMethod:"+paymentMethodDTO.getId(),cachedPaymentMethod,600);
+
+        return cachedPaymentMethod;
     }
 
     @Override
@@ -134,7 +164,12 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         }
 
         PaymentMethod updatedPaymentMethod = paymentMethodRepository.save(paymentMethod);
-        return PaymentMethodMapper.convertToDTO(updatedPaymentMethod);
+        PaymentMethodDTO cachedPaymentMethod = PaymentMethodMapper.convertToDTO(updatedPaymentMethod);
+
+        redisService.deleteByPatterns(List.of("allPaymentMethod","paymentMethod:"+id));
+        redisService.setObject("paymentMethod:"+id,cachedPaymentMethod,600);
+
+        return cachedPaymentMethod;
     }
 
 
@@ -144,6 +179,9 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         PaymentMethod paymentMethod = paymentMethodRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("PaymentMethod with ID " + id + " not found!"));
 //        paymentMethod.getPaymentList().clear();
+
+        redisService.deleteByPatterns(List.of("allPaymentMethod","paymentMethod:"+id));
+
         paymentMethodRepository.delete(paymentMethod);
     }
 

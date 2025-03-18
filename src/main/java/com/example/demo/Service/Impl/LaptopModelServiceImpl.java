@@ -4,10 +4,13 @@ import com.example.demo.Common.Enums;
 import com.example.demo.DTO.ImageDTO;
 import com.example.demo.DTO.LaptopModelDTO;
 import com.example.demo.DTO.Response.LaptopModelResponse;
+import com.example.demo.DTO.Response.LaptopResponse;
 import com.example.demo.Models.*;
 import com.example.demo.Repository.*;
 import com.example.demo.Service.LaptopModelService;
 import com.example.demo.mapper.LaptopModelMapper;
+import com.example.demo.mapper.LaptopOnCartMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.EnumType;
@@ -27,41 +30,49 @@ import java.util.stream.Collectors;
 public class LaptopModelServiceImpl implements LaptopModelService {
 
     private final LaptopModelRepository laptopModelRepository;
-    private final LaptopRepository laptopRepository;
-    private final ImageRepository imageRepository;
-    private final CommentRepository commentRepository;
-    private final LaptopOnCartRepository laptopOnCartRepository;
-    private final OrderDetailRepository orderDetailRepository;
-    private final SaleRepository saleRepository;
+    private final RedisService redisService;
 
-    public LaptopModelServiceImpl(LaptopModelRepository laptopModelRepository,SaleRepository saleRepository,LaptopRepository laptopRepository, ImageRepository imageRepository, CommentRepository commentRepository, LaptopOnCartRepository laptopOnCartRepository, OrderDetailRepository orderDetailRepository) {
+    public LaptopModelServiceImpl(RedisService redisService, LaptopModelRepository laptopModelRepository) {
         this.laptopModelRepository = laptopModelRepository;
-        this.laptopRepository = laptopRepository;
-        this.imageRepository = imageRepository;
-        this.commentRepository = commentRepository;
-        this.laptopOnCartRepository = laptopOnCartRepository;
-        this.orderDetailRepository = orderDetailRepository;
-        this.saleRepository =saleRepository;
+        this.redisService = redisService;
     }
 
     // 1. Lấy tất cả LaptopModel
     @Transactional
     @Override
     public List<LaptopModelResponse> getAllLaptopModels() {
-        return laptopModelRepository.findAll().stream()
+        List<LaptopModelResponse> cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<List<LaptopModelResponse>>() {});
+        if(cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()){
+            return cachedLaptopResponses;
+        }
+
+        List<LaptopModelResponse> laptopModelResponses = laptopModelRepository.findAll().stream()
                 .map(LaptopModelMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allLaptopModel",laptopModelResponses,600);
+
+        return laptopModelResponses;
     }
 
     // 2. Lấy LaptopModel theo ID
     @Transactional
     @Override
     public LaptopModelResponse getLaptopModelById(UUID id) {
+        LaptopModelResponse cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<LaptopModelResponse>() {});
+        if(cachedLaptopResponses != null){
+            return cachedLaptopResponses;
+        }
+
         // Tìm LaptopModel theo ID, nếu không tìm thấy thì ném ngoại lệ
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model with ID " + id + " not found"));
 
-        return LaptopModelMapper.convertToResponse(laptopModel);
+        LaptopModelResponse laptopResponse = LaptopModelMapper.convertToResponse(laptopModel);
+
+        redisService.setObject("laptopModel",laptopResponse,600);
+
+        return laptopResponse;
     }
     @Transactional
     @Override
@@ -81,7 +92,12 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
         LaptopModel laptopModelExisting = laptopModelRepository.save(laptopModel);
 
-        return LaptopModelMapper.convertToResponse(laptopModelExisting);
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModelExisting);
+
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","allLaptopOnSale"));
+        redisService.setObject("laptopModel:"+laptopModelResponse.getId(),laptopModelResponse,600);
+
+        return laptopModelResponse;
     }
 
     // 4. Cập nhật LaptopModel
@@ -94,7 +110,12 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         BeanUtils.copyProperties(laptopModelDTO, existingLaptopModel, "id");
 
         LaptopModel laptopModel = laptopModelRepository.save(existingLaptopModel);
-        return LaptopModelMapper.convertToResponse(laptopModel);
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModel);
+
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
+        redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
+
+        return laptopModelResponse;
     }
 
     @Override
@@ -137,7 +158,12 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         }
 
         LaptopModel updatedLaptopModel = laptopModelRepository.save(laptopModel);
-        return LaptopModelMapper.convertToResponse(updatedLaptopModel);
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(updatedLaptopModel);
+
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
+        redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
+
+        return laptopModelResponse;
     }
 
     // 5. Xóa LaptopModel
@@ -146,6 +172,8 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     public void deleteLaptopModel(UUID id) {
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found"));
+
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"orderDetail","*derDetail*","allLaptopOnSale"));
 
         laptopModelRepository.delete(laptopModel);
     }

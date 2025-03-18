@@ -4,6 +4,7 @@ import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.AddressDTO;
 import com.example.demo.DTO.CustomerDTO;
 import com.example.demo.DTO.LaptopDTO;
+import com.example.demo.DTO.Response.CustomerResponse;
 import com.example.demo.Service.CustomerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class CustomerController {
     @GetMapping
     public ResponseEntity<?> getAllCustomers() {
 
-        return ResponseEntity.ok(DataResponse.<List<CustomerDTO>>builder()
+        return ResponseEntity.ok(DataResponse.<List<CustomerResponse>>builder()
                 .success(true)
                 .message("Customer retrieved successfully")
                 .data(customerService.getAllCustomers())
@@ -38,7 +39,7 @@ public class CustomerController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getCustomerById(@PathVariable UUID id) {
 
-        return ResponseEntity.ok(DataResponse.<CustomerDTO>builder()
+        return ResponseEntity.ok(DataResponse.<CustomerResponse>builder()
                 .success(true)
                 .message("Customer retrieved successfully")
                 .data(customerService.getCustomerById(id))
@@ -47,7 +48,7 @@ public class CustomerController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateLaptop(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<CustomerDTO>builder()
+        return ResponseEntity.ok(DataResponse.<CustomerResponse>builder()
                 .success(true)
                 .message("Laptop updated successfully")
                 .data(customerService.partialUpdateCustomer(id, fieldsToUpdate))

@@ -22,7 +22,7 @@ public class AccountMapper {
                 .password(account.getPassword())
                 .name(account.getName())
                 .role(account.getRole())
-                .customer(CustomerMapper.convertToResponse(account.getCustomerId()))
+                .customer(CustomerMapper.convertToDTO(account.getCustomerId()))
                 .build();
     }
 }

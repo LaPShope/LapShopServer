@@ -24,6 +24,6 @@ public class CustomerDTO {
     private String phone;
 
     private String avatar;
-
-
+//
+//    private AccountDTO account;
 }
