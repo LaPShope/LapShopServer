@@ -2,9 +2,8 @@ package com.example.demo.Controller;
 
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.OrderDTO;
-import com.example.demo.Models.Order;
+import com.example.demo.DTO.Response.OrderResponse.OrderResponse;
 import com.example.demo.Service.OrderService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +24,7 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<?> getAllOrders() {
 
-        return ResponseEntity.ok(DataResponse.<List<OrderDTO>>builder()
+        return ResponseEntity.ok(DataResponse.<List<OrderResponse>>builder()
                 .success(true)
                 .message("Orders retrieved successfully")
                 .data(orderService.getAllOrders())
@@ -36,7 +35,7 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable UUID id) {
 
-        return ResponseEntity.ok(DataResponse.<OrderDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderResponse>builder()
                 .success(true)
                 .message("Order retrieved successfully")
                 .data(orderService.getOrderById(id))
@@ -47,7 +46,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderDTO orderDTO) {
             ;
-        return ResponseEntity.ok(DataResponse.<OrderDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderResponse>builder()
                 .success(true)
                 .message("Order created successfully")
                 .data(orderService.createOrder(orderDTO))
@@ -58,7 +57,7 @@ public class OrderController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrder(@PathVariable UUID id, @RequestBody OrderDTO orderDTO) {
 
-        return ResponseEntity.ok(DataResponse.<OrderDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderResponse>builder()
                 .success(true)
                 .message("Order updated successfully")
                 .data(orderService.updateOrder(id, orderDTO))
@@ -67,7 +66,7 @@ public class OrderController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateOrder(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<OrderDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderResponse>builder()
                 .success(true)
                 .message("Order updated successfully")
                 .data(orderService.partialUpdateOrder(id, fieldsToUpdate))

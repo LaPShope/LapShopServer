@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.DTO.PaymentDTO;
+import com.example.demo.DTO.Response.SaleResponse;
 import com.example.demo.DTO.SaleDTO;
 
 import java.util.List;
@@ -8,15 +9,15 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface SaleService {
-    SaleDTO partialUpdateSale(UUID id, Map<String,Object> fieldsToUpdate);
+    SaleResponse partialUpdateSale(UUID id, Map<String,Object> fieldsToUpdate);
 
-    List<SaleDTO> getAllSales();
+    List<SaleResponse> getAllSales();
 
-    SaleDTO getSaleById(UUID id);
+    SaleResponse getSaleById(UUID id);
 
-    SaleDTO createSale(SaleDTO saleDTO);
+    SaleResponse createSale(SaleDTO saleDTO);
 
-    SaleDTO updateSale(UUID saleId, SaleDTO saleDTO);
+    SaleResponse updateSale(UUID saleId, SaleDTO saleDTO);
 
     void deleteSale(UUID id);
 }

@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.ImageDTO;
 import com.example.demo.DTO.OrderDetailDTO;
+import com.example.demo.DTO.Response.OrderDetailResponse;
 import com.example.demo.Service.OrderDetailService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,9 @@ public class OrderDetailController {
 
     // Get all order details
     @GetMapping
-    public ResponseEntity<DataResponse<List<OrderDetailDTO>>> getAllOrderDetails() {
+    public ResponseEntity<DataResponse<List<OrderDetailResponse>>> getAllOrderDetails() {
 
-        return ResponseEntity.ok(DataResponse.<List<OrderDetailDTO>>builder()
+        return ResponseEntity.ok(DataResponse.<List<OrderDetailResponse>>builder()
                 .success(true)
                 .message("OrderDetail retrieved successfully")
                 .data(orderDetailService.getAllOrderDetails())
@@ -34,9 +35,9 @@ public class OrderDetailController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DataResponse<OrderDetailDTO>> getOrderDetailById(@PathVariable UUID id) {
+    public ResponseEntity<DataResponse<OrderDetailResponse>> getOrderDetailById(@PathVariable UUID id) {
 
-        return ResponseEntity.ok(DataResponse.<OrderDetailDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderDetailResponse>builder()
                 .success(true)
                 .message("OrderDetail retrieved successfully")
                 .data(orderDetailService.getOrderDetailById(id))
@@ -47,7 +48,7 @@ public class OrderDetailController {
     @PostMapping
     public ResponseEntity<?> createOrderDetail(@RequestBody OrderDetailDTO orderDetailDTO) {
 
-        return ResponseEntity.ok(DataResponse.<OrderDetailDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderDetailResponse>builder()
                 .success(true)
                 .message("OrderDetail created successfully")
                 .data(orderDetailService.createOrderDetail(orderDetailDTO))
@@ -58,7 +59,7 @@ public class OrderDetailController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrderDetail(@PathVariable UUID id, @RequestBody OrderDetailDTO orderDetailDTO) {
 
-        return ResponseEntity.ok(DataResponse.<OrderDetailDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderDetailResponse>builder()
                 .success(true)
                 .message("OrderDetail updated successfully")
                 .data(orderDetailService.updateOrderDetail(id, orderDetailDTO))
@@ -67,7 +68,7 @@ public class OrderDetailController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateOrderDetail(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<OrderDetailDTO>builder()
+        return ResponseEntity.ok(DataResponse.<OrderDetailResponse>builder()
                 .success(true)
                 .message("OrderDetail updated successfully")
                 .data(orderDetailService.partialUpdateOrderDetail(id, fieldsToUpdate))

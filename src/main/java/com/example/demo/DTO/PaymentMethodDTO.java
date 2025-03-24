@@ -13,6 +13,6 @@ import java.util.UUID;
 public class PaymentMethodDTO {
     private UUID id;
     private Map<String, Object> data;
-    private Enums.PaymentType type; // Tên type trong Enum
+    private Enums.PaymentType type;
 
 }

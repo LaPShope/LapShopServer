@@ -8,6 +8,7 @@ import com.example.demo.Repository.LaptopModelRepository;
 import com.example.demo.Service.ImageService;
 
 import com.example.demo.mapper.ImageMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -21,29 +22,48 @@ import java.util.stream.Collectors;
 @Transactional
 @Service
 public class ImageServiceImpl implements ImageService {
-
+    private final RedisService redisService;
     private final ImageRepository imageRepository;
     private final LaptopModelRepository laptopModelRepository;
 
-    public ImageServiceImpl(ImageRepository imageRepository, LaptopModelRepository laptopModelRepository) {
+    public ImageServiceImpl(RedisService redisService, ImageRepository imageRepository, LaptopModelRepository laptopModelRepository) {
         this.imageRepository = imageRepository;
         this.laptopModelRepository = laptopModelRepository;
+        this.redisService =redisService;
     }
 
     // 1. Lấy danh sách tất cả Images
     @Override
     public List<ImageDTO> getAllImages() {
-        return imageRepository.findAll().stream()
+        List<ImageDTO> cachedImage = redisService.getObject("allImage", new TypeReference<List<ImageDTO>>() {});
+        if(cachedImage != null && !cachedImage.isEmpty()){
+            return cachedImage;
+        }
+
+        List<ImageDTO> imageDTOS = imageRepository.findAll().stream()
                 .map(ImageMapper::convertToDTO)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allImage",imageDTOS,600);
+
+        return imageDTOS;
     }
 
     // 2. Lấy Image theo ID
     @Override
     public ImageDTO getImageById(UUID id) {
+        ImageDTO cachedImage = redisService.getObject("allImage", new TypeReference<ImageDTO>() {});
+        if(cachedImage != null){
+            return cachedImage;
+        }
+
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Image not found with ID: " + id));
-        return ImageMapper.convertToDTO(image);
+        ImageDTO imageDTO = ImageMapper.convertToDTO(image);
+
+        redisService.setObject("image:"+id,imageDTO,600);
+
+        return imageDTO;
     }
 
     // 3. Tạo mới một Image
@@ -65,7 +85,12 @@ public class ImageServiceImpl implements ImageService {
         }
         Image imageExisting = imageRepository.save(image);
 
-        return ImageMapper.convertToDTO(imageExisting);
+        ImageDTO cachedImage = ImageMapper.convertToDTO(imageExisting);
+
+        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
+        redisService.setObject("image:"+imageDTO.getId(),cachedImage,600);
+
+        return cachedImage;
     }
 
     @Override
@@ -86,10 +111,16 @@ public class ImageServiceImpl implements ImageService {
         }
 
         Image image = imageRepository.save(imageExisting);
-        return ImageMapper.convertToDTO(image);
+        ImageDTO cachedImage = ImageMapper.convertToDTO(image);
+
+        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
+        redisService.setObject("image:"+imageDTO.getId(),cachedImage,600);
+
+        return cachedImage;
     }
 
     @Override
+
     public ImageDTO partialUpdateImage(UUID id, Map<String, Object> fieldsToUpdate) {
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Image with ID " + id + " not found!"));
@@ -115,7 +146,12 @@ public class ImageServiceImpl implements ImageService {
         }
 
         Image updatedImage = imageRepository.save(image);
-        return ImageMapper.convertToDTO(updatedImage);
+        ImageDTO cachedImage = ImageMapper.convertToDTO(updatedImage);
+
+        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
+        redisService.setObject("image:"+id,cachedImage,600);
+
+        return cachedImage;
     }
 
     // 5. Xóa Image theo ID
@@ -125,6 +161,8 @@ public class ImageServiceImpl implements ImageService {
                 .orElseThrow(() -> new EntityNotFoundException("Image not found"));
 
         image.setLaptopModelList(null);
+
+        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
 
         imageRepository.delete(image);
     }

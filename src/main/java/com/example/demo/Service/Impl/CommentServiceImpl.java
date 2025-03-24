@@ -1,6 +1,7 @@
 package com.example.demo.Service.Impl;
 
 import com.example.demo.DTO.CommentDTO;
+import com.example.demo.DTO.Response.CommentResponse.CommentResponse;
 import com.example.demo.Models.Comment;
 import com.example.demo.Models.Account;
 import com.example.demo.Models.LaptopModel;
@@ -9,12 +10,12 @@ import com.example.demo.Repository.AccountRepository;
 import com.example.demo.Repository.LaptopModelRepository;
 import com.example.demo.Service.CommentService;
 import com.example.demo.mapper.CommentMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,40 +23,59 @@ import java.util.stream.Collectors;
 
 @Service
 public class CommentServiceImpl implements CommentService {
-
+    private final RedisService redisService;
     private final CommentRepository commentRepository;
     private final AccountRepository accountRepository;
     private final LaptopModelRepository laptopModelRepository;
 
-    public CommentServiceImpl(CommentRepository commentRepository, AccountRepository accountRepository, LaptopModelRepository laptopModelRepository) {
+    public CommentServiceImpl(RedisService redisService, CommentRepository commentRepository, AccountRepository accountRepository, LaptopModelRepository laptopModelRepository) {
         this.commentRepository = commentRepository;
         this.accountRepository = accountRepository;
         this.laptopModelRepository = laptopModelRepository;
+        this.redisService = redisService;
     }
 
     // Lấy danh sách tất cả Comment
     @Transactional
     @Override
-    public List<CommentDTO> getAllCommentsByAccountId(UUID accountId) {
-        return commentRepository.findByAccountId(accountId).stream()
-                .map(CommentMapper::convertToDTO)
+    public List<CommentResponse> getAllCommentsByAccountId(UUID accountId) {
+        List<CommentResponse> cachedCommentResponses = redisService.getObject("allComment", new TypeReference<List<CommentResponse>>() {});
+        if(cachedCommentResponses != null && !cachedCommentResponses.isEmpty()){
+            return cachedCommentResponses;
+        }
+
+        List<CommentResponse> commentResponses = commentRepository.findByAccountId(accountId).stream()
+                .map(CommentMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allComment",commentResponses,600);
+
+        return commentResponses;
     }
 
     // Lấy Comment theo ID
     @Transactional
     @Override
-    public CommentDTO getCommentById(UUID id) {
+    public CommentResponse getCommentById(UUID id) {
+        CommentResponse cachedCommentResponse = redisService.getObject("comment:"+id, new TypeReference<CommentResponse>() {});
+        if(cachedCommentResponse != null){
+            return cachedCommentResponse;
+        }
+
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
 
-        return CommentMapper.convertToDTO(comment);
+        CommentResponse commentResponse = CommentMapper.convertToResponse(comment);
+
+        redisService.setObject("comment:"+id,commentResponse,600);
+
+        return commentResponse;
     }
 
     // 3. Tạo một Comment mới
     @Override
     @Transactional
-    public CommentDTO createComment(CommentDTO commentDTO) {
+    public CommentResponse createComment(CommentDTO commentDTO) {
         if(commentDTO.getBody() == null){
             throw  new IllegalArgumentException("body cannot be null");
         }
@@ -78,59 +98,40 @@ public class CommentServiceImpl implements CommentService {
             Comment parentComment = commentRepository.findById(commentDTO.getParentId())
                     .orElseThrow(() -> new EntityNotFoundException("Parent Comment not found"));
             comment.setParent(parentComment);
+//            parentComment.getReplies().add(comment);
         }
 
         Comment commentExisting = commentRepository.save(comment);
 
-        return CommentMapper.convertToDTO(commentExisting);
+        CommentResponse cachedCommentResponse = CommentMapper.convertToResponse(commentExisting);
+
+        redisService.deleteByPatterns(List.of("allComment","allLaptopModel","laptopModel:"+commentDTO.getLaptopModelId()));
+        redisService.setObject("comment:"+cachedCommentResponse.getId(),cachedCommentResponse,600);
+
+        return cachedCommentResponse;
     }
 
     // 4. Cập nhật một Comment
     @Override
     @Transactional
-    public CommentDTO updateComment(UUID commentId, CommentDTO commentDTO) {
+    public CommentResponse updateComment(UUID commentId, CommentDTO commentDTO) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
 
         comment.setBody(commentDTO.getBody());
 
-        // Cập nhật Account
-        if (commentDTO.getAccountId() != null) {
-            Account account = accountRepository.findById(commentDTO.getAccountId())
-                    .orElseThrow(() -> new EntityNotFoundException("Account not found"));
-            comment.setAccount(account);
-        }
-
-        // Cập nhật LaptopModel nếu có
-        if (commentDTO.getLaptopModelId() != null) {
-            LaptopModel laptopModel = laptopModelRepository.findById(commentDTO.getLaptopModelId())
-                    .orElseThrow(() -> new EntityNotFoundException("LaptopModel not found "));
-            comment.setLaptopModel(laptopModel);
-        }
-
-        // Cập nhật Parent Comment nếu có
-        if (commentDTO.getParentId() != null) {
-            Comment parentComment = commentRepository.findById(commentDTO.getParentId())
-                    .orElseThrow(() -> new EntityNotFoundException("Parent Comment not found"));
-            comment.setParent(parentComment);
-        }
-
-        if (commentDTO.getReplies() != null) {
-            List<Comment> replies = commentDTO.getReplies().stream()
-                    .map(replyId -> commentRepository.findById(replyId)
-                            .orElseThrow(() -> new EntityNotFoundException("Reply Comment not found")))
-                    .collect(Collectors.toList());
-
-            comment.setReplies(replies);
-        }
-
         Comment commentExisting = commentRepository.save(comment);
 
-        return CommentMapper.convertToDTO(commentExisting);
+        CommentResponse cachedCommentResponse = CommentMapper.convertToResponse(commentExisting);
+
+        redisService.deleteByPatterns(List.of("allComment","allLaptopModel","laptopModel:"+commentDTO.getLaptopModelId(),"comment:"+commentId));
+        redisService.setObject("comment:"+cachedCommentResponse.getId(),cachedCommentResponse,600);
+
+        return cachedCommentResponse;
     }
 
     @Override
-    public CommentDTO partialUpdateComment(UUID id, Map<String, Object> fieldsToUpdate) {
+    public CommentResponse partialUpdateComment(UUID id, Map<String, Object> fieldsToUpdate) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comment with ID " + id + " not found!"));
 
@@ -155,7 +156,12 @@ public class CommentServiceImpl implements CommentService {
         }
 
         Comment updatedComment = commentRepository.save(comment);
-        return CommentMapper.convertToDTO(updatedComment);
+        CommentResponse cachedCommentResponse = CommentMapper.convertToResponse(updatedComment);
+
+        redisService.deleteByPatterns(List.of("allComment","allLaptopModel","laptopModel:"+cachedCommentResponse.getLaptopModel().getId(),"comment:"+id));
+        redisService.setObject("comment:"+cachedCommentResponse.getId(),cachedCommentResponse,600);
+
+        return cachedCommentResponse;
     }
 
     // 5. Xóa Comment theo ID
@@ -164,6 +170,8 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(UUID id) {
         Comment commentExisting = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+
+        redisService.deleteByPatterns(List.of("allComment","allLaptopModel","laptopModel:"+commentExisting.getLaptopModel().getId(),"comment:"+id));
 
         commentRepository.delete(commentExisting);
     }

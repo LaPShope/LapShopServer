@@ -6,8 +6,7 @@ import lombok.*;
 
 
 import com.example.demo.Common.Enums;
-
-import java.sql.Date;
+import java.util.Date;
 import java.util.UUID;
 
 @AllArgsConstructor

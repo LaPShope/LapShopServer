@@ -3,10 +3,14 @@ package com.example.demo.Service.Impl;
 import com.example.demo.Common.Enums;
 import com.example.demo.DTO.ImageDTO;
 import com.example.demo.DTO.LaptopModelDTO;
+import com.example.demo.DTO.Response.LaptopModelResponse;
+import com.example.demo.DTO.Response.LaptopResponse;
 import com.example.demo.Models.*;
 import com.example.demo.Repository.*;
 import com.example.demo.Service.LaptopModelService;
 import com.example.demo.mapper.LaptopModelMapper;
+import com.example.demo.mapper.LaptopOnCartMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.EnumType;
@@ -26,45 +30,53 @@ import java.util.stream.Collectors;
 public class LaptopModelServiceImpl implements LaptopModelService {
 
     private final LaptopModelRepository laptopModelRepository;
-    private final LaptopRepository laptopRepository;
-    private final ImageRepository imageRepository;
-    private final CommentRepository commentRepository;
-    private final LaptopOnCartRepository laptopOnCartRepository;
-    private final OrderDetailRepository orderDetailRepository;
-    private final SaleRepository saleRepository;
+    private final RedisService redisService;
 
-    public LaptopModelServiceImpl(LaptopModelRepository laptopModelRepository,SaleRepository saleRepository,LaptopRepository laptopRepository, ImageRepository imageRepository, CommentRepository commentRepository, LaptopOnCartRepository laptopOnCartRepository, OrderDetailRepository orderDetailRepository) {
+    public LaptopModelServiceImpl(RedisService redisService, LaptopModelRepository laptopModelRepository) {
         this.laptopModelRepository = laptopModelRepository;
-        this.laptopRepository = laptopRepository;
-        this.imageRepository = imageRepository;
-        this.commentRepository = commentRepository;
-        this.laptopOnCartRepository = laptopOnCartRepository;
-        this.orderDetailRepository = orderDetailRepository;
-        this.saleRepository =saleRepository;
+        this.redisService = redisService;
     }
 
     // 1. Lấy tất cả LaptopModel
     @Transactional
     @Override
-    public List<LaptopModelDTO> getAllLaptopModels() {
-        return laptopModelRepository.findAll().stream()
-                .map(LaptopModelMapper::convertToDTO)
+    public List<LaptopModelResponse> getAllLaptopModels() {
+        List<LaptopModelResponse> cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<List<LaptopModelResponse>>() {});
+        if(cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()){
+            return cachedLaptopResponses;
+        }
+
+        List<LaptopModelResponse> laptopModelResponses = laptopModelRepository.findAll().stream()
+                .map(LaptopModelMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allLaptopModel",laptopModelResponses,600);
+
+        return laptopModelResponses;
     }
 
     // 2. Lấy LaptopModel theo ID
     @Transactional
     @Override
-    public LaptopModelDTO getLaptopModelById(UUID id) {
+    public LaptopModelResponse getLaptopModelById(UUID id) {
+        LaptopModelResponse cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<LaptopModelResponse>() {});
+        if(cachedLaptopResponses != null){
+            return cachedLaptopResponses;
+        }
+
         // Tìm LaptopModel theo ID, nếu không tìm thấy thì ném ngoại lệ
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model with ID " + id + " not found"));
 
-        return LaptopModelMapper.convertToDTO(laptopModel);
+        LaptopModelResponse laptopResponse = LaptopModelMapper.convertToResponse(laptopModel);
+
+        redisService.setObject("laptopModel",laptopResponse,600);
+
+        return laptopResponse;
     }
     @Transactional
     @Override
-    public LaptopModelDTO createLaptopModel(LaptopModelDTO laptopModelDTO) {
+    public LaptopModelResponse createLaptopModel(LaptopModelDTO laptopModelDTO) {
         LaptopModel laptopModel = LaptopModel.builder()
                 .id(null)
                 .name(laptopModelDTO.getName())
@@ -78,102 +90,36 @@ public class LaptopModelServiceImpl implements LaptopModelService {
                 .description(laptopModelDTO.getDescription())
                 .build();
 
-        // 1. Tìm và ánh xạ danh sách Laptop
-        if (laptopModelDTO.getLaptopIds() != null) {
-            List<Laptop> laptops = laptopModelDTO.getLaptopIds().stream()
-                    .map(id -> {
-                        Laptop laptop = laptopRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("Laptop not found"));
-                        laptop.setLaptopModel(laptopModel); // Gán quan hệ một chiều
-                        return laptop;
-                    })
-                    .collect(Collectors.toList());
-            laptopModel.setLaptopList(laptops); // Gán danh sách Laptop vào LaptopModel
-        }
-
-        // 2. Tìm và ánh xạ danh sách Image
-        if (laptopModelDTO.getImageIds() != null) {
-            List<Image> images = laptopModelDTO.getImageIds().stream()
-                    .map(id -> {
-                        Image image = imageRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("Image not found"));
-                        return image;
-                    })
-                    .collect(Collectors.toList());
-            laptopModel.setImageList(images); // Gán danh sách Image vào LaptopModel
-        }
-
-        // 3. Tìm và ánh xạ danh sách Comment
-        if (laptopModelDTO.getCommentIds() != null) {
-            List<Comment> comments = laptopModelDTO.getCommentIds().stream()
-                    .map(id -> {
-                        Comment comment = commentRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
-                        comment.setLaptopModel(laptopModel); // Gán quan hệ một chiều
-                        return comment;
-                    })
-                    .collect(Collectors.toList());
-            laptopModel.setCommentList(comments); // Gán danh sách Comment vào LaptopModel
-        }
-
-        // 4. Tìm và ánh xạ danh sách LaptopOnCart
-        if (laptopModelDTO.getLaptopOnCartIds() != null) {
-            List<LaptopOnCart> laptopsOnCart = laptopModelDTO.getLaptopOnCartIds().stream()
-                    .map(id -> {
-                        LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart not found"));
-                        laptopOnCart.setLaptopModel(laptopModel); // Gán quan hệ một chiều
-                        return laptopOnCart;
-                    })
-                    .collect(Collectors.toList());
-            laptopModel.setLaptopOnCartList(laptopsOnCart); // Gán danh sách LaptopOnCart vào LaptopModel
-        }
-
-        // 5. Tìm và ánh xạ danh sách OrderDetail
-        if (laptopModelDTO.getOrderDetailIds() != null) {
-            List<OrderDetail> orderDetails = laptopModelDTO.getOrderDetailIds().stream()
-                    .map(id -> {
-                        OrderDetail orderDetail = orderDetailRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found"));
-                        orderDetail.setLaptopModel(laptopModel); // Gán quan hệ một chiều
-                        return orderDetail;
-                    })
-                    .collect(Collectors.toList());
-            laptopModel.setOrderDetailList(orderDetails); // Gán danh sách OrderDetail vào LaptopModel
-        }
-
-        if (laptopModelDTO.getSaleIds() != null) {
-            List<Sale> sales = laptopModelDTO.getSaleIds().stream()
-                    .map(id -> {
-                        Sale sale = saleRepository.findById(id)
-                                .orElseThrow(() -> new EntityNotFoundException("Sale not found"));
-                        return sale;
-                    })
-                    .collect(Collectors.toList());
-            laptopModel.setSaleList(sales); // Gán danh sách OrderDetail vào LaptopModel
-        }
-
-        // Lưu vào database
         LaptopModel laptopModelExisting = laptopModelRepository.save(laptopModel);
 
-        return LaptopModelMapper.convertToDTO(laptopModelExisting);
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModelExisting);
+
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","allLaptopOnSale"));
+        redisService.setObject("laptopModel:"+laptopModelResponse.getId(),laptopModelResponse,600);
+
+        return laptopModelResponse;
     }
 
     // 4. Cập nhật LaptopModel
     @Transactional
     @Override
-    public LaptopModelDTO updateLaptopModel(UUID id, LaptopModelDTO laptopModelDTO) {
+    public LaptopModelResponse updateLaptopModel(UUID id, LaptopModelDTO laptopModelDTO) {
         LaptopModel existingLaptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model with ID " + id + " not found"));
 
         BeanUtils.copyProperties(laptopModelDTO, existingLaptopModel, "id");
 
         LaptopModel laptopModel = laptopModelRepository.save(existingLaptopModel);
-        return LaptopModelMapper.convertToDTO(laptopModel);
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModel);
+
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
+        redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
+
+        return laptopModelResponse;
     }
 
     @Override
-    public LaptopModelDTO partialUpdateLaptopModel(UUID id, Map<String, Object> fieldsToUpdate) {
+    public LaptopModelResponse partialUpdateLaptopModel(UUID id, Map<String, Object> fieldsToUpdate) {
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopModel with ID " + id + " not found!"));
 
@@ -212,7 +158,12 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         }
 
         LaptopModel updatedLaptopModel = laptopModelRepository.save(laptopModel);
-        return LaptopModelMapper.convertToDTO(updatedLaptopModel);
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(updatedLaptopModel);
+
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
+        redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
+
+        return laptopModelResponse;
     }
 
     // 5. Xóa LaptopModel
@@ -222,12 +173,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found"));
 
-        laptopModel.getSaleList().forEach(sale -> sale.setLaptopModelList(null));
-        laptopModel.getLaptopList().forEach(laptop -> laptop.setLaptopModel(null));
-        laptopModel.getImageList().forEach(image -> image.setLaptopModelList(null));
-        laptopModel.getCommentList().forEach(comment -> comment.setLaptopModel(null));
-        laptopModel.getLaptopOnCartList().forEach(laptopOnCart -> laptopOnCart.setLaptopModel(null));
-        laptopModel.getOrderDetailList().forEach(orderDetail -> orderDetail.setLaptopModel(null));
+        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"orderDetail","*derDetail*","allLaptopOnSale"));
 
         laptopModelRepository.delete(laptopModel);
     }

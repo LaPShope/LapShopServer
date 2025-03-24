@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.AddressDTO;
+import com.example.demo.DTO.Response.SaleResponse;
 import com.example.demo.DTO.SaleDTO;
 import com.example.demo.Service.SaleService;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public class SaleController {
     @GetMapping
     public ResponseEntity<?> getAllSales() {
 
-        return ResponseEntity.ok(DataResponse.<List<SaleDTO>>builder()
+        return ResponseEntity.ok(DataResponse.<List<SaleResponse>>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
                 .data(saleService.getAllSales())
@@ -36,7 +37,7 @@ public class SaleController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getSaleById(@PathVariable UUID id) {
 
-        return ResponseEntity.ok(DataResponse.<SaleDTO>builder()
+        return ResponseEntity.ok(DataResponse.<SaleResponse>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
                 .data(saleService.getSaleById(id))
@@ -47,7 +48,7 @@ public class SaleController {
     @PostMapping
     public ResponseEntity<?> createSale(@RequestBody SaleDTO saleDTO) {
 
-        return ResponseEntity.ok(DataResponse.<SaleDTO>builder()
+        return ResponseEntity.ok(DataResponse.<SaleResponse>builder()
                 .success(true)
                 .message("Sale created successfully")
                 .data(saleService.createSale(saleDTO))
@@ -67,7 +68,7 @@ public class SaleController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateSale(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<SaleDTO>builder()
+        return ResponseEntity.ok(DataResponse.<SaleResponse>builder()
                 .success(true)
                 .message("Sale updated successfully")
                 .data(saleService.partialUpdateSale(id, fieldsToUpdate))
@@ -78,7 +79,7 @@ public class SaleController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateSale(@PathVariable UUID id, @RequestBody SaleDTO saleDTO) {
 
-        return ResponseEntity.ok(DataResponse.<SaleDTO>builder()
+        return ResponseEntity.ok(DataResponse.<SaleResponse>builder()
                 .success(true)
                 .message("Sale updated successfully")
                 .data(saleService.updateSale(id, saleDTO))

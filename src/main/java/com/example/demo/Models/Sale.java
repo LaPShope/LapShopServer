@@ -33,6 +33,7 @@ public class Sale {
 
     @ManyToMany(cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
+            CascadeType.REMOVE,
             CascadeType.MERGE,
             CascadeType.REFRESH})
     @JoinTable(

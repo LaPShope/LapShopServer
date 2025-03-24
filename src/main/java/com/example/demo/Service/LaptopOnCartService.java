@@ -2,21 +2,22 @@ package com.example.demo.Service;
 
 import com.example.demo.DTO.LaptopDTO;
 import com.example.demo.DTO.LaptopOnCartDTO;
+import com.example.demo.DTO.Response.LaptopOnCartResponse;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public interface LaptopOnCartService {
-    LaptopOnCartDTO partialUpdateLaptopOnCart(UUID id, Map<String,Object> fieldsToUpdate);
+    LaptopOnCartResponse partialUpdateLaptopOnCart(UUID id, Map<String,Object> fieldsToUpdate);
 
-    List<LaptopOnCartDTO> getAllLaptopOnCarts();
+    List<LaptopOnCartResponse> getAllLaptopOnCarts();
 
-    LaptopOnCartDTO getLaptopOnCartById(UUID id);
+    LaptopOnCartResponse getLaptopOnCartById(UUID id);
 
-    LaptopOnCartDTO createLaptopOnCart(LaptopOnCartDTO laptopOnCartDTO);
+    LaptopOnCartResponse createLaptopOnCart(LaptopOnCartDTO laptopOnCartDTO);
 
-    LaptopOnCartDTO updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO);
+    LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO);
 
     void deleteLaptopOnCart(UUID id);
 }

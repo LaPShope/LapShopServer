@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.Common.DataResponse;
 import com.example.demo.DTO.LaptopDTO;
 import com.example.demo.DTO.LaptopModelDTO;
+import com.example.demo.DTO.Response.LaptopModelResponse;
 import com.example.demo.Service.LaptopModelService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class LaptopModelController {
     @GetMapping
     public ResponseEntity<?> getAllLaptopModels() {
 
-        return ResponseEntity.ok(DataResponse.<List<LaptopModelDTO>>builder()
+        return ResponseEntity.ok(DataResponse.<List<LaptopModelResponse>>builder()
                 .success(true)
                 .message("LaptopModel retrieved successfully")
                 .data(laptopModelService.getAllLaptopModels())
@@ -37,7 +38,7 @@ public class LaptopModelController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getLaptopModelById(@PathVariable UUID id) {
 
-        return ResponseEntity.ok(DataResponse.<LaptopModelDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopModelResponse>builder()
                 .success(true)
                 .message("LaptopModel retrieved successfully")
                 .data(laptopModelService.getLaptopModelById(id))
@@ -50,7 +51,7 @@ public class LaptopModelController {
     public ResponseEntity<?> createLaptopModel(@RequestBody LaptopModelDTO laptopModelDTO) {
 
 
-        return ResponseEntity.ok(DataResponse.<LaptopModelDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopModelResponse>builder()
                 .success(true)
                 .message("LaptopModel created successfully")
                 .data(laptopModelService.createLaptopModel(laptopModelDTO))
@@ -63,7 +64,7 @@ public class LaptopModelController {
     public ResponseEntity<?> updateLaptopModel(@PathVariable UUID id, @RequestBody LaptopModelDTO laptopModelDTO) {
 
 
-        return ResponseEntity.ok(DataResponse.<LaptopModelDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopModelResponse>builder()
                 .success(true)
                 .message("LaptopModel updated successfully")
                 .data(laptopModelService.updateLaptopModel(id, laptopModelDTO))
@@ -73,7 +74,7 @@ public class LaptopModelController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateLaptopModel(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<LaptopModelDTO>builder()
+        return ResponseEntity.ok(DataResponse.<LaptopModelResponse>builder()
                 .success(true)
                 .message("LaptopModel updated successfully")
                 .data(laptopModelService.partialUpdateLaptopModel(id, fieldsToUpdate))

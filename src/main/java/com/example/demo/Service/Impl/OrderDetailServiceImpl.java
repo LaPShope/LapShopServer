@@ -3,6 +3,7 @@ package com.example.demo.Service.Impl;
 import com.example.demo.DTO.ImageDTO;
 import com.example.demo.DTO.OrderDTO;
 import com.example.demo.DTO.OrderDetailDTO;
+import com.example.demo.DTO.Response.OrderDetailResponse;
 import com.example.demo.Models.Image;
 import com.example.demo.Models.LaptopModel;
 import com.example.demo.Models.Order;
@@ -12,6 +13,7 @@ import com.example.demo.Repository.OrderDetailRepository;
 import com.example.demo.Repository.OrderRepository;
 import com.example.demo.Service.OrderDetailService;
 import com.example.demo.mapper.OrderDetailMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.stereotype.Service;
@@ -26,39 +28,58 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrderDetailServiceImpl implements OrderDetailService {
-
+    private final RedisService redisService;
     private final OrderDetailRepository orderDetailRepository;
     private final OrderRepository orderRepository;
     private final LaptopModelRepository laptopModelRepository;
 
-    public OrderDetailServiceImpl(OrderDetailRepository orderDetailRepository,
+    public OrderDetailServiceImpl(RedisService redisService, OrderDetailRepository orderDetailRepository,
                                   OrderRepository orderRepository,
                                   LaptopModelRepository laptopModelRepository) {
         this.orderDetailRepository = orderDetailRepository;
         this.orderRepository = orderRepository;
         this.laptopModelRepository = laptopModelRepository;
+        this.redisService = redisService;
     }
 
     @Transactional
     @Override
-    public List<OrderDetailDTO> getAllOrderDetails() {
-        return orderDetailRepository.findAll().stream()
-                .map(OrderDetailMapper::convertToDTO)
+    public List<OrderDetailResponse> getAllOrderDetails() {
+        List<OrderDetailResponse> cachedOderDetail = redisService.getObject("allOderDetail", new TypeReference<List<OrderDetailResponse>>() {});
+        if (cachedOderDetail != null && !cachedOderDetail.isEmpty()){
+            return cachedOderDetail;
+        }
+
+        List<OrderDetailResponse> orderDetailResponses = orderDetailRepository.findAll().stream()
+                .map(OrderDetailMapper::convertToResponse)
                 .collect(Collectors.toList());
+
+        redisService.setObject("allOderDetail",orderDetailResponses,600);
+
+        return orderDetailResponses;
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO getOrderDetailById(UUID id) {
+    public OrderDetailResponse getOrderDetailById(UUID id) {
+        OrderDetailResponse cachedOderDetail = redisService.getObject("oderDetail:"+id, new TypeReference<OrderDetailResponse>() {});
+        if (cachedOderDetail != null){
+            return cachedOderDetail;
+        }
+
         OrderDetail orderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found"));
 
-        return OrderDetailMapper.convertToDTO(orderDetail);
+        OrderDetailResponse orderDetailResponse = OrderDetailMapper.convertToResponse(orderDetail);
+
+        redisService.setObject("oderDetail:"+id,orderDetailResponse,600);
+
+        return orderDetailResponse;
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO createOrderDetail(OrderDetailDTO orderDetailDTO) {
+    public OrderDetailResponse createOrderDetail(OrderDetailDTO orderDetailDTO) {
         Order order = orderRepository.findById(orderDetailDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order  not found!"));
 
@@ -75,12 +96,17 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
         OrderDetail orderDetailExisting = orderDetailRepository.save(orderDetail);
 
-        return OrderDetailMapper.convertToDTO(orderDetailExisting);
+        OrderDetailResponse cachedOrderDetailResponse = OrderDetailMapper.convertToResponse(orderDetailExisting);
+
+        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","order:"+cachedOrderDetailResponse.getOrder().getId()));
+        redisService.setObject("orderDetail:"+cachedOrderDetailResponse.getId(),cachedOrderDetailResponse,600);
+
+        return cachedOrderDetailResponse;
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO updateOrderDetail(UUID id, OrderDetailDTO orderDetailDTO) {
+    public OrderDetailResponse updateOrderDetail(UUID id, OrderDetailDTO orderDetailDTO) {
         OrderDetail existingOrderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found!"));
 
@@ -97,12 +123,17 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
         OrderDetail orderDetailExisting = orderDetailRepository.save(existingOrderDetail);
 
-        return OrderDetailMapper.convertToDTO(orderDetailExisting);
+        OrderDetailResponse cachedOrderDetailResponse = OrderDetailMapper.convertToResponse(orderDetailExisting);
+
+        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","oderDetail:"+id,"order:"+cachedOrderDetailResponse.getOrder().getId()));
+        redisService.setObject("orderDetail:"+id,cachedOrderDetailResponse,600);
+
+        return cachedOrderDetailResponse;
     }
 
     @Transactional
     @Override
-    public OrderDetailDTO partialUpdateOrderDetail(UUID id, Map<String, Object> fieldsToUpdate) {
+    public OrderDetailResponse partialUpdateOrderDetail(UUID id, Map<String, Object> fieldsToUpdate) {
         OrderDetail orderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail with ID " + id + " not found!"));
 
@@ -132,7 +163,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
             }
         }
         OrderDetail updatedOrderDetail = orderDetailRepository.save(orderDetail);
-        return OrderDetailMapper.convertToDTO(updatedOrderDetail);
+        OrderDetailResponse cachedOrderDetailResponse = OrderDetailMapper.convertToResponse(updatedOrderDetail);
+
+        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","oderDetail:"+id,"order:"+cachedOrderDetailResponse.getOrder().getId()));
+        redisService.setObject("orderDetail:"+id,cachedOrderDetailResponse,600);
+
+        return cachedOrderDetailResponse;
     }
 
     @Transactional
@@ -140,6 +176,8 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     public void deleteOrderDetail(UUID id) {
         OrderDetail existingOrderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found!"));
+
+        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","oderDetail:"+id,"order:"+existingOrderDetail.getOrder().getId()));
 
         orderDetailRepository.delete(existingOrderDetail);
     }

@@ -25,9 +25,12 @@ public class Cart {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    private Integer quantity;
+
     @JsonIgnore
     @OneToMany(mappedBy = "cart",cascade = {CascadeType.PERSIST,
                                             CascadeType.DETACH,
+                                            CascadeType.REMOVE,
                                             CascadeType.MERGE,
                                             CascadeType.REFRESH},orphanRemoval = true)
     private List<LaptopOnCart> laptopOnCarts;
