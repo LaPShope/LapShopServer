@@ -34,6 +34,15 @@ services:
     depends_on:
       - db
 
+  redis:
+    container_name: lapshope-redis
+    image: redis
+    networks:
+      - lapshope-network
+    restart: on-failure:3
+    ports:
+      - 6379:6379
+
 networks:
   lapshope-network:
     name: lapshope-network

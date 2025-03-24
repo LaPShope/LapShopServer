@@ -1,9 +1,9 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.CartDTO;
-import com.example.demo.DTO.Response.CartResponse.CartResponse;
-import com.example.demo.Models.Cart;
-import com.example.demo.Models.LaptopOnCart;
+import com.example.demo.dto.CartDTO;
+import com.example.demo.dto.response.cart.CartResponse;
+import com.example.demo.model.Cart;
+import com.example.demo.model.LaptopOnCart;
 
 import java.util.Collections;
 import java.util.Optional;

@@ -1,10 +1,8 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.AccountDTO;
-import com.example.demo.DTO.CommentDTO;
-import com.example.demo.DTO.CustomerDTO;
-import com.example.demo.DTO.Response.CustomerResponse;
-import com.example.demo.Models.*;
+import com.example.demo.dto.CustomerDTO;
+import com.example.demo.dto.response.CustomerResponse;
+import com.example.demo.model.*;
 
 import java.util.Collections;
 import java.util.stream.Collectors;

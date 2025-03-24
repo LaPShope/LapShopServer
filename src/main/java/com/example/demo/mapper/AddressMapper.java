@@ -1,8 +1,8 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.AddressDTO;
-import com.example.demo.DTO.Response.AddressResponse;
-import com.example.demo.Models.Address;
+import com.example.demo.dto.AddressDTO;
+import com.example.demo.dto.response.AddressResponse;
+import com.example.demo.model.Address;
 
 public class AddressMapper {
     public static AddressDTO convertToDTO(Address address) {

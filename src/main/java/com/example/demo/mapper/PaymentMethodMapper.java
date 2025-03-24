@@ -1,7 +1,7 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.PaymentMethodDTO;
-import com.example.demo.Models.PaymentMethod;
+import com.example.demo.dto.PaymentMethodDTO;
+import com.example.demo.model.PaymentMethod;
 
 public class PaymentMethodMapper {
     public static PaymentMethodDTO convertToDTO(PaymentMethod paymentMethod) {

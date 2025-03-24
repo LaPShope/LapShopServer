@@ -1,10 +1,7 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.ImageDTO;
-import com.example.demo.Models.Image;
-import com.example.demo.Models.LaptopModel;
-
-import java.util.stream.Collectors;
+import com.example.demo.dto.ImageDTO;
+import com.example.demo.model.Image;
 
 public class ImageMapper {
     public static ImageDTO convertToDTO(Image image) {

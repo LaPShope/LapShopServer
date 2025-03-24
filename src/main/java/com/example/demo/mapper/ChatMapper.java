@@ -1,8 +1,8 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.ChatDTO;
-import com.example.demo.DTO.Response.ChatResponse;
-import com.example.demo.Models.Chat;
+import com.example.demo.dto.ChatDTO;
+import com.example.demo.dto.response.ChatResponse;
+import com.example.demo.model.Chat;
 
 public class ChatMapper {
     public static ChatDTO convertToDTO(Chat chat) {

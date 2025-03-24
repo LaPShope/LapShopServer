@@ -1,9 +1,9 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.LaptopOnCartDTO;
-import com.example.demo.DTO.Response.CartResponse.CartItem;
-import com.example.demo.DTO.Response.LaptopOnCartResponse;
-import com.example.demo.Models.LaptopOnCart;
+import com.example.demo.dto.LaptopOnCartDTO;
+import com.example.demo.dto.response.cart.CartItem;
+import com.example.demo.dto.response.LaptopOnCartResponse;
+import com.example.demo.model.LaptopOnCart;
 
 public class LaptopOnCartMapper {
     public static LaptopOnCartDTO convertToDTO(LaptopOnCart laptopOnCart) {

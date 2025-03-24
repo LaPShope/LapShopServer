@@ -1,10 +1,9 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.OrderDetailDTO;
-import com.example.demo.DTO.Response.OrderDetailResponse;
-import com.example.demo.DTO.Response.OrderResponse.OrderItem;
-import com.example.demo.Models.LaptopModel;
-import com.example.demo.Models.OrderDetail;
+import com.example.demo.dto.OrderDetailDTO;
+import com.example.demo.dto.response.OrderDetailResponse;
+import com.example.demo.dto.response.order.OrderItem;
+import com.example.demo.model.OrderDetail;
 
 public class OrderDetailMapper {
     public static OrderDetailDTO convertToDTO(OrderDetail orderDetail) {

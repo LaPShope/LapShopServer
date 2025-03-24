@@ -1,8 +1,8 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.AccountDTO;
-import com.example.demo.DTO.Response.AccountResponse;
-import com.example.demo.Models.Account;
+import com.example.demo.dto.AccountDTO;
+import com.example.demo.dto.response.AccountResponse;
+import com.example.demo.model.Account;
 
 public class AccountMapper {
     public static AccountDTO convertToDTO(Account account) {

@@ -1,9 +1,8 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.LaptopDTO;
-import com.example.demo.DTO.Response.LaptopResponse;
-import com.example.demo.Models.Laptop;
-import com.example.demo.Models.LaptopModel;
+import com.example.demo.dto.LaptopDTO;
+import com.example.demo.dto.response.LaptopResponse;
+import com.example.demo.model.Laptop;
 
 public class LaptopMapper {
     public static LaptopDTO convertToDTO(Laptop laptop) {

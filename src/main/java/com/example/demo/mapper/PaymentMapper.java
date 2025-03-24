@@ -1,11 +1,8 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.PaymentDTO;
-import com.example.demo.DTO.Response.PaymentResponse;
-import com.example.demo.Models.Payment;
-
-import java.util.Collections;
-import java.util.stream.Collectors;
+import com.example.demo.dto.PaymentDTO;
+import com.example.demo.dto.response.PaymentResponse;
+import com.example.demo.model.Payment;
 
 public class PaymentMapper {
     public static PaymentDTO convertToDTO(Payment payment) {

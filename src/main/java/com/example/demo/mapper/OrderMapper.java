@@ -1,8 +1,8 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.OrderDTO;
-import com.example.demo.DTO.Response.OrderResponse.OrderResponse;
-import com.example.demo.Models.Order;
+import com.example.demo.dto.OrderDTO;
+import com.example.demo.dto.response.order.OrderResponse;
+import com.example.demo.model.Order;
 
 import java.util.Collections;
 import java.util.stream.Collectors;

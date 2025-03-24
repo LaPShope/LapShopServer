@@ -1,10 +1,10 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.CommentDTO;
-import com.example.demo.DTO.Response.CommentResponse.CommentItem;
-import com.example.demo.DTO.Response.CommentResponse.CommentItems;
-import com.example.demo.DTO.Response.CommentResponse.CommentResponse;
-import com.example.demo.Models.Comment;
+import com.example.demo.dto.CommentDTO;
+import com.example.demo.dto.response.comment.CommentItem;
+import com.example.demo.dto.response.comment.CommentItems;
+import com.example.demo.dto.response.comment.CommentResponse;
+import com.example.demo.model.Comment;
 
 import java.util.Collections;
 import java.util.stream.Collectors;

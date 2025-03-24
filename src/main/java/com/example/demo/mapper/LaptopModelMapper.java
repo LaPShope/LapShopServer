@@ -1,11 +1,10 @@
 package com.example.demo.mapper;
 
-import com.example.demo.DTO.LaptopModelDTO;
-import com.example.demo.DTO.Response.LaptopModelResponse;
-import com.example.demo.Models.*;
+import com.example.demo.dto.LaptopModelDTO;
+import com.example.demo.dto.response.LaptopModelResponse;
+import com.example.demo.model.*;
 
 import java.util.Collections;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class LaptopModelMapper {
