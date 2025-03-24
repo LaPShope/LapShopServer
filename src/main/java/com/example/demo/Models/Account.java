@@ -6,8 +6,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -68,4 +70,13 @@ public class Account implements UserDetails {
     private List<Chat> chatReceive;
 
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public String getUsername() {
+        return "";
+    }
 }
