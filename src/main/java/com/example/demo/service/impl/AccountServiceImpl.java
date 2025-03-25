@@ -17,6 +17,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -209,7 +211,6 @@ public class AccountServiceImpl implements AccountService {
         return cachedAccount;
     }
 
-
     // Xóa tài khoản
     @Transactional
     @Override
@@ -223,4 +224,9 @@ public class AccountServiceImpl implements AccountService {
         accountRepository.deleteById(id);
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return accountRepository.findByEmail(username)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+    }
 }
