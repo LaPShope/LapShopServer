@@ -1,7 +1,11 @@
 package com.example.demo.configuration;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.example.demo.common.Enums;
+import com.example.demo.common.ErrorMessage;
 import com.example.demo.model.Account;
 import com.example.demo.service.AccountService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,40 +39,57 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
-        String token = null;
-        String email = null;
+
+        try {
+            String authHeader = request.getHeader("Authorization");
+            String token = null;
+            String email = null;
 
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            email = jwtService.extractEmail(token);
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+                email = jwtService.extractEmail(token);
+            }
+
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                Account account = accountService.getAccount(email);
+
+                UserDetails userDetails = User.builder()
+                        .username(account.getName())
+                        .roles(String.valueOf(account.getRole()))
+                        .authorities(Collections
+                                .singletonList(new SimpleGrantedAuthority(account.getRole().toString()))
+                        )
+                        .build();
+
+                if (jwtService.validateToken(token, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities() //Get authorities from UserDetails
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+            filterChain.doFilter(request, response);
         }
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            Account account = accountService.getAccount(email);
+        catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
 
-            UserDetails userDetails = User.builder()
-                    .username(account.getName())
-                    .roles(String.valueOf(account.getRole()))
-                    .authorities(Collections
-                            .singletonList(new SimpleGrantedAuthority(account.getRole().toString()))
-                    )
+            ErrorMessage errorResponse = ErrorMessage.builder()
+                    .success(false)
+                    .statusCode(Enums.ErrorKey.ErrorInternal)
+                    .message(e.getLocalizedMessage())
+                    .data(null)
                     .build();
 
-            if (jwtService.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities() //Get authorities from UserDetails
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+            ObjectMapper mapper = new ObjectMapper();
+
+            response.getWriter()
+                    .write(mapper.writeValueAsString(errorResponse));
         }
-
-        filterChain.doFilter(request, response);
     }
-
 }
-

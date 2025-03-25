@@ -26,6 +26,8 @@ public class Enums {
     }
 
     public enum ErrorKey {
-        ErrorInternal, ErrorWrongCreds, ErrorNoPermission
+        ErrorInternal,
+        ErrorWrongCreds,
+        ErrorNoPermission
     }
 }

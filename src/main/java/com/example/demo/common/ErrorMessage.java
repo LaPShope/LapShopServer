@@ -1,19 +1,19 @@
 package com.example.demo.common;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.sql.Timestamp;
 
 @AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Builder
-@Data
 public class ErrorMessage {
     private Timestamp timestamp;
     @JsonProperty("error_key")
-    private Enum<Enums.ErrorKey> statusCode;
+    private Enums.ErrorKey statusCode;
     private String message;
     private Object data;
     private Boolean success;

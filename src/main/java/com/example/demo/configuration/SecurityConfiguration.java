@@ -38,14 +38,8 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/v1/accounts/login", "/api/v1/accounts/register").permitAll()
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
-    }
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/**"); // Bỏ qua tất cả kiểm tra bảo mật
     }
 
     @Bean
