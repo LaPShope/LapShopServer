@@ -1,6 +1,5 @@
 package com.example.demo.configuration;
 
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.example.demo.common.Enums;
 import com.example.demo.common.ErrorMessage;
 import com.example.demo.model.Account;
@@ -23,6 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -30,6 +30,7 @@ import java.util.Collections;
 public class JwtFilter extends OncePerRequestFilter {
     private JwtService jwtService;
     private AccountService accountService;
+    private List<String> acceptedNoAuth = List.of("/api/v1/accounts/login", "/api/v1/accounts/register");
 
     public JwtFilter(JwtService jwtService, AccountService accountService) {
         this.jwtService = jwtService;
@@ -45,11 +46,25 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = null;
             String email = null;
 
-
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
-                email = jwtService.extractEmail(token);
+            if (acceptedNoAuth.contains(request.getRequestURI())) {
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                ErrorMessage errResponse = ErrorMessage.builder()
+                        .success(false)
+                        .statusCode(Enums.ErrorKey.ErrorInternal)
+                        .message("Unauthorized: Missing or invalid Authorization header.")
+                        .data(null)
+                        .build();
+
+                this.writeResponse(response, 401, "application/json", errResponse);
+                return;
+            }
+
+            token = authHeader.substring(7);
+            email = jwtService.extractEmail(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 Account account = accountService.getAccount(email);
@@ -73,23 +88,25 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
             filterChain.doFilter(request, response);
-        }
-
-        catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-
-            ErrorMessage errorResponse = ErrorMessage.builder()
+        } catch (Exception e) {
+            ErrorMessage errResponse = ErrorMessage.builder()
                     .success(false)
                     .statusCode(Enums.ErrorKey.ErrorInternal)
-                    .message(e.getLocalizedMessage())
+                    .message("Unauthorized: " + e.getLocalizedMessage())
                     .data(null)
                     .build();
 
-            ObjectMapper mapper = new ObjectMapper();
+            this.writeResponse(response, 401, "application/json", errResponse);
+        }
+    }
 
-            response.getWriter()
-                    .write(mapper.writeValueAsString(errorResponse));
+    private void writeResponse(HttpServletResponse response, int status, String contentType, Object content) {
+        response.setStatus(status);
+        response.setContentType(contentType);
+        try {
+            response.getWriter().write(new ObjectMapper().writeValueAsString(content));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
