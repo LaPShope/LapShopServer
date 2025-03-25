@@ -1,7 +1,7 @@
 package com.example.demo.configuration;
 
 import com.example.demo.common.Enums;
-import com.example.demo.common.ErrorMessage;
+import com.example.demo.exception.ErrorMessage;
 import com.example.demo.model.Account;
 import com.example.demo.service.AccountService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +40,6 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
         try {
             String authHeader = request.getHeader("Authorization");
             String token = null;

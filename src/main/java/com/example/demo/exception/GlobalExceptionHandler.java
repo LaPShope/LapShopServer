@@ -1,7 +1,6 @@
-package com.example.demo.common;
+package com.example.demo.exception;
 
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.example.demo.common.Enums;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -85,21 +84,6 @@ public class GlobalExceptionHandler  {
                 .body(errorMessage);
     }
 
-    @ExceptionHandler({JWTVerificationException.class})
-    public ResponseEntity<?> handleJWTVerificationException(JWTVerificationException ex) {
-        ErrorMessage errorMessage = ErrorMessage.builder()
-                .success(false)
-                .statusCode(Enums.ErrorKey.ErrorNoPermission)
-                .timestamp(new java.sql.Timestamp(System.currentTimeMillis()))
-                .message(ex.getLocalizedMessage())
-                .data("hehe")
-                .build();
-
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(errorMessage);
-    }
-
     @ExceptionHandler({RuntimeException.class})
     public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
         ErrorMessage errorMessage = ErrorMessage.builder()
@@ -112,22 +96,6 @@ public class GlobalExceptionHandler  {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorMessage);
-    }
-
-    @ExceptionHandler({SignatureVerificationException.class})
-    public ResponseEntity<?> handleSignatureVerificationException(SignatureVerificationException ex) {
-        System.out.println("con heheheheh");
-        ErrorMessage errorMessage = ErrorMessage.builder()
-                .success(false)
-                .statusCode(Enums.ErrorKey.ErrorNoPermission)
-                .timestamp(new java.sql.Timestamp(System.currentTimeMillis()))
-                .message(ex.getLocalizedMessage())
-                .data("hehe")
-                .build();
-
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
                 .body(errorMessage);
     }
 }

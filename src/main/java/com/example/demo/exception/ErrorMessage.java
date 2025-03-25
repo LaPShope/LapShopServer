@@ -1,5 +1,6 @@
-package com.example.demo.common;
+package com.example.demo.exception;
 
+import com.example.demo.common.Enums;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
