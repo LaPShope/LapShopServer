@@ -30,6 +30,15 @@ public class JwtService {
 
         long issuedAtMillis = System.currentTimeMillis();
 
+//        {
+//            subject: email,
+//            issuer: "lap-shop",
+//            issueat:
+//            expire:
+//            claim:
+//            sign: hacmac256(key)
+//        }
+
         return JWT.create()
                 .withSubject(email)
                 .withIssuer("lap-shop")

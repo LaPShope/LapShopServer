@@ -7,9 +7,9 @@ import java.util.UUID;
 import com.example.demo.dto.AccountDTO;
 import com.example.demo.dto.response.AccountResponse;
 import com.example.demo.model.Account;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
-public interface AccountService {
-    
+public interface AccountService extends UserDetailsService {
     public AccountResponse partialUpdateAccount(UUID id,Map<String,Object> fieldsToUpdate );
     public List<AccountResponse> getAllAccounts();
     public AccountResponse getAccount(UUID id);
