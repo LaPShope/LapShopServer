@@ -29,7 +29,7 @@ public class Account  implements UserDetails {
 
     private String name;
 
-    @Column(nullable = false)
+    // @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -74,6 +74,6 @@ public class Account  implements UserDetails {
 
     @Override
     public String getUsername() {
-        return "";
+        return this.name;
     }
 }

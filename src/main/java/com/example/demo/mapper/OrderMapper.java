@@ -14,6 +14,8 @@ public class OrderMapper {
                 .customerId(order.getCustomer().getId())
                 .dateCreate(order.getDateCreate())
                 .status(order.getStatus())
+                .finalPrice(order.getFinalPrice())
+                .deliveryCost(order.getDeliveryCost())
 //                .orderDetails(order.getOrderDetailList() == null
 //                        ? Collections.emptyList()
 //                        : order.getOrderDetailList().stream()
@@ -33,6 +35,8 @@ public class OrderMapper {
                 .customer(CustomerMapper.convertToDTO(order.getCustomer()))
                 .dateCreate(order.getDateCreate())
                 .status(order.getStatus())
+                .finalPrice(order.getFinalPrice())
+                .deliveryCost(order.getDeliveryCost())
                 .orderDetails(order.getOrderDetailList() == null
                         ? Collections.emptyList()
                         : order.getOrderDetailList().stream()

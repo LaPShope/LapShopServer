@@ -13,9 +13,10 @@ import com.example.demo.service.LaptopService;
 import com.example.demo.mapper.LaptopMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
+
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -36,8 +37,6 @@ public class LaptopServiceImpl implements LaptopService {
         this.redisService = redisService;
     }
 
-    // **1. Lấy danh sách tất cả Laptop**
-    @Transactional
     @Override
     public List<LaptopResponse> getAllLaptops() {
         List<LaptopResponse> cachedLaptopResponses = redisService.getObject("allLaptop", new TypeReference<List<LaptopResponse>>() {});
@@ -54,8 +53,6 @@ public class LaptopServiceImpl implements LaptopService {
         return laptopResponses;
     }
 
-    // **2. Lấy Laptop chi tiết theo ID**
-    @Transactional
     @Override
     public LaptopResponse getLaptopById(UUID id) {
         LaptopResponse cachedLaptopResponses = redisService.getObject("allLaptop", new TypeReference<LaptopResponse>() {});
@@ -131,6 +128,7 @@ public class LaptopServiceImpl implements LaptopService {
         return laptopResponse;
     }
 
+    @Transactional
     @Override
     public LaptopResponse partialUpdateLaptop(UUID id, Map<String, Object> fieldsToUpdate) {
         Laptop laptop = laptopRepository.findById(id)
@@ -193,7 +191,6 @@ public class LaptopServiceImpl implements LaptopService {
         laptopRepository.deleteById(id);
     }
 
-    @Transactional
     @Override
     public List<LaptopResponse> searchLaptops(Map<String, Object> filters) {
         String cacheKey = "searchLaptop";

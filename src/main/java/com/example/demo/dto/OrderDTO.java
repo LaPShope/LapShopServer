@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +26,12 @@ public class OrderDTO {
 
     @JsonProperty("date_create")
     private Date dateCreate;
+
+    @JsonProperty("delivery_cost")
+    private BigDecimal deliveryCost;
+
+    @JsonProperty("final_price")
+    private BigDecimal finalPrice;
 
     @JsonProperty("oder_details")
     private List<UUID> orderDetails;

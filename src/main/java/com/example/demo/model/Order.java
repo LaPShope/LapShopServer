@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +33,12 @@ public class Order {
 
     @Column(name = "date_create", nullable = false)
     private Date dateCreate;
+
+    @Column(name="delivery_cost")
+    private BigDecimal deliveryCost;
+    
+    @Column(name="final_price")
+    private BigDecimal finalPrice;
 
     @JsonIgnore
     @OneToMany(mappedBy = "order",cascade = {CascadeType.PERSIST,
