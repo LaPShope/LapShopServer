@@ -6,8 +6,10 @@ import com.example.demo.common.Enums;
 import com.example.demo.configuration.JwtService;
 import com.example.demo.dto.AccountDTO;
 import com.example.demo.dto.request.auth.LoginRequest;
+import com.example.demo.dto.request.auth.RegisterRequest;
 import com.example.demo.dto.response.AccountResponse;
 import com.example.demo.dto.response.LoginResponse;
+import com.example.demo.dto.response.auth.RegisterReponse;
 import com.example.demo.model.Account;
 import com.example.demo.model.Admin;
 import com.example.demo.model.Customer;
@@ -46,25 +48,58 @@ public class AccountServiceImpl implements AccountService {
         this.adminRepository = adminRepository;
         this.jwtService = jwtService;
     }
+
     //test lay token
     @Override
-    public LoginResponse login(LoginRequest loginRequest){
+    public LoginResponse login(LoginRequest loginRequest) {
 
         Account account = accountRepository.findByEmail(loginRequest.getEmail())
-                            .orElseThrow(() -> new EntityNotFoundException("not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         String token = jwtService.generateToken(
-            account.getEmail(),
-            account.getRole()
+                account.getEmail(),
+                account.getRole()
         );
 
         System.out.println(token);
 
         return LoginResponse.builder()
-            .token(token)
-            .email(account.getEmail())
-            .role(account.getRole())
-            .build();
+                .token(token)
+                .email(account.getEmail())
+                .role(account.getRole())
+                .build();
+    }
+
+    @Override
+    public RegisterReponse register(RegisterRequest registerRequest) {
+        if (accountRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+            throw new EntityExistsException("Email already exists!");
+        }
+
+        Account account = Account.builder()
+                .id(UUID.randomUUID())
+                .email(registerRequest.getEmail())
+                .name(registerRequest.getName())
+                .password(registerRequest.getPassword())
+                .role(Enums.role.CUSTOMER)
+                .build();
+
+        Customer customer = new Customer();
+        customer.setCustomerId(account);
+        account.setCustomerId(customer);
+
+        Account accountExisting = accountRepository.save(account);
+        RegisterReponse registerReponse = RegisterReponse.builder()
+                .id(accountExisting.getId())
+                .email(accountExisting.getEmail())
+                .name(accountExisting.getName())
+                .password(accountExisting.getPassword())
+                .role(accountExisting.getRole())
+                .token(jwtService.generateToken(accountExisting.getEmail(), Enums.role.CUSTOMER))
+                .build();
+        redisService.setObject("account:" + accountExisting.getId(), registerReponse, 600);
+
+        return registerReponse;
     }
 
     // Lấy danh sách tài khoản
@@ -127,11 +162,11 @@ public class AccountServiceImpl implements AccountService {
                 .role(accountDTO.getRole())
                 .build();
 
-        if (account.getRole().equals(Enums.role.ADMIN)) {
-            Admin admin = new Admin();
-            admin.setAdminId(account);
-            account.setAdminId(admin);
-        }
+//        if (account.getRole().equals(Enums.role.ADMIN)) {
+//            Admin admin = new Admin();
+//            admin.setAdminId(account);
+//            account.setAdminId(admin);
+//        }
 
         Customer customer = new Customer();
         customer.setCustomerId(account);
@@ -155,10 +190,10 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse updateAccount(UUID id, AccountDTO updatedAccount) {
         Account existingAccount = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
-        
+
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(existingAccount.getEmail())){
+        if (!currentUserEmail.equals(existingAccount.getEmail())) {
             throw new SecurityException("User is not authorized to delete this account");
         }
 
@@ -195,7 +230,7 @@ public class AccountServiceImpl implements AccountService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(account.getEmail())){
+        if (!currentUserEmail.equals(account.getEmail())) {
             throw new SecurityException("User is not authorized to delete this account");
         }
 
@@ -217,11 +252,11 @@ public class AccountServiceImpl implements AccountService {
                             field.set(account, enumValue);
                             if (enumValue.equals(Enums.role.ADMIN)) {
                                 Admin admin = Admin.builder()
-                                        .adminId(account)
+//                                        .adminId(account)
                                         .build();
                                 adminRepository.save(admin);
                             } else if (enumValue.equals(Enums.role.CUSTOMER)) {
-                                account.setAdminId(null);
+//                                account.setAdminId(null);
                                 adminRepository.deleteById(account.getId());
                             }
                         } catch (IllegalArgumentException e) {
@@ -258,10 +293,10 @@ public class AccountServiceImpl implements AccountService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(account.getEmail())){
+        if (!currentUserEmail.equals(account.getEmail())) {
             throw new SecurityException("User is not authorized to delete this account");
         }
-                
+
         redisService.del("allAccount");
         redisService.del("account:" + account.getId());
 

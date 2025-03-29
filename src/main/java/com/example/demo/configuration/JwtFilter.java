@@ -46,6 +46,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = null;
             String email = null;
 
+
             if (acceptedNoAuth.contains(request.getRequestURI())) {
                 filterChain.doFilter(request, response);
                 return;
@@ -72,7 +73,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 UserDetails userDetails = User.builder()
                         .username(account.getEmail())
                         .roles(String.valueOf(account.getRole()))
-                        // .password(account.getPassword())
+                        .password(account.getPassword())
                         .authorities(Collections.singletonList(new SimpleGrantedAuthority(account.getRole().toString())))
                         .build();
 

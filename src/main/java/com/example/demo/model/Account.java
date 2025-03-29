@@ -40,9 +40,9 @@ public class Account  implements UserDetails {
 //    @JsonIgnore
     private Customer customerId;
 
-    @OneToOne(mappedBy = "adminId",cascade = CascadeType.ALL)
+//    @OneToOne(mappedBy = "adminId",cascade = CascadeType.ALL)
 //    @JsonIgnore
-    private Admin adminId;
+//    private Admin adminId;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account",cascade = {CascadeType.PERSIST,
