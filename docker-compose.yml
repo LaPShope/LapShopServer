@@ -1,5 +1,4 @@
-
-version: "3" 
+version: "3"
 
 services:
   db:
@@ -14,9 +13,9 @@ services:
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=lapshope
       - MYSQL_ROOT_HOST=%
-    volumes:
-      - ./volumes/mysql:/var/lib/mysql
-      - ./dockerfiles/mysql/lapshope.initdb.sql:/docker-entrypoint-initdb.d/lapshope.initdb.sql
+    # volumes:
+    #   - ./volumes/mysql:/var/lib/mysql
+    #   - ./dockerfiles/mysql/lapshope.initdb.sql:/docker-entrypoint-initdb.d/lapshope.initdb.sql
 
   phpmyadmin:
     container_name: lapshope-phpmyadmin

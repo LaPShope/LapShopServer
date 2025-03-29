@@ -7,8 +7,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +19,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 public class OrderResponse {
     private UUID id;
 
@@ -26,6 +30,13 @@ public class OrderResponse {
 
     @JsonProperty("date_create")
     private Date dateCreate;
+
+    
+    @JsonProperty("delivery_cost")
+    private BigDecimal deliveryCost;
+
+    @JsonProperty("final_price")
+    private BigDecimal finalPrice;
 
     @JsonProperty("oder_details")
     private List<OrderItem> orderDetails;

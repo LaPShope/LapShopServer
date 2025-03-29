@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.ImageDTO;
 import com.example.demo.model.Image;
 import com.example.demo.model.LaptopModel;
@@ -65,7 +66,7 @@ public class ImageServiceImpl implements ImageService {
         return imageDTO;
     }
 
-    // 3. Tạo mới một Image
+    @Transactional
     @Override
     public ImageDTO createImage(ImageDTO imageDTO) {
         Image image = Image.builder()
@@ -92,6 +93,7 @@ public class ImageServiceImpl implements ImageService {
         return cachedImage;
     }
 
+    @Transactional
     @Override
     public ImageDTO updateImage(UUID imageId, ImageDTO imageDTO){
         Image imageExisting = imageRepository.findById(imageId)
@@ -118,8 +120,8 @@ public class ImageServiceImpl implements ImageService {
         return cachedImage;
     }
 
+    @Transactional
     @Override
-
     public ImageDTO partialUpdateImage(UUID id, Map<String, Object> fieldsToUpdate) {
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Image with ID " + id + " not found!"));
@@ -153,7 +155,7 @@ public class ImageServiceImpl implements ImageService {
         return cachedImage;
     }
 
-    // 5. Xóa Image theo ID
+    @Transactional
     @Override
     public void deleteImage(UUID id) {
         Image image = imageRepository.findById(id)

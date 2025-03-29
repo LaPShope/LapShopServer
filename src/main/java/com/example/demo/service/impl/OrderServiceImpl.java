@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.common.ConvertDate;
 import com.example.demo.common.ConvertSnakeToCamel;
 import com.example.demo.common.Enums;
@@ -19,7 +20,6 @@ import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Map;
 
 
 @Service
@@ -39,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
         this.redisService = redisService;
     }
 
+    @Override
     public List<OrderResponse> getAllOrders() {
         List<OrderResponse> cachedOrderResponses = redisService.getObject("allOder", new TypeReference<List<OrderResponse>>() {});
         if(cachedOrderResponses != null && !cachedOrderResponses.isEmpty()){
@@ -78,6 +79,12 @@ public class OrderServiceImpl implements OrderService {
         Customer customer = customerRepository.findById(orderDTO.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to create this order");
+        }
+
         Order order = Order.builder()
                 .customer(customer)
                 .dateCreate(new Date())
@@ -102,6 +109,12 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse updateOrder(UUID id, OrderDTO orderDTO) {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(existingOrder.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
 
         existingOrder.setStatus(orderDTO.getStatus());
         existingOrder.setDateCreate(orderDTO.getDateCreate());
@@ -148,8 +161,14 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order with ID " + id + " not found!"));
 
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(order.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
+
         Class<?> clazz = order.getClass();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"); // Định dạng chuẩn ISO 8601
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
             String fieldName = entry.getKey();
@@ -197,6 +216,12 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(UUID id) {
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(existingOrder.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
 
         redisService.deleteByPatterns(List.of("allOder","*der*"));
 

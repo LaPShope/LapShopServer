@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.OrderDetailDTO;
 import com.example.demo.dto.response.OrderDetailResponse;
 import com.example.demo.model.LaptopModel;
@@ -39,7 +40,7 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         this.redisService = redisService;
     }
 
-    @Transactional
+    
     @Override
     public List<OrderDetailResponse> getAllOrderDetails() {
         List<OrderDetailResponse> cachedOderDetail = redisService.getObject("allOderDetail", new TypeReference<List<OrderDetailResponse>>() {});
@@ -56,7 +57,6 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         return orderDetailResponses;
     }
 
-    @Transactional
     @Override
     public OrderDetailResponse getOrderDetailById(UUID id) {
         OrderDetailResponse cachedOderDetail = redisService.getObject("oderDetail:"+id, new TypeReference<OrderDetailResponse>() {});
@@ -79,6 +79,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     public OrderDetailResponse createOrderDetail(OrderDetailDTO orderDetailDTO) {
         Order order = orderRepository.findById(orderDetailDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order  not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(order.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to create this orderDetail");
+        }
 
         LaptopModel laptopModel = laptopModelRepository.findById(orderDetailDTO.getLaptopModelId())
                 .orElseThrow(() -> new EntityNotFoundException("LaptopModel not found!"));
@@ -107,6 +113,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         OrderDetail existingOrderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found!"));
 
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(existingOrderDetail.getOrder().getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
+
         Order order = orderRepository.findById(orderDetailDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
@@ -133,6 +145,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     public OrderDetailResponse partialUpdateOrderDetail(UUID id, Map<String, Object> fieldsToUpdate) {
         OrderDetail orderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail with ID " + id + " not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(orderDetail.getOrder().getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
 
         Class<?> clazz = orderDetail.getClass();
 
@@ -173,6 +191,12 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     public void deleteOrderDetail(UUID id) {
         OrderDetail existingOrderDetail = orderDetailRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(existingOrderDetail.getOrder().getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
 
         redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","oderDetail:"+id,"order:"+existingOrderDetail.getOrder().getId()));
 

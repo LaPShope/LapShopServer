@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.common.Enums;
 import com.example.demo.dto.PaymentMethodDTO;
 import com.example.demo.model.PaymentMethod;
@@ -10,8 +11,7 @@ import com.example.demo.mapper.PaymentMethodMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -20,7 +20,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class PaymentMethodServiceImpl implements PaymentMethodService {
     private final RedisService redisService;
     private final PaymentMethodRepository paymentMethodRepository;
@@ -83,6 +82,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
 
 
     // Tạo mới PaymentMethod
+    @Transactional
     @Override
     public PaymentMethodDTO createPaymentMethod(PaymentMethodDTO paymentMethodDTO) {
 
@@ -103,6 +103,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     }
 
     // Cập nhật PaymentMethod
+    @Transactional
     @Override
     public PaymentMethodDTO updatePaymentMethod(UUID id, PaymentMethodDTO paymentMethodDTO) {
         PaymentMethod existingPaymentMethod = paymentMethodRepository.findById(id)
@@ -122,6 +123,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
         return cachedPaymentMethod;
     }
 
+    @Transactional
     @Override
     public PaymentMethodDTO partialUpdatePaymentMethod(UUID id, Map<String, Object> fieldsToUpdate) {
         PaymentMethod paymentMethod = paymentMethodRepository.findById(id)
@@ -166,7 +168,7 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     }
 
 
-    // Xóa PaymentMethod theo ID
+    @Transactional
     @Override
     public void deletePaymentMethod(UUID id) {
         PaymentMethod paymentMethod = paymentMethodRepository.findById(id)

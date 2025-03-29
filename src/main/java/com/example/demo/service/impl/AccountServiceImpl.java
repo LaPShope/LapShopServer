@@ -1,9 +1,13 @@
 package com.example.demo.service.impl;
 
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.common.Enums;
+import com.example.demo.configuration.JwtService;
 import com.example.demo.dto.AccountDTO;
+import com.example.demo.dto.request.auth.LoginRequest;
 import com.example.demo.dto.response.AccountResponse;
+import com.example.demo.dto.response.LoginResponse;
 import com.example.demo.model.Account;
 import com.example.demo.model.Admin;
 import com.example.demo.model.Customer;
@@ -34,11 +38,33 @@ public class AccountServiceImpl implements AccountService {
     private final RedisService redisService;
     private final AdminRepository adminRepository;
     private final AccountRepository accountRepository;
+    private final JwtService jwtService;
 
-    public AccountServiceImpl(AdminRepository adminRepository, RedisService redisService, AccountRepository accountRepository) {
+    public AccountServiceImpl(JwtService jwtService, AdminRepository adminRepository, RedisService redisService, AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
         this.redisService = redisService;
         this.adminRepository = adminRepository;
+        this.jwtService = jwtService;
+    }
+    //test lay token
+    @Override
+    public LoginResponse login(LoginRequest loginRequest){
+
+        Account account = accountRepository.findByEmail(loginRequest.getEmail())
+                            .orElseThrow(() -> new EntityNotFoundException("not found"));
+
+        String token = jwtService.generateToken(
+            account.getEmail(),
+            account.getRole()
+        );
+
+        System.out.println(token);
+
+        return LoginResponse.builder()
+            .token(token)
+            .email(account.getEmail())
+            .role(account.getRole())
+            .build();
     }
 
     // Lấy danh sách tài khoản
@@ -129,11 +155,17 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse updateAccount(UUID id, AccountDTO updatedAccount) {
         Account existingAccount = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+        
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(existingAccount.getEmail())){
+            throw new SecurityException("User is not authorized to delete this account");
+        }
 
         Optional<Account> existingAccount1 = accountRepository.findByEmail(updatedAccount.getEmail());
 
         if (existingAccount1.isPresent()) {
-            if (!existingAccount1.get().getId().equals(existingAccount.getId())) {
+            if (!existingAccount1.get().getEmail().equals(existingAccount.getEmail())) {
                 throw new EntityExistsException("Email already existed");
             }
         }
@@ -160,6 +192,12 @@ public class AccountServiceImpl implements AccountService {
     public AccountResponse partialUpdateAccount(UUID id, Map<String, Object> fieldsToUpdate) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account with ID " + id + " not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(account.getEmail())){
+            throw new SecurityException("User is not authorized to delete this account");
+        }
 
         Class<?> clazz = account.getClass();
 
@@ -218,6 +256,12 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(account.getEmail())){
+            throw new SecurityException("User is not authorized to delete this account");
+        }
+                
         redisService.del("allAccount");
         redisService.del("account:" + account.getId());
 

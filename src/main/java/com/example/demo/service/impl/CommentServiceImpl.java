@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.CommentDTO;
 import com.example.demo.dto.response.comment.CommentResponse;
 import com.example.demo.model.Comment;
@@ -36,7 +37,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     // Lấy danh sách tất cả Comment
-    @Transactional
     @Override
     public List<CommentResponse> getAllCommentsByAccountId(UUID accountId) {
         List<CommentResponse> cachedCommentResponses = redisService.getObject("allComment", new TypeReference<List<CommentResponse>>() {});
@@ -54,7 +54,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     // Lấy Comment theo ID
-    @Transactional
     @Override
     public CommentResponse getCommentById(UUID id) {
         CommentResponse cachedCommentResponse = redisService.getObject("comment:"+id, new TypeReference<CommentResponse>() {});
@@ -82,6 +81,12 @@ public class CommentServiceImpl implements CommentService {
 
         Account account = accountRepository.findById(commentDTO.getAccountId())
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(account.getEmail())){
+            throw new SecurityException("User is not authorized to create this comment");
+        }
 
         LaptopModel laptopModel = laptopModelRepository.findById(commentDTO.getLaptopModelId())
                 .orElseThrow(() -> new EntityNotFoundException("LaptopModel not found"));
@@ -118,6 +123,12 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(comment.getAccount().getEmail())){
+            throw new SecurityException("User is not authorized to update this comment");
+        }
+
         comment.setBody(commentDTO.getBody());
 
         Comment commentExisting = commentRepository.save(comment);
@@ -130,10 +141,17 @@ public class CommentServiceImpl implements CommentService {
         return cachedCommentResponse;
     }
 
+    @Transactional
     @Override
     public CommentResponse partialUpdateComment(UUID id, Map<String, Object> fieldsToUpdate) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comment with ID " + id + " not found!"));
+
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(comment.getAccount().getEmail())){
+            throw new SecurityException("User is not authorized to update this comment");
+        }
 
         Class<?> clazz = comment.getClass();
 
@@ -170,6 +188,12 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(UUID id) {
         Comment commentExisting = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(commentExisting.getAccount().getEmail())){
+            throw new SecurityException("User is not authorized to delete this account");
+        }
 
         redisService.deleteByPatterns(List.of("allComment","allLaptopModel","laptopModel:"+commentExisting.getLaptopModel().getId(),"comment:"+id));
 
