@@ -30,7 +30,6 @@ public class AccountController {
                     .message("Account retrieved successfully")
                     .data(accountService.getAllAccounts())
                     .build());
-
     }
 
     // Lấy tài khoản theo id
