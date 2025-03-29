@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.common.ConvertDate;
 import com.example.demo.common.ConvertSnakeToCamel;
 import com.example.demo.dto.ChatDTO;
@@ -33,7 +34,6 @@ public class ChatServiceImpl implements ChatService {
         this.redisService = redisService;
     }
 
-    @Transactional
     @Override
     public List<ChatResponse> getAllChatsByAccountId(UUID accountId) {
 
@@ -57,7 +57,6 @@ public class ChatServiceImpl implements ChatService {
         return chatResponsesList;
     }
 
-    @Transactional
     @Override
     public ChatResponse getChatById(UUID id) {
         ChatResponse cachedChat = redisService.getObject("chat:", new TypeReference<ChatResponse>() {});
@@ -83,6 +82,12 @@ public class ChatServiceImpl implements ChatService {
         Account receiver = accountRepository.findById(chatDTO.getReceiverId())
                 .orElseThrow(() -> new EntityNotFoundException("Receiver Account not found"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(sender.getEmail())){
+            throw new SecurityException("User is not authorized to create this chat");
+        }
+
         Chat chat = Chat.builder()
                 .receiverId(receiver)
                 .senderId(sender)
@@ -106,8 +111,8 @@ public class ChatServiceImpl implements ChatService {
         senderChatList.add(chatResponse);
         receiverChatList.add(chatResponse);
 
-        redisService.saveChatList("allChatAccountId:"+chatDTO.getSenderId(), senderChatList, 600);
-        redisService.saveChatList("allCChatAccountId:"+chatDTO.getReceiverId(), receiverChatList, 600);
+        // redisService.saveChatList("allChatAccountId:"+chatDTO.getSenderId(), senderChatList, 600);
+        // redisService.saveChatList("allCChatAccountId:"+chatDTO.getReceiverId(), receiverChatList, 600);
 
         return chatResponse;
     }
@@ -117,7 +122,13 @@ public class ChatServiceImpl implements ChatService {
     public ChatResponse updateChat(UUID chatId, ChatDTO chatDTO) {
         Chat chat = chatRepository.findById(chatId)
                 .orElseThrow(() -> new EntityNotFoundException("Chat not found"));
-
+        
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(chat.getSenderId().getEmail())){
+            throw new SecurityException("User is not authorized to update this chat");
+        }
+        
         Account sender = accountRepository.findById(chatDTO.getSenderId())
                 .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
         Account receiver = accountRepository.findById(chatDTO.getReceiverId())
@@ -131,8 +142,8 @@ public class ChatServiceImpl implements ChatService {
 
         ChatResponse cachedChat = ChatMapper.convertToResponse(chat);
 
-        updateChatInRedis("allChatAccountId:"+chatDTO.getReceiverId(), chatId, cachedChat);
-        updateChatInRedis("allChatAccountId:"+chatDTO.getSenderId(), chatId, cachedChat);
+        // updateChatInRedis("allChatAccountId:"+chatDTO.getReceiverId(), chatId, cachedChat);
+        // updateChatInRedis("allChatAccountId:"+chatDTO.getSenderId(), chatId, cachedChat);
 
         return cachedChat;
     }
@@ -143,6 +154,12 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Chat with ID " + id + " not found!"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(chat.getSenderId().getEmail())){
+            throw new SecurityException("User is not authorized to update this chat");
+        }
+        
         Class<?> clazz = chat.getClass();
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
@@ -176,8 +193,8 @@ public class ChatServiceImpl implements ChatService {
 
         ChatResponse cachedChat = ChatMapper.convertToResponse(updatedChat);
 
-        updateChatInRedis("allChatAccountId:" + chat.getReceiverId().getId(), id, cachedChat);
-        updateChatInRedis("allChatAccountId:" + chat.getSenderId().getId(), id, cachedChat);
+        // updateChatInRedis("allChatAccountId:" + chat.getReceiverId().getId(), id, cachedChat);
+        // updateChatInRedis("allChatAccountId:" + chat.getSenderId().getId(), id, cachedChat);
 
         return cachedChat;
     }
@@ -191,6 +208,12 @@ public class ChatServiceImpl implements ChatService {
         Account sender = chat.getSenderId();
         Account receiver = chat.getReceiverId();
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(sender.getEmail())){
+            throw new SecurityException("User is not authorized to delete this chat");
+        }
+
         sender.getChatSend().remove(chat);
         receiver.getChatReceive().remove(chat);
 
@@ -199,21 +222,21 @@ public class ChatServiceImpl implements ChatService {
         chatRepository.delete(chat);
     }
 
-    private void updateChatInRedis(String redisKey, UUID chatId, ChatResponse updatedChatResponse) {
-        List<ChatResponse> chatList = redisService.getChatList(redisKey);
+    // private void updateChatInRedis(String redisKey, UUID chatId, ChatResponse updatedChatResponse) {
+    //     List<ChatResponse> chatList = redisService.getChatList(redisKey);
 
-        if (chatList == null || chatList.isEmpty()) {
-            return;
-        }
+    //     if (chatList == null || chatList.isEmpty()) {
+    //         return;
+    //     }
 
-        for (int i = 0; i < chatList.size(); i++) {
-            if (chatList.get(i).getId().equals(chatId)) {
-                chatList.set(i, updatedChatResponse); // Cập nhật tin nhắn
-                redisService.saveChatList(redisKey, chatList, 20); // Lưu lại vào Redis
-                return;
-            }
-        }
-    }
+    //     for (int i = 0; i < chatList.size(); i++) {
+    //         if (chatList.get(i).getId().equals(chatId)) {
+    //             chatList.set(i, updatedChatResponse); // Cập nhật tin nhắn
+    //             redisService.saveChatList(redisKey, chatList, 20); // Lưu lại vào Redis
+    //             return;
+    //         }
+    //     }
+    // }
 
 
 }

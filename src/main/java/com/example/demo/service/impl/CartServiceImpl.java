@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.CartDTO;
 import com.example.demo.dto.response.cart.CartResponse;
 import com.example.demo.model.*;
@@ -74,6 +75,12 @@ public class CartServiceImpl implements CartService {
         Customer customer = customerRepository.findById(cartDTO.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to create this cart ");
+        }
+
         Cart cart = Cart.builder()
                 .customer(customer)
                 .build();
@@ -93,10 +100,15 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cart not found!"));
 
-        Customer customer = customerRepository.findById(cartDTO.getCustomerId())
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this cart");
+        }
+        // Customer customer = customerRepository.findById(cartDTO.getCustomerId())
+        //         .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
-        cart.setCustomer(customer);
+        // cart.setCustomer(customer);
         //loai bo toan bo laptopOnCart
         cart.getLaptopOnCarts().removeIf(laptop -> true);
         //lay laptopOnCart moi
@@ -119,10 +131,18 @@ public class CartServiceImpl implements CartService {
         return  cartResponse;
     }
 
+    @Transactional
+    @Override
     public CartResponse partialUpdateCart(UUID id, Map<String, Object> fieldsToUpdate) {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cart with ID " + id + " not found!"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this cart");
+        }
+    
         Class<?> clazz = cart.getClass();
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
@@ -153,12 +173,18 @@ public class CartServiceImpl implements CartService {
     }
 
 
-    // Xóa Cart theo ID xoa luon cac LaptopOnCart con
+    @Transactional
     @Override
     public void deleteCart(UUID id) {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to delete this cart");
+        }
+    
         cart.getLaptopOnCarts().removeIf(laptopOnCart -> true);
 
         redisService.deleteByPatterns(List.of("allCart","cart:"+id));

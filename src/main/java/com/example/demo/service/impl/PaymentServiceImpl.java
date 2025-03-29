@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.PaymentDTO;
 import com.example.demo.dto.response.PaymentResponse;
 import com.example.demo.model.*;
@@ -10,6 +11,7 @@ import com.example.demo.mapper.PaymentMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -89,10 +91,17 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentResponse;
     }
 
+    @Transactional
     @Override
     public PaymentResponse createPayment(PaymentDTO paymentDTO) {
         Customer customer = customerRepository.findById(paymentDTO.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to create this payment");
+        }
 
         Order order = orderRepository.findById(paymentDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
@@ -119,10 +128,17 @@ public class PaymentServiceImpl implements PaymentService {
         return cachedPayment;
     }
 
+    @Transactional
     @Override
     public PaymentResponse updatePayment(UUID id, PaymentDTO paymentDTO) {
         Payment existingPayment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(existingPayment.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this payment");
+        }
 
         Customer customer = customerRepository.findById(paymentDTO.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
@@ -151,10 +167,17 @@ public class PaymentServiceImpl implements PaymentService {
         return cachedPaymentResponse;
     }
 
+    @Transactional
     @Override
     public PaymentResponse partialUpdatePayment(UUID id, Map<String, Object> fieldsToUpdate) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment with ID " + id + " not found!"));
+
+                //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(payment.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
 
         Class<?> clazz = payment.getClass();
 
@@ -195,10 +218,17 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
 
+    @Transactional
     @Override
     public void deletePayment(UUID id) {
         Payment existingPayment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(existingPayment.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this orderDetail");
+        }
 
         redisService.deleteByPatterns(List.of("allPayment","payment:"+id,"allPaymentByCustomerId:+id"));
 

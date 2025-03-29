@@ -32,8 +32,6 @@ public class SaleServiceImpl implements SaleService {
         this.redisService = redisService;
     }
 
-    //Lấy danh sách tất cả Sale
-    @Transactional
     @Override
     public List<SaleResponse> getAllSales() {
         List<SaleResponse> cachedSales = redisService.getObject("allSale", new TypeReference<List<SaleResponse>>() {});
@@ -50,8 +48,6 @@ public class SaleServiceImpl implements SaleService {
         return saleResponses;
     }
 
-    //Lấy Sale theo ID
-    @Transactional
     @Override
     public SaleResponse getSaleById(UUID id) {
         SaleResponse cachedSale = redisService.getObject("allSale", new TypeReference<SaleResponse>() {});

@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.common.ConvertDate;
 import com.example.demo.common.ConvertSnakeToCamel;
 import com.example.demo.dto.response.CustomerResponse;
@@ -70,10 +71,17 @@ public class CustomerServiceImpl implements CustomerService {
         return customerResponse;
     }
 
+    @Transactional
     @Override
     public CustomerResponse partialUpdateCustomer(UUID id, Map<String, Object> fieldsToUpdate) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer with ID " + id + " not found!"));
+
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to delete this account");
+        }
 
         Class<?> clazz = customer.getClass();
 
@@ -116,13 +124,19 @@ public class CustomerServiceImpl implements CustomerService {
         return cachedCustomer;
     }
 
-    // 5. Xóa khách hàng
+    @Transactional
     @Override
     public void deleteCustomer(UUID id) {
 
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer with ID " + id + " not found!"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to delete this account");
+        }
+        
         redisService.del("customer:"+id);
 
         customerRepository.delete(customer);

@@ -14,7 +14,6 @@ public class CartMapper {
         return CartDTO.builder()
                 .id(cart.getId())
                 .customerId(cart.getCustomer().getId())
-                .quantity(cart.getQuantity())
                 .laptopOnCartIds(Optional.ofNullable(cart.getLaptopOnCarts())
                         .orElse(Collections.emptyList())
                         .stream()
@@ -27,7 +26,6 @@ public class CartMapper {
     public static CartResponse convertToResponse(Cart cart) {
         return CartResponse.builder()
                 .id(cart.getId())
-                .quantity(cart.getQuantity())
                 .laptopOnCartList(cart.getLaptopOnCarts() == null ? Collections.emptyList() :
                         cart.getLaptopOnCarts().stream()
                         .map(LaptopOnCartMapper::convertToItem)

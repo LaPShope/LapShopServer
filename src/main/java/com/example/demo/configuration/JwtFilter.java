@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -69,11 +70,10 @@ public class JwtFilter extends OncePerRequestFilter {
                 Account account = accountService.getAccount(email);
 
                 UserDetails userDetails = User.builder()
-                        .username(account.getName())
+                        .username(account.getEmail())
                         .roles(String.valueOf(account.getRole()))
-                        .authorities(Collections
-                                .singletonList(new SimpleGrantedAuthority(account.getRole().toString()))
-                        )
+                        // .password(account.getPassword())
+                        .authorities(Collections.singletonList(new SimpleGrantedAuthority(account.getRole().toString())))
                         .build();
 
                 if (jwtService.validateToken(token, userDetails)) {
@@ -88,6 +88,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (Exception e) {
+            e.printStackTrace();
             ErrorMessage errResponse = ErrorMessage.builder()
                     .success(false)
                     .statusCode(Enums.ErrorKey.ErrorInternal)

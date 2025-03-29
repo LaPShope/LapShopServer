@@ -7,6 +7,7 @@ import com.example.demo.model.Customer;
 import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.service.AddressService;
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.AddressDTO;
 
 import com.example.demo.mapper.AddressMapper;
@@ -34,7 +35,6 @@ public class AddressServiceImpl implements AddressService{
     }
 
     // Lấy tất cả địa chỉ của một khách hàng
-    @Transactional
     @Override
     public List<AddressResponse> getAllAddress(UUID customerId) {
         List<AddressResponse> cachedAddress = redisService.getObject("allAddressCustomerId:" + customerId, new TypeReference<List<AddressResponse>>() {});
@@ -53,7 +53,6 @@ public class AddressServiceImpl implements AddressService{
     }
 
     // Lấy địa chỉ theo ID
-    @Transactional
     @Override
     public AddressResponse getAddressById(UUID id) {
         AddressResponse cachedAddress = redisService.getObject("addressId:" + id, new TypeReference<AddressResponse>() {});
@@ -78,6 +77,12 @@ public class AddressServiceImpl implements AddressService{
         Customer  customer = customerRepository.findById(addressDTO.getCustomerId())
                            .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to create address");
+        }
+        
         Address address = Address.builder()
                 .id(null)
                 .customer(customer)
@@ -108,6 +113,12 @@ public class AddressServiceImpl implements AddressService{
         Customer customer = customerRepository.findById(updatedAddress.getCustomerId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update address");
+        }
+
         Address addressToUpdate = addressRepository.findById(idToUpdate)
                 .orElseThrow(() -> new EntityNotFoundException("Address not found"));
 
@@ -131,11 +142,18 @@ public class AddressServiceImpl implements AddressService{
         return addressResponse;
     }
 
+    @Transactional
     @Override
     public AddressResponse partialUpdateAddress(UUID id, Map<String, Object> fieldsToUpdate) {
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Address with ID " + id + " not found!"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(address.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to delete this account");
+        }
+        
         Class<?> clazz = address.getClass();
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
@@ -174,6 +192,12 @@ public class AddressServiceImpl implements AddressService{
         Address addressExisting = addressRepository.findById(id)
                         .orElseThrow(() -> new EntityNotFoundException("Address not found"));
 
+        //kiem tra user qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(addressExisting.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to delete this address");
+        }
+        
         redisService.deleteByPatterns(List.of("*ustomer:"+addressExisting.getCustomer().getId()+"*"));
 
         addressRepository.deleteById(id);

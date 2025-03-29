@@ -3,7 +3,9 @@ package com.example.demo.controller;
 
 import com.example.demo.common.DataResponse;
 import com.example.demo.dto.AccountDTO;
+import com.example.demo.dto.request.auth.LoginRequest;
 import com.example.demo.dto.response.AccountResponse;
+import com.example.demo.dto.response.LoginResponse;
 import com.example.demo.service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,12 +45,12 @@ public class AccountController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<DataResponse<AccountResponse>> login(@RequestBody AccountDTO accountDTO) {
+    public ResponseEntity<DataResponse<LoginResponse>> login(@RequestBody LoginRequest loginRequest) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(DataResponse.<AccountResponse>builder()
+                .body(DataResponse.<LoginResponse>builder()
                         .success(true)
                         .message("Account created successfully!")
-                        .data(accountService.createAccount(accountDTO))
+                        .data(accountService.login(loginRequest))
                         .build());
     }
 

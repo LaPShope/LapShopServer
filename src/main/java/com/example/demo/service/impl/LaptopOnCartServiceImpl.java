@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.LaptopOnCartDTO;
 import com.example.demo.dto.response.LaptopOnCartResponse;
 import com.example.demo.model.Cart;
@@ -84,6 +85,12 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
         Cart cart = cartRepository.findById(laptopOnCartDTO.getCartId())
                 .orElseThrow(() -> new EntityNotFoundException("Cart not found!"));
 
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to create this laptopOnCart");
+        }
+
         LaptopModel laptopModel = laptopModelRepository.findById(laptopOnCartDTO.getLaptopModelId())
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found!"));
 
@@ -104,6 +111,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
     }
 
     // 4. Cập nhật LaptopOnCart
+    @Transactional
     @Override
     public LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO) {
         LaptopOnCartResponse cachLaptopOnCartResponse = redisService.getObject("laptopOnCart:" + id, new TypeReference<LaptopOnCartResponse>() {});
@@ -113,6 +121,12 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this laptopOnCart");
+        }
 
         Cart cart = cartRepository.findById(laptopOnCartDTO.getCartId())
                 .orElseThrow(() -> new EntityNotFoundException("Cart with ID " + laptopOnCartDTO.getCartId() + " not found!"));
@@ -143,6 +157,12 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this laptopOnCart");
+        }
 
         Class<?> clazz = laptopOnCart.getClass();
 
@@ -181,6 +201,12 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
     public void deleteLaptopOnCart(UUID id) {
         LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
+
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getCustomerId().getEmail())){
+            throw new SecurityException("User is not authorized to update this laptopOnCart");
+        }
 
         redisService.deleteByPatterns(List.of("*art:"+id+"*","allLaptopOnCart"));
 

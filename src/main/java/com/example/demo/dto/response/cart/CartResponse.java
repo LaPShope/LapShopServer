@@ -17,8 +17,6 @@ import java.util.UUID;
 public class CartResponse {
     private UUID id;
 
-    private Integer quantity;
-
     private CustomerDTO customer;
 
     @JsonProperty("laptop_on_cart_list")
