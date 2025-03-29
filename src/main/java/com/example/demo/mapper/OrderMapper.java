@@ -11,7 +11,7 @@ public class OrderMapper {
     public static OrderDTO convertToDTO(Order order) {
         return OrderDTO.builder()
                 .id(order.getId())
-                .customerId(order.getCustomer().getId())
+                .customerId(order.getCustomer().getAccount().getId())
                 .dateCreate(order.getDateCreate())
                 .status(order.getStatus())
                 .finalPrice(order.getFinalPrice())

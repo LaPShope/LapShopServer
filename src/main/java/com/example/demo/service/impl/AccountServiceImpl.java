@@ -15,6 +15,7 @@ import com.example.demo.model.Admin;
 import com.example.demo.model.Customer;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.AdminRepository;
+import com.example.demo.repository.CustomerRepository;
 import com.example.demo.service.AccountService;
 
 
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
+import jakarta.persistence.Version;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,10 @@ public class AccountServiceImpl implements AccountService {
         this.jwtService = jwtService;
     }
 
+    private boolean existsAccountByEmail(String email) {
+        return accountRepository.existsAccountByEmail(email) > 0;
+    }
+
     //test lay token
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
@@ -71,13 +77,13 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
     public RegisterReponse register(RegisterRequest registerRequest) {
-        if (accountRepository.findByEmail(registerRequest.getEmail()).isPresent()) {
+        if (this.existsAccountByEmail(registerRequest.getEmail())) {
             throw new EntityExistsException("Email already exists!");
         }
 
         Account account = Account.builder()
-                .id(UUID.randomUUID())
                 .email(registerRequest.getEmail())
                 .name(registerRequest.getName())
                 .password(registerRequest.getPassword())
@@ -85,10 +91,11 @@ public class AccountServiceImpl implements AccountService {
                 .build();
 
         Customer customer = new Customer();
-        customer.setCustomerId(account);
-        account.setCustomerId(customer);
+        account.setCustomer(customer);
+        customer.setAccount(account);
 
         Account accountExisting = accountRepository.save(account);
+
         RegisterReponse registerReponse = RegisterReponse.builder()
                 .id(accountExisting.getId())
                 .email(accountExisting.getEmail())
@@ -169,8 +176,8 @@ public class AccountServiceImpl implements AccountService {
 //        }
 
         Customer customer = new Customer();
-        customer.setCustomerId(account);
-        account.setCustomerId(customer);
+        customer.setAccount(account);
+//        account.setCustomerId(customer);
 
         Account accountExisting = accountRepository.save(account);
 
@@ -308,4 +315,5 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findByEmail(username)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
     }
+
 }

@@ -13,5 +13,5 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
     Optional<Account> findByEmail(String email);
 
     @Query(nativeQuery = true, value = "SELECT EXISTS(SELECT 1 FROM account WHERE email = ?1)")
-    boolean existsAccountByEmail(String email);
+    Long existsAccountByEmail(String email);
 }

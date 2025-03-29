@@ -43,8 +43,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public List<PaymentResponse> getAllPaymentsByCustomerId(UUID id) {
-        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:"+id, new TypeReference<List<PaymentResponse>>() {});
-        if(cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()){
+        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:" + id, new TypeReference<List<PaymentResponse>>() {
+        });
+        if (cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()) {
             return cachedPaymentResponses;
         }
 
@@ -53,31 +54,33 @@ public class PaymentServiceImpl implements PaymentService {
                 .map(PaymentMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allPaymentByCustomerId:"+id,paymentResponses,600);
+        redisService.setObject("allPaymentByCustomerId:" + id, paymentResponses, 600);
 
         return paymentResponses;
     }
 
     @Override
     public List<PaymentResponse> getAllPayments() {
-        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<List<PaymentResponse>>() {});
-        if(cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()){
+        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<List<PaymentResponse>>() {
+        });
+        if (cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()) {
             return cachedPaymentResponses;
         }
 
-         List<PaymentResponse> paymentResponses = paymentRepository.findAll().stream()
+        List<PaymentResponse> paymentResponses = paymentRepository.findAll().stream()
                 .map(PaymentMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allPayment",paymentResponses,600);
+        redisService.setObject("allPayment", paymentResponses, 600);
 
         return paymentResponses;
     }
 
     @Override
     public PaymentResponse getPaymentById(UUID id) {
-        PaymentResponse cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<PaymentResponse>() {});
-        if(cachedPaymentResponses != null){
+        PaymentResponse cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<PaymentResponse>() {
+        });
+        if (cachedPaymentResponses != null) {
             return cachedPaymentResponses;
         }
 
@@ -86,7 +89,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentResponse paymentResponse = PaymentMapper.convertToResponse(payment);
 
-        redisService.setObject("payment:"+id,paymentResponse,600);
+        redisService.setObject("payment:" + id, paymentResponse, 600);
 
         return paymentResponse;
     }
@@ -99,7 +102,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(customer.getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to create this payment");
         }
 
@@ -122,8 +125,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentResponse cachedPayment = PaymentMapper.convertToResponse(paymentExisting);
 
-        redisService.deleteByPatterns(List.of("allPayment","allPaymentByCustomerId:"+paymentDTO.getCustomerId()));
-        redisService.setObject("payment:"+paymentDTO.getCustomerId(),cachedPayment,600);
+        redisService.deleteByPatterns(List.of("allPayment", "allPaymentByCustomerId:" + paymentDTO.getCustomerId()));
+        redisService.setObject("payment:" + paymentDTO.getCustomerId(), cachedPayment, 600);
 
         return cachedPayment;
     }
@@ -136,7 +139,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(existingPayment.getCustomer().getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(existingPayment.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this payment");
         }
 
@@ -161,8 +164,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentResponse cachedPaymentResponse = PaymentMapper.convertToResponse(payment);
 
-        redisService.deleteByPatterns(List.of("allPayment","payment:"+id,"allPaymentByCustomerId:+id"));
-        redisService.setObject("payment:"+id,cachedPaymentResponse,600);
+        redisService.deleteByPatterns(List.of("allPayment", "payment:" + id, "allPaymentByCustomerId:+id"));
+        redisService.setObject("payment:" + id, cachedPaymentResponse, 600);
 
         return cachedPaymentResponse;
     }
@@ -173,9 +176,9 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment with ID " + id + " not found!"));
 
-                //kiem tra qua email
+        //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(payment.getCustomer().getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(payment.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 
@@ -211,8 +214,8 @@ public class PaymentServiceImpl implements PaymentService {
         Payment updatedPayment = paymentRepository.save(payment);
         PaymentResponse cachedPaymentResponse = PaymentMapper.convertToResponse(updatedPayment);
 
-        redisService.deleteByPatterns(List.of("allPayment","payment:"+id,"allPaymentByCustomerId:+id"));
-        redisService.setObject("payment:"+id,cachedPaymentResponse,600);
+        redisService.deleteByPatterns(List.of("allPayment", "payment:" + id, "allPaymentByCustomerId:+id"));
+        redisService.setObject("payment:" + id, cachedPaymentResponse, 600);
 
         return cachedPaymentResponse;
     }
@@ -226,11 +229,11 @@ public class PaymentServiceImpl implements PaymentService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(existingPayment.getCustomer().getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(existingPayment.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 
-        redisService.deleteByPatterns(List.of("allPayment","payment:"+id,"allPaymentByCustomerId:+id"));
+        redisService.deleteByPatterns(List.of("allPayment", "payment:" + id, "allPaymentByCustomerId:+id"));
 
         paymentRepository.delete(existingPayment);
     }
