@@ -5,7 +5,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
 class DemoApplicationTests {
     class Calulator {
         public int add(int a, int b) {

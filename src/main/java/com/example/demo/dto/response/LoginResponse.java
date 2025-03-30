@@ -12,5 +12,5 @@ import lombok.Setter;
 public class LoginResponse {
     private String token;
     private String email;
-    private Enums.role role;
+    private Enums.Role role;
 }

@@ -15,7 +15,6 @@ import com.example.demo.model.Admin;
 import com.example.demo.model.Customer;
 import com.example.demo.repository.AccountRepository;
 import com.example.demo.repository.AdminRepository;
-import com.example.demo.repository.CustomerRepository;
 import com.example.demo.service.AccountService;
 
 
@@ -24,7 +23,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
-import jakarta.persistence.Version;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -69,6 +67,8 @@ public class AccountServiceImpl implements AccountService {
 
         System.out.println(token);
 
+        System.out.println("cac");
+        System.out.println(account.getRole());
         return LoginResponse.builder()
                 .token(token)
                 .email(account.getEmail())
@@ -87,7 +87,7 @@ public class AccountServiceImpl implements AccountService {
                 .email(registerRequest.getEmail())
                 .name(registerRequest.getName())
                 .password(registerRequest.getPassword())
-                .role(Enums.role.CUSTOMER)
+                .role(Enums.Role.Customer)
                 .build();
 
         Customer customer = new Customer();
@@ -102,7 +102,7 @@ public class AccountServiceImpl implements AccountService {
                 .name(accountExisting.getName())
                 .password(accountExisting.getPassword())
                 .role(accountExisting.getRole())
-                .token(jwtService.generateToken(accountExisting.getEmail(), Enums.role.CUSTOMER))
+                .token(jwtService.generateToken(accountExisting.getEmail(), Enums.Role.Customer))
                 .build();
         redisService.setObject("account:" + accountExisting.getId(), registerReponse, 600);
 
@@ -257,12 +257,12 @@ public class AccountServiceImpl implements AccountService {
                         try {
                             Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
                             field.set(account, enumValue);
-                            if (enumValue.equals(Enums.role.ADMIN)) {
+                            if (enumValue.equals(Enums.Role.Admin)) {
                                 Admin admin = Admin.builder()
 //                                        .adminId(account)
                                         .build();
                                 adminRepository.save(admin);
-                            } else if (enumValue.equals(Enums.role.CUSTOMER)) {
+                            } else if (enumValue.equals(Enums.Role.Customer)) {
 //                                account.setAdminId(null);
                                 adminRepository.deleteById(account.getId());
                             }

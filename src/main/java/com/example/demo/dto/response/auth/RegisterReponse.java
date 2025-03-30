@@ -19,7 +19,7 @@ public class RegisterReponse {
 
     private String password;
 
-    private Enums.role role;
+    private Enums.Role role;
 
     private String token;
 }

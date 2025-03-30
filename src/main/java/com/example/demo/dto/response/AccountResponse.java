@@ -22,7 +22,7 @@ public class AccountResponse {
 
     private String password;
 
-    private Enums.role role;
+    private Enums.Role role;
 
     private CustomerDTO customer;
 }

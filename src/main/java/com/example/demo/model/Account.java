@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import com.example.demo.common.Enums;
+import com.example.demo.common.RoleConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,7 +33,7 @@ public class Account  implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,columnDefinition = "VARCHAR(255) DEFAULT 'CUSTOMER'")
-    private Enums.role role;
+    private Enums.Role role;
 
     @OneToOne(mappedBy = "account",cascade = CascadeType.ALL)
     @JsonIgnore
