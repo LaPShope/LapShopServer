@@ -34,5 +34,6 @@ build/
 volumes/
 
 ### java spring
-src/main/resources/application.properties
+src/main/resources/application.yml
+
 

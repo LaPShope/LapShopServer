@@ -6,7 +6,7 @@ services:
     image: mysql
     networks:
       - lapshope-network
-    restart: always
+    restart: on-failure:3
     ports:
       - 3306:3306
     environment:
@@ -42,6 +42,15 @@ services:
     restart: on-failure:3
     ports:
       - 6379:6379
+
+  h2:
+    container_name: lapshope-h2
+    image: oscarfonts/h2
+    networks: 
+      - lapshope-network
+    ports:
+      - 8082:8082
+
 
 networks:
   lapshope-network:
