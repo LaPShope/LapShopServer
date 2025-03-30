@@ -1,10 +1,18 @@
 package com.example.demo.common;
 
-import lombok.Getter;
-
 public class Enums {
     public enum Role {
-        Admin, Customer;
+        Admin("Admin"), Customer("Customer");
+
+        private final String role;
+
+        Role(String role) {
+            this.role = role;
+        }
+
+        public String value() {
+            return role;
+        }
     }
 
     public enum laptopStatus{

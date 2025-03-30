@@ -2,6 +2,7 @@ package com.example.demo.repository;
 
 import com.example.demo.common.Enums;
 import com.example.demo.model.Account;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
@@ -18,6 +19,12 @@ public class AccountRepositoryTest {
     @Autowired
     private AccountRepository accountRepository;
 
+
+    @BeforeEach
+    void setUp() {
+        accountRepository.deleteAll();
+    }
+
     @Test
     void givenAccount_whenSave_thenSuccess() {
         // Arrange
@@ -25,7 +32,7 @@ public class AccountRepositoryTest {
                 .email("Triet")
                 .password("123456")
                 .name("Triet")
-                .role(Enums.Role.CUSTOMER)
+                .role(Enums.Role.Customer)
                 .build();
 
         // Act
@@ -36,7 +43,7 @@ public class AccountRepositoryTest {
         assertEquals("Triet", accountSaved.getEmail());
         assertEquals("123456", accountSaved.getPassword());
         assertEquals("Triet", accountSaved.getName());
-        assertEquals(Enums.Role.CUSTOMER, accountSaved.getRole());
+        assertEquals(Enums.Role.Customer, accountSaved.getRole());
     }
 
     @Test
@@ -46,7 +53,7 @@ public class AccountRepositoryTest {
                 .email("Triet")
                 .password("123456")
                 .name("Triet")
-                .role(Enums.Role.CUSTOMER)
+                .role(Enums.Role.Customer)
                 .build();
 
         accountRepository.save(baseAccount);
@@ -55,7 +62,7 @@ public class AccountRepositoryTest {
                 .orElseThrow(() -> new RuntimeException("Account not found"));
 
         // Assert
-        assertEquals(Enums.Role.CUSTOMER, acc.getRole());
+        assertEquals("Customer", acc.getRole().value(), "Role should be Customer");
     }
 
 }

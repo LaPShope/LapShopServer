@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -29,9 +28,9 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class JwtFilter extends OncePerRequestFilter {
-    private JwtService jwtService;
-    private AccountService accountService;
-    private List<String> acceptedNoAuth = List.of("/api/v1/accounts/login", "/api/v1/accounts/register");
+    private final JwtService jwtService;
+    private final AccountService accountService;
+    private final List<String> acceptedNoAuth = List.of("/api/v1/accounts/login", "/api/v1/accounts/register");
 
     public JwtFilter(JwtService jwtService, AccountService accountService) {
         this.jwtService = jwtService;
@@ -60,7 +59,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         .data(null)
                         .build();
 
-                this.writeResponse(response, 401, "application/json", errResponse);
+                this.writeJsonResponse(response, 401, errResponse);
                 return;
             }
 
@@ -93,17 +92,17 @@ public class JwtFilter extends OncePerRequestFilter {
             ErrorMessage errResponse = ErrorMessage.builder()
                     .success(false)
                     .statusCode(Enums.ErrorKey.ErrorInternal)
-                    .message("Unauthorized: " + e.getLocalizedMessage())
+                    .message("Unauthorized: The token is invalid or expired.")
                     .data(null)
                     .build();
 
-            this.writeResponse(response, 401, "application/json", errResponse);
+            this.writeJsonResponse(response, 401, errResponse);
         }
     }
 
-    private void writeResponse(HttpServletResponse response, int status, String contentType, Object content) {
+    private void writeJsonResponse(HttpServletResponse response, int status, Object content) {
         response.setStatus(status);
-        response.setContentType(contentType);
+        response.setContentType("application/json");
         try {
             response.getWriter().write(new ObjectMapper().writeValueAsString(content));
         } catch (IOException e) {
