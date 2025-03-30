@@ -20,10 +20,10 @@ public class Customer {
     @Id
     private UUID id;
 
-    @MapsId
     @OneToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "id")
-    private Account customerId;
+    @JoinColumn(name = "account_id", referencedColumnName = "id")
+    @MapsId
+    private Account account;
 
     private String gender;
 
@@ -61,10 +61,5 @@ public class Customer {
             CascadeType.MERGE,
             CascadeType.REFRESH})
     private List<Cart> cartList;
-
-    @Override
-    public String toString() {
-        return "Customer{id=" + id + "}";
-    }
 
 }

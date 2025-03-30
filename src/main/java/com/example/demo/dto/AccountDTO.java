@@ -21,6 +21,6 @@ public class AccountDTO {
 
     private String password;
 
-    private Enums.role role;
+    private Enums.Role role;
 
 }

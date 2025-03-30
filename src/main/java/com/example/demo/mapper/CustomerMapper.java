@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class CustomerMapper {
     public static CustomerDTO convertToDTO(Customer customer) {
         return CustomerDTO.builder()
-                .customerId(customer.getCustomerId().getId())
+                .customerId(customer.getAccount().getId())
                 .phone(customer.getPhone())
                 .avatar(customer.getAvatar())
                 .gender(customer.getGender())
@@ -21,12 +21,12 @@ public class CustomerMapper {
 
     public static CustomerResponse convertToResponse(Customer customer) {
         return CustomerResponse.builder()
-                .customerId(customer.getCustomerId().getId())
+                .customerId(customer.getAccount().getId())
                 .phone(customer.getPhone())
                 .avatar(customer.getAvatar())
                 .gender(customer.getGender())
                 .bornDate(customer.getBornDate())
-                .account(AccountMapper.convertToDTO(customer.getCustomerId()))
+                .account(AccountMapper.convertToDTO(customer.getAccount()))
                 .addressList(customer.getAddressList() == null ? Collections.emptyList() :
                         customer.getAddressList().stream()
                         .map(AddressMapper::convertToDTO).collect(Collectors.toList()))

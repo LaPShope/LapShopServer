@@ -12,13 +12,13 @@ import java.util.UUID;
 @Setter
 @Builder
 @Entity
-@Table(name="admin")
+@Table(name = "admin")
 public class Admin {
     @Id
     private UUID id;
 
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @MapsId
-    @OneToOne(cascade = {CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "account_id")
-    private Account adminId;
+    @JoinColumn(name = "account_id", referencedColumnName = "id")
+    private Account account;
 }

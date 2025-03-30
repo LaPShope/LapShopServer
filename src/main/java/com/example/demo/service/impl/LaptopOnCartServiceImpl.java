@@ -87,7 +87,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to create this laptopOnCart");
         }
 
@@ -124,7 +124,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this laptopOnCart");
         }
 
@@ -160,7 +160,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this laptopOnCart");
         }
 
@@ -204,7 +204,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this laptopOnCart");
         }
 

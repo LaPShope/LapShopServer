@@ -8,7 +8,7 @@ public class AddressMapper {
     public static AddressDTO convertToDTO(Address address) {
         return AddressDTO.builder()
                 .id(address.getId())
-                .customerId(address.getCustomer().getId())
+                .customerId(address.getCustomer().getAccount().getId())
                 .city(address.getCity())
                 .district(address.getDistrict())
                 .ward(address.getWard())

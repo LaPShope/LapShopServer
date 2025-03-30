@@ -79,7 +79,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(customer.getAccount().getEmail())){
             throw new SecurityException("User is not authorized to delete this account");
         }
 
@@ -133,7 +133,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(customer.getAccount().getEmail())){
             throw new SecurityException("User is not authorized to delete this account");
         }
         

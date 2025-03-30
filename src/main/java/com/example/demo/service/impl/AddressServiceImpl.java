@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-public class AddressServiceImpl implements AddressService{
+public class AddressServiceImpl implements AddressService {
 
     private final AddressRepository addressRepository;
     private final CustomerRepository customerRepository;
@@ -31,23 +31,24 @@ public class AddressServiceImpl implements AddressService{
     public AddressServiceImpl(RedisService redisService, AddressRepository addressRepository, CustomerRepository customerRepository) {
         this.addressRepository = addressRepository;
         this.customerRepository = customerRepository;
-        this.redisService =redisService;
+        this.redisService = redisService;
     }
 
     // Lấy tất cả địa chỉ của một khách hàng
     @Override
     public List<AddressResponse> getAllAddress(UUID customerId) {
-        List<AddressResponse> cachedAddress = redisService.getObject("allAddressCustomerId:" + customerId, new TypeReference<List<AddressResponse>>() {});
+        List<AddressResponse> cachedAddress = redisService.getObject("allAddressCustomerId:" + customerId, new TypeReference<List<AddressResponse>>() {
+        });
 
-        if(cachedAddress != null && !cachedAddress.isEmpty()){
+        if (cachedAddress != null && !cachedAddress.isEmpty()) {
             return cachedAddress;
         }
 
         List<AddressResponse> addresses = addressRepository.findByCustomerId(customerId).stream()
-            .map(AddressMapper::convertToResponse)
-            .toList();
+                .map(AddressMapper::convertToResponse)
+                .toList();
 
-        redisService.setObject("allAddressCustomerId:"+customerId,addresses,600);
+        redisService.setObject("allAddressCustomerId:" + customerId, addresses, 600);
 
         return addresses;
     }
@@ -55,34 +56,35 @@ public class AddressServiceImpl implements AddressService{
     // Lấy địa chỉ theo ID
     @Override
     public AddressResponse getAddressById(UUID id) {
-        AddressResponse cachedAddress = redisService.getObject("addressId:" + id, new TypeReference<AddressResponse>() {});
+        AddressResponse cachedAddress = redisService.getObject("addressId:" + id, new TypeReference<AddressResponse>() {
+        });
 
-        if(cachedAddress != null){
+        if (cachedAddress != null) {
             return cachedAddress;
         }
 
         Address address = addressRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
         AddressResponse addressResponse = AddressMapper.convertToResponse(address);
 
-        redisService.setObject("address:"+id,addressResponse,600);
+        redisService.setObject("address:" + id, addressResponse, 600);
 
         return addressResponse;
     }
-    
+
     // Tạo mới địa chỉ
     @Transactional
     @Override
     public AddressResponse createAddress(AddressDTO addressDTO) {
-        Customer  customer = customerRepository.findById(addressDTO.getCustomerId())
-                           .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
+        Customer customer = customerRepository.findById(addressDTO.getCustomerId())
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(customer.getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to create address");
         }
-        
+
         Address address = Address.builder()
                 .id(null)
                 .customer(customer)
@@ -99,13 +101,13 @@ public class AddressServiceImpl implements AddressService{
 
         AddressResponse addressResponse = AddressMapper.convertToResponse(addressExisting);
 
-        redisService.deleteByPatterns(List.of("*ustomer:"+addressDTO.getCustomerId()+"*","allAddressCustomerId:"+addressDTO.getCustomerId()));
+        redisService.deleteByPatterns(List.of("*ustomer:" + addressDTO.getCustomerId() + "*", "allAddressCustomerId:" + addressDTO.getCustomerId()));
 
-        redisService.setObject("address:"+addressExisting.getId(),addressResponse,600);
+        redisService.setObject("address:" + addressExisting.getId(), addressResponse, 600);
 
         return addressResponse;
     }
-    
+
     // Cập nhật thông tin địa chỉ
     @Transactional
     @Override
@@ -115,14 +117,14 @@ public class AddressServiceImpl implements AddressService{
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(customer.getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update address");
         }
 
         Address addressToUpdate = addressRepository.findById(idToUpdate)
                 .orElseThrow(() -> new EntityNotFoundException("Address not found"));
 
-        addressToUpdate.setId(customer.getId());
+        addressToUpdate.setId(customer.getAccount().getId());
         addressToUpdate.setCity(updatedAddress.getCity());
         addressToUpdate.setPhone(updatedAddress.getPhone());
         addressToUpdate.setStreet(updatedAddress.getStreet());
@@ -135,9 +137,9 @@ public class AddressServiceImpl implements AddressService{
 
         AddressResponse addressResponse = AddressMapper.convertToResponse(addressExisting);
 
-        redisService.deleteByPatterns(List.of("*ustomer:"+updatedAddress.getCustomerId()+"*","*ddress:"+idToUpdate+"*"));
+        redisService.deleteByPatterns(List.of("*ustomer:" + updatedAddress.getCustomerId() + "*", "*ddress:" + idToUpdate + "*"));
 
-        redisService.setObject("address:"+addressResponse.getId(), addressResponse,600);
+        redisService.setObject("address:" + addressResponse.getId(), addressResponse, 600);
 
         return addressResponse;
     }
@@ -150,10 +152,10 @@ public class AddressServiceImpl implements AddressService{
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(address.getCustomer().getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(address.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to delete this account");
         }
-        
+
         Class<?> clazz = address.getClass();
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
@@ -178,9 +180,9 @@ public class AddressServiceImpl implements AddressService{
 
         AddressResponse addressResponse = AddressMapper.convertToResponse(updatedAddress);
 
-        redisService.deleteByPatterns(List.of("*ustomer:"+address.getCustomer().getId()+"*","*ddress:"+id+"*"));
+        redisService.deleteByPatterns(List.of("*ustomer:" + address.getCustomer().getAccount() + "*", "*ddress:" + id + "*"));
 
-        redisService.setObject("addressId:"+id,addressResponse,600);
+        redisService.setObject("addressId:" + id, addressResponse, 600);
 
         return addressResponse;
     }
@@ -190,15 +192,15 @@ public class AddressServiceImpl implements AddressService{
     @Override
     public void deleteAddress(UUID id) {
         Address addressExisting = addressRepository.findById(id)
-                        .orElseThrow(() -> new EntityNotFoundException("Address not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Address not found"));
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(addressExisting.getCustomer().getCustomerId().getEmail())){
+        if (!currentUserEmail.equals(addressExisting.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to delete this address");
         }
-        
-        redisService.deleteByPatterns(List.of("*ustomer:"+addressExisting.getCustomer().getId()+"*"));
+
+        redisService.deleteByPatterns(List.of("*ustomer:" + addressExisting.getCustomer().getAccount() + "*"));
 
         addressRepository.deleteById(id);
 

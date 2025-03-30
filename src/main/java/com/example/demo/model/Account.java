@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import com.example.demo.common.Enums;
+import com.example.demo.common.RoleConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,8 +14,7 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 @Builder
 @Entity
 @Table(name="account")
@@ -29,20 +29,19 @@ public class Account  implements UserDetails {
 
     private String name;
 
-    // @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,columnDefinition = "VARCHAR(255) DEFAULT 'CUSTOMER'")
-    private Enums.role role;
+    private Enums.Role role;
 
-    @OneToOne(mappedBy = "customerId",cascade = CascadeType.ALL)
-//    @JsonIgnore
-    private Customer customerId;
+    @OneToOne(mappedBy = "account",cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Customer customer;
 
-    @OneToOne(mappedBy = "adminId",cascade = CascadeType.ALL)
-//    @JsonIgnore
-    private Admin adminId;
+    @OneToOne(mappedBy = "account",cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Admin admin;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account",cascade = {CascadeType.PERSIST,

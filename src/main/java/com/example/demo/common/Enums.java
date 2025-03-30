@@ -1,8 +1,18 @@
 package com.example.demo.common;
 
 public class Enums {
-    public enum role{
-        ADMIN,CUSTOMER
+    public enum Role {
+        Admin("Admin"), Customer("Customer");
+
+        private final String role;
+
+        Role(String role) {
+            this.role = role;
+        }
+
+        public String value() {
+            return role;
+        }
     }
 
     public enum laptopStatus{

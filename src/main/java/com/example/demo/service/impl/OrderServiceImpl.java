@@ -81,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(customer.getAccount().getEmail())){
             throw new SecurityException("User is not authorized to create this order");
         }
 
@@ -112,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(existingOrder.getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(existingOrder.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 
@@ -163,7 +163,7 @@ public class OrderServiceImpl implements OrderService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(order.getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(order.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 
@@ -219,7 +219,7 @@ public class OrderServiceImpl implements OrderService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(existingOrder.getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(existingOrder.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 

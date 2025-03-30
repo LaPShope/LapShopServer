@@ -77,7 +77,7 @@ public class CartServiceImpl implements CartService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(customer.getAccount().getEmail())){
             throw new SecurityException("User is not authorized to create this cart ");
         }
 
@@ -102,7 +102,7 @@ public class CartServiceImpl implements CartService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this cart");
         }
         // Customer customer = customerRepository.findById(cartDTO.getCustomerId())
@@ -139,7 +139,7 @@ public class CartServiceImpl implements CartService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to update this cart");
         }
     
@@ -181,7 +181,7 @@ public class CartServiceImpl implements CartService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getCustomerId().getEmail())){
+        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to delete this cart");
         }
     

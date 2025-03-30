@@ -24,6 +24,7 @@ public class SecurityConfiguration {
     private final JwtFilter jwtFilter;
     private final AccountService accountService;
 
+
     public SecurityConfiguration(JwtFilter jwtFilter, AccountService accountService) {
         this.jwtFilter = jwtFilter;
         this.accountService = accountService;
