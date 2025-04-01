@@ -64,5 +64,4 @@ public class AccountRepositoryTest {
         // Assert
         assertEquals("Customer", acc.getRole().value(), "Role should be Customer");
     }
-
 }
