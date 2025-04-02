@@ -26,21 +26,7 @@ public class EmailServiceImpl implements EmailService {
                 "<p>If you did not request this code, please ignore this email.</p>" +
                 "<p>Best regards,<br>LapShope</p>";
 
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-
-        MimeMessageHelper message = new MimeMessageHelper(mimeMessage, true);
-
-        try {
-            message.setFrom("noreply@lapshope.com");
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body, true);
-
-            mailSender.send(mimeMessage);
-        } catch (MailException e) {
-            System.err.println("Error sending email: " + e.getMessage());
-            throw new RuntimeException("Failed to send email", e);
-        }
+        this.coreSend(to, subject, body);
     }
 
 
@@ -55,8 +41,25 @@ public class EmailServiceImpl implements EmailService {
                 "<p>Best regards,<br>LapShope</p>";
 
 
+        this.coreSend(to, subject, body);
+    }
+
+
+    @Override
+    public void sendLinkEmail(String to, String link) throws MessagingException {
+        String subject = "Your Password Reset Link";
+        String body = "<p>Dear User,</p>" +
+                "<p>Click the link below to reset your password:</p>" +
+                "<a href=\"" + link + "\">Reset Password</a>" +
+                "<p>If you did not request this, please ignore this email.</p>" +
+                "<p>Best regards,<br>LapShope</p>";
+
+        this.coreSend(to, subject, body);
+    }
+
+    private void coreSend(String to, String subject, String body) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage);
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
         try {
             helper.setFrom("noreply@lapshope.com");
@@ -69,4 +72,5 @@ public class EmailServiceImpl implements EmailService {
             throw new RuntimeException("Failed to send email", e);
         }
     }
+
 }

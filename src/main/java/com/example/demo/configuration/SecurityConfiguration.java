@@ -27,7 +27,6 @@ public class SecurityConfiguration {
     private final JwtFilter jwtFilter;
     private final AccountService accountService;
 
-
     public SecurityConfiguration(JwtFilter jwtFilter, AccountService accountService) {
         this.jwtFilter = jwtFilter;
         this.accountService = accountService;
@@ -35,11 +34,23 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomerService customerService) throws Exception {
+        String[] whitelist = {
+                "/api/v1/accounts/login",
+                "/api/v1/accounts/register",
+                "/api/v1/accounts/forgot-password",
+                "/api/v1/accounts/reset-password",
+                "/api/v1/accounts/verify-email",
+                "/api/v1/accounts/verify-otp",
+//                "/api/v1/accounts/refresh-token",
+//                "/api/v1/accounts/reset-password",
+//                "/api/v1/customers/**"
+        };
+
         http
                 .csrf(csrf -> csrf.disable()) // Vô hiệu hóa CSRF nếu không cần thiết
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/accounts/login", "/api/v1/accounts/register").permitAll()
+                        .requestMatchers(whitelist).permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

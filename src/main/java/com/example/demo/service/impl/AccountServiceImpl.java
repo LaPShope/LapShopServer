@@ -19,10 +19,14 @@ import com.example.demo.service.AccountService;
 
 
 import com.example.demo.mapper.AccountMapper;
+import com.example.demo.service.EmailService;
 import com.fasterxml.jackson.core.type.TypeReference;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -34,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,12 +47,20 @@ public class AccountServiceImpl implements AccountService {
     private final AdminRepository adminRepository;
     private final AccountRepository accountRepository;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
-    public AccountServiceImpl(JwtService jwtService, AdminRepository adminRepository, RedisService redisService, AccountRepository accountRepository) {
+    public AccountServiceImpl(
+            JwtService jwtService,
+            AdminRepository adminRepository,
+            RedisService redisService,
+            AccountRepository accountRepository,
+            EmailService emailService
+    ) {
         this.accountRepository = accountRepository;
         this.redisService = redisService;
         this.adminRepository = adminRepository;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
 
     private boolean existsAccountByEmail(String email) {
@@ -108,6 +121,27 @@ public class AccountServiceImpl implements AccountService {
         redisService.setObject("account:" + accountExisting.getId(), registerReponse, 600);
 
         return registerReponse;
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+//        Long res = accountRepository.existsAccountByEmail(email);
+//
+//        if (res == 0) {
+//            throw new EntityNotFoundException("Email not found");
+//        }
+
+        String baseClientUrl = "http://localhost:3000/reset-password?token=";
+        String token = UUID.randomUUID().toString();
+
+        redisService.set(email, token, 60 * 3);
+
+        try {
+            this.emailService.sendLinkEmail(email, baseClientUrl + token);
+        }
+        catch (MessagingException e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
     }
 
     // Lấy danh sách tài khoản

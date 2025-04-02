@@ -3,6 +3,7 @@ package com.example.demo.controller;
 
 import com.example.demo.common.DataResponse;
 import com.example.demo.dto.AccountDTO;
+import com.example.demo.dto.request.auth.ForgotPasswordRequest;
 import com.example.demo.dto.request.auth.LoginRequest;
 import com.example.demo.dto.request.auth.RegisterRequest;
 import com.example.demo.dto.response.AccountResponse;
@@ -66,6 +67,21 @@ public class AccountController {
                         .build());
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<DataResponse<?>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        String email = request.getEmail();
+
+        accountService.forgotPassword(email);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(DataResponse.<String>builder()
+                        .success(true)
+                        .message("Send email successfully!")
+                        .build());
+    }
+
+
+
     @PostMapping("/logout")
     public ResponseEntity<DataResponse<AccountResponse>> logout(@RequestBody AccountDTO accountDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -121,5 +137,6 @@ public class AccountController {
                     .build());
 
     }
+
 }
 

@@ -25,7 +25,6 @@ public class OneTimeTokenGenerator implements OneTimeTokenGenerationSuccessHandl
         this.emailService = emailService;
     }
 
-
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, OneTimeToken oneTimeToken) throws IOException, ServletException {
         UriComponentsBuilder builder = UriComponentsBuilder

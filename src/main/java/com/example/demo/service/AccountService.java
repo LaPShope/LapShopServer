@@ -23,4 +23,5 @@ public interface AccountService extends UserDetailsService {
     public void deleteAccount(UUID id);
     public LoginResponse login(LoginRequest loginRequest);
     public RegisterReponse register(RegisterRequest registerRequest);
+    public void forgotPassword(String email);
 }
