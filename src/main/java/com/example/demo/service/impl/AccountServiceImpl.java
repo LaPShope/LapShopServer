@@ -25,6 +25,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,19 +57,18 @@ public class AccountServiceImpl implements AccountService {
     //test lay token
     @Override
     public LoginResponse login(LoginRequest loginRequest) {
-
         Account account = accountRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (!new BCryptPasswordEncoder().matches(loginRequest.getPassword(), account.getPassword())) {
+            throw new SecurityException("Invalid password");
+        }
 
         String token = jwtService.generateToken(
                 account.getEmail(),
                 account.getRole()
         );
 
-        System.out.println(token);
-
-        System.out.println("cac");
-        System.out.println(account.getRole());
         return LoginResponse.builder()
                 .token(token)
                 .email(account.getEmail())
@@ -87,6 +87,7 @@ public class AccountServiceImpl implements AccountService {
                 .email(registerRequest.getEmail())
                 .name(registerRequest.getName())
                 .password(registerRequest.getPassword())
+                .password(new BCryptPasswordEncoder().encode(registerRequest.getPassword()))
                 .role(Enums.Role.Customer)
                 .build();
 

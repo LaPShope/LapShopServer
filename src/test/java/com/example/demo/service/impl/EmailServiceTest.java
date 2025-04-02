@@ -1,12 +1,15 @@
 package com.example.demo.service.impl;
 
 
+import com.example.demo.service.EmailService;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
@@ -18,12 +21,12 @@ public class EmailServiceTest {
     @Autowired
     JavaMailSender mailSender;
 
+    @Autowired
     EmailService emailService;
-
 
     @BeforeEach
     void setUp() {
-        emailService = new EmailService(mailSender);
+        emailService = new EmailServiceImpl(mailSender);
     }
 
 
