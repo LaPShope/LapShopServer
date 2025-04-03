@@ -30,7 +30,15 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final AccountService accountService;
-    private final List<String> acceptedNoAuth = List.of("/api/v1/accounts/login", "/api/v1/accounts/register");
+
+    private final List<String> acceptedNoAuth = List.of(
+            "/api/v1/accounts/login",
+            "/api/v1/accounts/register",
+            "/api/v1/accounts/forgot-password",
+            "/api/v1/accounts/reset-password",
+            "/api/v1/accounts/verify-email",
+            "/api/v1/accounts/verify-otp"
+    );
 
     public JwtFilter(JwtService jwtService, AccountService accountService) {
         this.jwtService = jwtService;

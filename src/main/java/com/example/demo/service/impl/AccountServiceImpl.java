@@ -5,11 +5,15 @@ import com.example.demo.common.AuthUtil;
 import com.example.demo.common.Enums;
 import com.example.demo.configuration.JwtService;
 import com.example.demo.dto.AccountDTO;
+import com.example.demo.dto.request.auth.ChangePasswordRequest;
 import com.example.demo.dto.request.auth.LoginRequest;
 import com.example.demo.dto.request.auth.RegisterRequest;
+import com.example.demo.dto.request.auth.ResetPasswordRequest;
 import com.example.demo.dto.response.AccountResponse;
 import com.example.demo.dto.response.LoginResponse;
+import com.example.demo.dto.response.auth.ChangePasswordResponse;
 import com.example.demo.dto.response.auth.RegisterReponse;
+import com.example.demo.dto.response.auth.ResetPasswordReponse;
 import com.example.demo.model.Account;
 import com.example.demo.model.Admin;
 import com.example.demo.model.Customer;
@@ -25,11 +29,8 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,19 +48,22 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     public AccountServiceImpl(
             JwtService jwtService,
             AdminRepository adminRepository,
             RedisService redisService,
             AccountRepository accountRepository,
-            EmailService emailService
+            EmailService emailService,
+            PasswordEncoder passwordEncoder
     ) {
         this.accountRepository = accountRepository;
         this.redisService = redisService;
         this.adminRepository = adminRepository;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     private boolean existsAccountByEmail(String email) {
@@ -100,7 +103,7 @@ public class AccountServiceImpl implements AccountService {
                 .email(registerRequest.getEmail())
                 .name(registerRequest.getName())
                 .password(registerRequest.getPassword())
-                .password(new BCryptPasswordEncoder().encode(registerRequest.getPassword()))
+                .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .role(Enums.Role.Customer)
                 .build();
 
@@ -123,25 +126,78 @@ public class AccountServiceImpl implements AccountService {
         return registerReponse;
     }
 
+
     @Override
     public void forgotPassword(String email) {
-//        Long res = accountRepository.existsAccountByEmail(email);
-//
-//        if (res == 0) {
-//            throw new EntityNotFoundException("Email not found");
-//        }
+        Long res = accountRepository.existsAccountByEmail(email);
+
+        if (res == 0) {
+            throw new EntityNotFoundException("Email not found");
+        }
 
         String baseClientUrl = "http://localhost:3000/reset-password?token=";
         String token = UUID.randomUUID().toString();
 
-        redisService.set(email, token, 60 * 3);
+        redisService.set(token, email, 60 * 3);
 
         try {
             this.emailService.sendLinkEmail(email, baseClientUrl + token);
-        }
-        catch (MessagingException e) {
+        } catch (MessagingException e) {
             throw new RuntimeException("Failed to send email", e);
         }
+    }
+
+    @Override
+    public ResetPasswordReponse changePassword(ResetPasswordRequest resetPasswordRequest) {
+
+        String email = null;
+        try {
+            email = redisService.get(resetPasswordRequest.getToken());
+        } catch (Exception e) {
+            // do nothing
+        }
+
+        if (email == null || email.isEmpty()) {
+            throw new EntityNotFoundException("Token not found");
+        }
+
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+
+        redisService.del(resetPasswordRequest.getToken());
+
+        if (resetPasswordRequest.getNewPassword() != null && !resetPasswordRequest.getNewPassword().isEmpty()) {
+            account.setPassword(passwordEncoder.encode(resetPasswordRequest.getNewPassword()));
+            accountRepository.save(account);
+        }
+
+        return ResetPasswordReponse.builder()
+                .email(account.getEmail())
+                .jwtToken(jwtService.generateToken(account.getEmail(), account.getRole()))
+                .build();
+    }
+
+    @Override
+    public ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest) {
+        String currentUserEmail = AuthUtil.AuthCheck();
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+
+        if (!passwordEncoder.matches(changePasswordRequest.getOldPassword(), account.getPassword())) {
+            throw new SecurityException("Invalid password");
+        }
+
+        if (changePasswordRequest.getNewPassword() == null || changePasswordRequest.getNewPassword().isEmpty()) {
+            throw new EntityNotFoundException("New password is required");
+        }
+
+        account.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
+        accountRepository.save(account);
+
+        return ChangePasswordResponse.builder()
+                .email(account.getEmail())
+                .token(jwtService.generateToken(account.getEmail(), account.getRole()))
+                .build();
     }
 
     // Lấy danh sách tài khoản
@@ -168,8 +224,7 @@ public class AccountServiceImpl implements AccountService {
     // Lấy chi tiết một tài khoản
     @Override
     public AccountResponse getAccount(UUID id) {
-        AccountResponse cachedAccount = redisService.getObject("account:" + id, new TypeReference<AccountResponse>() {
-        });
+        AccountResponse cachedAccount = redisService.getObject("account:" + id, new TypeReference<AccountResponse>() {});
 
         if (cachedAccount != null) {
             return cachedAccount;
@@ -344,11 +399,4 @@ public class AccountServiceImpl implements AccountService {
 
         accountRepository.deleteById(id);
     }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return accountRepository.findByEmail(username)
-                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
-    }
-
 }
