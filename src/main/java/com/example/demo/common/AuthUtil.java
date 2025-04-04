@@ -15,12 +15,12 @@ public class AuthUtil {
         return authentication.getName();
     }
 
-    // public static boolean isAdmin() {
-    //     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    //     if (authentication == null || !authentication.isAuthenticated()) {
-    //         throw new SecurityException("User is not authenticated");
-    //     }
-    //     return authentication.getAuthorities().stream()
-    //             .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
-    // }
+    public static boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("User is not authenticated");
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("Admin"));
+    }
 }

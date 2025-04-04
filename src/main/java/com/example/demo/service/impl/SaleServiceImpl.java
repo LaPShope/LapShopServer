@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.common.ConvertDate;
 import com.example.demo.common.ConvertSnakeToCamel;
 import com.example.demo.dto.response.SaleResponse;
@@ -67,6 +68,10 @@ public class SaleServiceImpl implements SaleService {
     @Transactional
     @Override
     public SaleResponse createSale(SaleDTO saleDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Sale sale = Sale.builder()
                 .id(null)
                 .event_description(saleDTO.getEventDescription())
@@ -96,6 +101,10 @@ public class SaleServiceImpl implements SaleService {
     @Transactional
     @Override
     public SaleResponse updateSale(UUID saleId, SaleDTO saleDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Sale sale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new EntityNotFoundException("Sale not found"));
 
@@ -125,6 +134,10 @@ public class SaleServiceImpl implements SaleService {
     @Transactional
     @Override
     public SaleResponse partialUpdateSale(UUID id, Map<String, Object> fieldsToUpdate) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Sale with ID " + id + " not found!"));
 
@@ -172,6 +185,10 @@ public class SaleServiceImpl implements SaleService {
     @Transactional
     @Override
     public void deleteSale(UUID id) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Sale not found"));
 
