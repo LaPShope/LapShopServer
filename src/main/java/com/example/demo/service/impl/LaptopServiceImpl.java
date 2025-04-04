@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.common.ConvertDate;
 import com.example.demo.dto.LaptopDTO;
 import com.example.demo.dto.response.LaptopResponse;
@@ -73,6 +74,10 @@ public class LaptopServiceImpl implements LaptopService {
     @Transactional
     @Override
     public LaptopResponse createLaptop(LaptopDTO laptopDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Laptop laptop = Laptop.builder()
                 .MFG(laptopDTO.getMFG())
                 .status(laptopDTO.getStatus())
@@ -102,6 +107,9 @@ public class LaptopServiceImpl implements LaptopService {
     @Override
     @Transactional
     public LaptopResponse updateLaptop(UUID laptopId, LaptopDTO updatedLaptopDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
 
         Laptop existingLaptop = laptopRepository.findById(laptopId)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop not found"));
@@ -131,6 +139,10 @@ public class LaptopServiceImpl implements LaptopService {
     @Transactional
     @Override
     public LaptopResponse partialUpdateLaptop(UUID id, Map<String, Object> fieldsToUpdate) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Laptop laptop = laptopRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop with ID " + id + " not found!"));
 
@@ -181,6 +193,10 @@ public class LaptopServiceImpl implements LaptopService {
     @Transactional
     @Override
     public void deleteLaptop(UUID id) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Laptop laptop = laptopRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop not found"));
 

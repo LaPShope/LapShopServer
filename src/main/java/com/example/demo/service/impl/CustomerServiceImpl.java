@@ -39,6 +39,10 @@ public class CustomerServiceImpl implements CustomerService {
     // 1. Lấy tất cả khách hàng
     @Override
     public List<CustomerResponse> getAllCustomers() {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         List<CustomerResponse> cachedCustomers = redisService.getObject("allCustomer", new TypeReference<List<CustomerResponse>>() {});
 
         if(cachedCustomers != null && !cachedCustomers.isEmpty()){

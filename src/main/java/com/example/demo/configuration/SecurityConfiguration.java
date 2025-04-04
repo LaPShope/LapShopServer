@@ -5,6 +5,7 @@ import com.example.demo.service.CustomerService;
 import jakarta.servlet.Filter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -50,6 +51,8 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(whitelist).permitAll()
+                        .requestMatchers("/api/v1/images/**","/api/v1/laptops/**",
+                        "/api/v1/laptop-models/**","/api/v1/sales/**","/api/v1/payment-methods/**","/api/v1/admin").hasRole("Admin")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)

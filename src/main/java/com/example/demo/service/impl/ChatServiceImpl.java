@@ -222,21 +222,5 @@ public class ChatServiceImpl implements ChatService {
         chatRepository.delete(chat);
     }
 
-    // private void updateChatInRedis(String redisKey, UUID chatId, ChatResponse updatedChatResponse) {
-    //     List<ChatResponse> chatList = redisService.getChatList(redisKey);
-
-    //     if (chatList == null || chatList.isEmpty()) {
-    //         return;
-    //     }
-
-    //     for (int i = 0; i < chatList.size(); i++) {
-    //         if (chatList.get(i).getId().equals(chatId)) {
-    //             chatList.set(i, updatedChatResponse); // Cập nhật tin nhắn
-    //             redisService.saveChatList(redisKey, chatList, 20); // Lưu lại vào Redis
-    //             return;
-    //         }
-    //     }
-    // }
-
 
 }
