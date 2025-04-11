@@ -69,6 +69,10 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public ImageDTO createImage(ImageDTO imageDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Image image = Image.builder()
                 .id(null)
                 .imageUrl(imageDTO.getImageUrl())
@@ -96,6 +100,10 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public ImageDTO updateImage(UUID imageId, ImageDTO imageDTO){
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Image imageExisting = imageRepository.findById(imageId)
                 .orElseThrow(() -> new EntityNotFoundException("Image not found"));
         imageExisting.setImageUrl(imageDTO.getImageUrl());
@@ -123,6 +131,11 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public ImageDTO partialUpdateImage(UUID id, Map<String, Object> fieldsToUpdate) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
+        
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Image with ID " + id + " not found!"));
 
@@ -158,6 +171,10 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public void deleteImage(UUID id) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Image not found"));
 

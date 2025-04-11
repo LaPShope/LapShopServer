@@ -85,6 +85,9 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     @Transactional
     @Override
     public PaymentMethodDTO createPaymentMethod(PaymentMethodDTO paymentMethodDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
 
         PaymentMethod paymentMethod = PaymentMethod.builder()
                 .id(null)
@@ -106,6 +109,10 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     @Transactional
     @Override
     public PaymentMethodDTO updatePaymentMethod(UUID id, PaymentMethodDTO paymentMethodDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         PaymentMethod existingPaymentMethod = paymentMethodRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("PaymentMethod with ID " + id + " not found!"));
 
@@ -126,6 +133,10 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     @Transactional
     @Override
     public PaymentMethodDTO partialUpdatePaymentMethod(UUID id, Map<String, Object> fieldsToUpdate) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         PaymentMethod paymentMethod = paymentMethodRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("PaymentMethod with ID " + id + " not found!"));
 
@@ -171,6 +182,10 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     @Transactional
     @Override
     public void deletePaymentMethod(UUID id) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         PaymentMethod paymentMethod = paymentMethodRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("PaymentMethod with ID " + id + " not found!"));
 //        paymentMethod.getPaymentList().clear();

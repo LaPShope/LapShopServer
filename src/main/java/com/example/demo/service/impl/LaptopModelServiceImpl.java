@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.LaptopModelDTO;
 import com.example.demo.dto.response.LaptopModelResponse;
 import com.example.demo.model.*;
@@ -69,6 +70,10 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     @Transactional
     @Override
     public LaptopModelResponse createLaptopModel(LaptopModelDTO laptopModelDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         LaptopModel laptopModel = LaptopModel.builder()
                 .id(null)
                 .name(laptopModelDTO.getName())
@@ -96,6 +101,10 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     @Transactional
     @Override
     public LaptopModelResponse updateLaptopModel(UUID id, LaptopModelDTO laptopModelDTO) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         LaptopModel existingLaptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model with ID " + id + " not found"));
 
@@ -112,6 +121,10 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
     @Override
     public LaptopModelResponse partialUpdateLaptopModel(UUID id, Map<String, Object> fieldsToUpdate) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopModel with ID " + id + " not found!"));
 
@@ -162,6 +175,10 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
     @Override
     public void deleteLaptopModel(UUID id) {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found"));
 

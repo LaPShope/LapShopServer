@@ -203,6 +203,10 @@ public class AccountServiceImpl implements AccountService {
     // Lấy danh sách tài khoản
     @Override
     public List<AccountResponse> getAllAccounts() {
+        if(!AuthUtil.isAdmin()){
+            throw new SecurityException("User is not an Admin");
+        }
+
         // kiem tra trong redis
         List<AccountResponse> cachedAccounts = redisService.getObject("allAccount", new TypeReference<List<AccountResponse>>() {
         });
@@ -259,11 +263,6 @@ public class AccountServiceImpl implements AccountService {
                 .role(accountDTO.getRole())
                 .build();
 
-//        if (account.getRole().equals(Enums.role.ADMIN)) {
-//            Admin admin = new Admin();
-//            admin.setAdminId(account);
-//            account.setAdminId(admin);
-//        }
 
         Customer customer = new Customer();
         customer.setAccount(account);
