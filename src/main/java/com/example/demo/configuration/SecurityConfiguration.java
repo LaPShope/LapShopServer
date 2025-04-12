@@ -64,7 +64,7 @@ public class SecurityConfiguration {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOrigin("http://localhost:3000"); // Cho phép truy cập từ React frontend
+        corsConfiguration.addAllowedOrigin("*"); // allow for all clien
         corsConfiguration.addAllowedHeader("*"); // Cho phép tất cả các header
         corsConfiguration.addAllowedMethod("*"); // Cho phép tất cả các phương thức (GET, POST, PUT, DELETE, ...)
         corsConfiguration.setAllowCredentials(true); // Cho phép gửi cookie và thông tin xác thực
