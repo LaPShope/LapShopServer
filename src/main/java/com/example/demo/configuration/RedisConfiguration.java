@@ -1,5 +1,6 @@
 package com.example.demo.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -13,11 +14,16 @@ import redis.clients.jedis.JedisPoolConfig;
 @Configuration
 public class RedisConfiguration {
 
+    @Value("${app.redis.host:localhost}")
+    private String redisHost;
+    @Value("${app.redis.port:6379}")
+    private int redisPort;
+
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
-        configuration.setHostName("127.0.0.1");
-        configuration.setPort(6379);
+        configuration.setHostName(redisHost);
+        configuration.setPort(redisPort);
 
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(20); // Số kết nối tối đa
