@@ -1,34 +1,34 @@
 version: "3"
 
 services:
-  # backend:
-  #   container_name: lapshope-backend
-  #   build:
-  #     context: .
-  #     dockerfile: ./Dockerfile
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   networks:
-  #     - lapshope-network
-  #   restart: on-failure:3
-  #   ports:
-  #     - 8080:8080
-  #   # entrypoint: ["/bin/sh", "-c", "sleep 15 && ./mvnw spring-boot:run"]
-  #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lapshope
-  #     SPRING_DATASOURCE_USERNAME: root
-  #     SPRING_DATASOURCE_PASSWORD: 123456
-  #     
-  #     SPRING_MAIL_HOST: smtp.gmail.com
-  #     SPRING_MAIL_PORT: 587
-  #     SPRING_MAIL_USERNAME: ntriet0612@gmail.com
-  #     SPRING_MAIL_PASSWORD: hwpjvmaiuqrqgvsq
-  #     SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
-  #     SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
-  #
-  #     APP_REDIS_HOST: redis
-  #     APP_REDIS_PORT: 6379
+  backend:
+    container_name: lapshope-backend
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    depends_on:
+      - db
+      - redis
+    networks:
+      - lapshope-network
+    restart: on-failure:3
+    ports:
+      - 8080:8080
+    # entrypoint: ["/bin/sh", "-c", "sleep 15 && ./mvnw spring-boot:run"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lapshope
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456
+      
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: ntriet0612@gmail.com
+      SPRING_MAIL_PASSWORD: hwpjvmaiuqrqgvsq
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+
+      APP_REDIS_HOST: redis
+      APP_REDIS_PORT: 6379
 
   db:
     container_name: lapshope-mysql
