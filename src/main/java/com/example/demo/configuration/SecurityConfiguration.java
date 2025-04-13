@@ -22,10 +22,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -41,15 +44,13 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         String[] whitelist = {
+                "/api/v1/accounts",
                 "/api/v1/accounts/login",
                 "/api/v1/accounts/register",
                 "/api/v1/accounts/forgot-password",
                 "/api/v1/accounts/reset-password",
                 "/api/v1/accounts/verify-email",
                 "/api/v1/accounts/verify-otp",
-//                "/api/v1/accounts/refresh-token",
-//                "/api/v1/accounts/reset-password",
-//                "/api/v1/customers/**"
         };
 
         String[] adminWhiteList = {
@@ -57,7 +58,8 @@ public class SecurityConfiguration {
         };
 
         http
-                .csrf(csrf -> csrf.disable()) // Vô hiệu hóa CSRF nếu không cần thiết
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(whitelist).permitAll()
@@ -80,19 +82,19 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public CorsFilter corsFilter() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOriginPattern("*"); // Cho phép tất cả các origin
-        corsConfiguration.addAllowedHeader("*"); // Cho phép tất cả các header
-        corsConfiguration.addAllowedMethod("*"); // Cho phép tất cả các phương thức (GET, POST, PUT, DELETE, ...)
-        corsConfiguration.setAllowCredentials(true); // Cho phép gửi cookie và thông tin xác thực
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*")); // Allow all origins
+        configuration.setAllowedMethods(Arrays.asList("*")); // Allow all methods
+        configuration.setAllowedHeaders(Arrays.asList("*")); // Allow all headers
+        configuration.setExposedHeaders(Arrays.asList("*")); // Expose all headers
+        configuration.setAllowCredentials(false); // Disable credentials since we're using wildcard origin
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfiguration);
-
-        return new CorsFilter(source);
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
-
 
     private void writeJsonResponse(HttpServletResponse response, int status, Exception exception) {
         ErrorMessage errResponse = ErrorMessage.builder()
