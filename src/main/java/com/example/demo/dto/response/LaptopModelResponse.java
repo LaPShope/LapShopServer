@@ -20,7 +20,7 @@ import java.util.UUID;
 public class LaptopModelResponse {
     private UUID id;
     private String name;
-    private String branch;
+    private String brand;
     private String cpu;
     private String ram;
     private String storage;
