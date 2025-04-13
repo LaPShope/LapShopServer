@@ -26,8 +26,9 @@ public class LaptopModelResponse {
     private String storage;
     private String display;
     private Enums.Color color;
-    private BigDecimal price;
     private String description;
+    private String gpu;
+    private BigDecimal price;
     @JsonProperty("comment_list")
     private List<CommentItems> commentList;
     @JsonProperty("image_list")

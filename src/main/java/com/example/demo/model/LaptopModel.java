@@ -37,6 +37,9 @@ public class LaptopModel {
     private String ram;
 
     @Column(nullable = false)
+    private String gpu;
+
+    @Column(nullable = false)
     private String storage;
 
     @Column(nullable = false)
@@ -73,13 +76,11 @@ public class LaptopModel {
     @ManyToMany(mappedBy = "laptopModelList",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
             CascadeType.MERGE,
-            CascadeType.REMOVE,
             CascadeType.REFRESH})
     private List<Image> imageList;
 
     @ManyToMany(mappedBy = "laptopModelList",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
-            CascadeType.REMOVE,
             CascadeType.MERGE,
             CascadeType.REFRESH})
     private List<Sale> saleList;

@@ -34,8 +34,10 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     @Transactional
     @Override
     public List<LaptopModelResponse> getAllLaptopModels() {
-        List<LaptopModelResponse> cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<List<LaptopModelResponse>>() {});
-        if(cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()){
+
+        List<LaptopModelResponse> cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<List<LaptopModelResponse>>() {
+        });
+        if (cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()) {
             return cachedLaptopResponses;
         }
 
@@ -43,8 +45,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
                 .map(LaptopModelMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allLaptopModel",laptopModelResponses,600);
-
+        redisService.setObject("allLaptopModel", laptopModelResponses, 600);
         return laptopModelResponses;
     }
 
@@ -52,8 +53,9 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     @Transactional
     @Override
     public LaptopModelResponse getLaptopModelById(UUID id) {
-        LaptopModelResponse cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<LaptopModelResponse>() {});
-        if(cachedLaptopResponses != null){
+        LaptopModelResponse cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<LaptopModelResponse>() {
+        });
+        if (cachedLaptopResponses != null) {
             return cachedLaptopResponses;
         }
 
@@ -63,14 +65,15 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
         LaptopModelResponse laptopResponse = LaptopModelMapper.convertToResponse(laptopModel);
 
-        redisService.setObject("laptopModel",laptopResponse,600);
+        redisService.setObject("laptopModel", laptopResponse, 600);
 
         return laptopResponse;
     }
+
     @Transactional
     @Override
     public LaptopModelResponse createLaptopModel(LaptopModelDTO laptopModelDTO) {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
@@ -91,8 +94,8 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
         LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModelExisting);
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","allLaptopOnSale"));
-        redisService.setObject("laptopModel:"+laptopModelResponse.getId(),laptopModelResponse,600);
+        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "allLaptopOnSale"));
+        redisService.setObject("laptopModel:" + laptopModelResponse.getId(), laptopModelResponse, 600);
 
         return laptopModelResponse;
     }
@@ -101,7 +104,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     @Transactional
     @Override
     public LaptopModelResponse updateLaptopModel(UUID id, LaptopModelDTO laptopModelDTO) {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
@@ -113,15 +116,15 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         LaptopModel laptopModel = laptopModelRepository.save(existingLaptopModel);
         LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModel);
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
-        redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
+        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + id, "*derDetail*", "allLaptopOnSale"));
+        redisService.setObject("laptopModel:" + id, laptopModelResponse, 600);
 
         return laptopModelResponse;
     }
 
     @Override
     public LaptopModelResponse partialUpdateLaptopModel(UUID id, Map<String, Object> fieldsToUpdate) {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
@@ -165,8 +168,8 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         LaptopModel updatedLaptopModel = laptopModelRepository.save(laptopModel);
         LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(updatedLaptopModel);
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"*derDetail*","allLaptopOnSale"));
-        redisService.setObject("laptopModel:"+id,laptopModelResponse,600);
+        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + id, "*derDetail*", "allLaptopOnSale"));
+        redisService.setObject("laptopModel:" + id, laptopModelResponse, 600);
 
         return laptopModelResponse;
     }
@@ -175,14 +178,14 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
     @Override
     public void deleteLaptopModel(UUID id) {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
         LaptopModel laptopModel = laptopModelRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found"));
 
-        redisService.deleteByPatterns(List.of("allLaptopModel","allImage","allSale","laptopModel:"+id,"orderDetail","*derDetail*","allLaptopOnSale"));
+        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + id, "orderDetail", "*derDetail*", "allLaptopOnSale"));
 
         laptopModelRepository.delete(laptopModel);
     }

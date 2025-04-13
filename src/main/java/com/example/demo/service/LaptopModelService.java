@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface LaptopModelService {
-    LaptopModelResponse partialUpdateLaptopModel(UUID id, Map<String,Object> fieldsToUpdate);
     List<LaptopModelResponse> getAllLaptopModels();                  // Lấy tất cả LaptopModel
+    LaptopModelResponse partialUpdateLaptopModel(UUID id, Map<String,Object> fieldsToUpdate);
     LaptopModelResponse getLaptopModelById(UUID id);                 // Lấy LaptopModel theo ID
     LaptopModelResponse createLaptopModel(LaptopModelDTO laptopModelDTO);      // Tạo LaptopModel mới
     LaptopModelResponse updateLaptopModel(UUID id, LaptopModelDTO laptopModelDTO); // Cập nhật LaptopModel theo ID

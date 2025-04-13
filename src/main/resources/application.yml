@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: LaptopStore
@@ -7,11 +8,10 @@ spring:
     username: root
     password: 123456
 
-
-
   web:
     resources:
       static-locations: classpath:/static/
+
 
   jpa:
     show-sql: true
@@ -45,7 +45,7 @@ spring:
 
 
 server:
-  port: 8080
+  port: 8081
 
 logging:
   level:

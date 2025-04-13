@@ -1,8 +1,12 @@
 package com.example.demo.configuration;
 
+import com.example.demo.common.Enums;
+import com.example.demo.exception.ErrorMessage;
 import com.example.demo.service.AccountService;
 import com.example.demo.service.CustomerService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +25,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.io.IOException;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
@@ -33,7 +39,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomerService customerService) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         String[] whitelist = {
                 "/api/v1/accounts/login",
                 "/api/v1/accounts/register",
@@ -46,14 +52,26 @@ public class SecurityConfiguration {
 //                "/api/v1/customers/**"
         };
 
+        String[] adminWhiteList = {
+                "/api/v1/admin/**",
+        };
+
         http
                 .csrf(csrf -> csrf.disable()) // Vô hiệu hóa CSRF nếu không cần thiết
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(whitelist).permitAll()
-                        .requestMatchers("/api/v1/images/**","/api/v1/laptops/**",
-                        "/api/v1/laptop-models/**","/api/v1/sales/**","/api/v1/payment-methods/**","/api/v1/admin").hasRole("Admin")
+                        .requestMatchers(adminWhiteList).hasAnyAuthority(Enums.Role.Admin.value())
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(
+                        exception -> exception
+                                .authenticationEntryPoint((request, response, authException) -> {
+                                    writeJsonResponse(response, HttpServletResponse.SC_UNAUTHORIZED, authException);
+                                })
+                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                    writeJsonResponse(response, HttpServletResponse.SC_FORBIDDEN, accessDeniedException);
+                                })
                 )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -73,5 +91,22 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/**", corsConfiguration);
 
         return new CorsFilter(source);
+    }
+
+
+    private void writeJsonResponse(HttpServletResponse response, int status, Exception exception) {
+        ErrorMessage errResponse = ErrorMessage.builder()
+                .success(false)
+                .statusCode(Enums.ErrorKey.ErrorInternal)
+                .message("Unauthorized: " + exception.toString())
+                .data(null)
+                .build();
+        response.setStatus(status);
+        response.setContentType("application/json");
+        try {
+            response.getWriter().write(new ObjectMapper().writeValueAsString(errResponse));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

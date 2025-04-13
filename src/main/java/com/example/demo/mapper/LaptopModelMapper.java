@@ -9,11 +9,12 @@ import java.util.stream.Collectors;
 
 public class LaptopModelMapper {
     public static LaptopModelDTO convertToDTO(LaptopModel laptopModel) {
-        LaptopModelDTO laptopModelDTO = LaptopModelDTO.builder()
+        return LaptopModelDTO.builder()
                 .id(laptopModel.getId())
                 .name(laptopModel.getName())
                 .branch(laptopModel.getBranch())
                 .cpu(laptopModel.getCpu())
+                .gpu(laptopModel.getGpu())
                 .ram(laptopModel.getRam())
                 .storage(laptopModel.getStorage())
                 .display(laptopModel.getDisplay())
@@ -21,16 +22,16 @@ public class LaptopModelMapper {
                 .price(laptopModel.getPrice())
                 .description(laptopModel.getDescription())
                 .build();
-        return laptopModelDTO;
     }
 
     public static LaptopModelResponse convertToResponse(LaptopModel laptopModel) {
-        LaptopModelResponse laptopModelResponse = LaptopModelResponse.builder()
+        return LaptopModelResponse.builder()
                 .id(laptopModel.getId())
                 .name(laptopModel.getName())
                 .branch(laptopModel.getBranch())
                 .cpu(laptopModel.getCpu())
                 .ram(laptopModel.getRam())
+                .gpu(laptopModel.getGpu())
                 .storage(laptopModel.getStorage())
                 .display(laptopModel.getDisplay())
                 .color(laptopModel.getColor())
@@ -40,6 +41,5 @@ public class LaptopModelMapper {
                 .saleList(laptopModel.getSaleList() == null ? Collections.emptyList() : laptopModel.getSaleList().stream().map(SaleMapper::convertToDTO).collect(Collectors.toList()))
                 .imageList(laptopModel.getImageList() == null ? Collections.emptyList() : laptopModel.getImageList().stream().map(ImageMapper::convertToDTO).collect(Collectors.toList()))
                 .build();
-        return laptopModelResponse;
     }
 }

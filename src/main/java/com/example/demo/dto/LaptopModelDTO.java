@@ -17,6 +17,7 @@ public class LaptopModelDTO {
     private String branch;
     private String cpu;
     private String ram;
+    private String gpu;
     private String storage;
     private String display;
     private Enums.Color color;
