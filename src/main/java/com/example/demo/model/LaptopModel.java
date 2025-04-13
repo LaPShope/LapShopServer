@@ -28,7 +28,7 @@ public class LaptopModel {
     private String name;
 
     @Column(nullable = false)
-    private String branch;
+    private String brand;
 
     @Column(nullable = false)
     private String cpu;
