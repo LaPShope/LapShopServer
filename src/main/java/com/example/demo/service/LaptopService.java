@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.LaptopDTO;
 import com.example.demo.dto.response.LaptopResponse;
+import com.example.demo.dto.response.PagingResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -23,4 +24,12 @@ public interface LaptopService {
     void deleteLaptop(UUID id);
 
     List<LaptopResponse> searchLaptops(Map<String,Object> filters);
+
+    PagingResponse<?> getLaptopsWithPaginationAndSortByPriceASC(double price,int offset, int pageSize);
+
+    PagingResponse<?> getLaptopsWithPaginationAndSortByPriceDES(double price,int offset, int pageSize);
+
+    PagingResponse<?> getLaptopsWithPagination(int offset, int pageSize);
+
+    PagingResponse<?> getLaptopsWithPaginationByBrand(int offset, int pageSize,String brand);
 }

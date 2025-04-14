@@ -90,4 +90,46 @@ public class LaptopModelController {
                 .build());
 
     }
+
+        // 6. Lấy LaptopModels với phân trang
+    @GetMapping("/pagination")
+    public ResponseEntity<?> getLaptopModelsWithPagination(
+            @RequestParam int offset,
+            @RequestParam int pageSize) {
+
+        return ResponseEntity.ok(DataResponse.builder()
+                .success(true)
+                .message("LaptopModels retrieved successfully")
+                .data(laptopModelService.getLaptopModelsWithPagination(offset, pageSize))
+                .build());
+    }
+
+    // 7. Lấy LaptopModels với phân trang và sắp xếp theo giá tăng dần
+    @GetMapping("/pagination/sort/price-asc")
+    public ResponseEntity<?> getLaptopModelsWithPaginationAndSortByPriceASC(
+            @RequestParam double price,
+            @RequestParam int offset,
+            @RequestParam int pageSize) {
+
+        return ResponseEntity.ok(DataResponse.builder()
+                .success(true)
+                .message("LaptopModels retrieved and sorted by price ascending")
+                .data(laptopModelService.getLaptopModelsWithPaginationAndSortByPriceASC(price, offset, pageSize))
+                .build());
+    }
+
+    // 8. Lấy LaptopModels với phân trang và sắp xếp theo giá giảm dần
+    @GetMapping("/pagination/sort/price-des")
+    public ResponseEntity<?> getLaptopModelsWithPaginationAndSortByPriceDES(
+            @RequestParam double price,
+            @RequestParam int offset,
+            @RequestParam int pageSize) {
+
+        return ResponseEntity.ok(DataResponse.builder()
+                .success(true)
+                .message("LaptopModels retrieved and sorted by price descending")
+                .data(laptopModelService.getLaptopModelsWithPaginationAndSortByPriceDES(price, offset, pageSize))
+                .build());
+    }
+
 }

@@ -3,13 +3,20 @@ package com.example.demo.service.impl;
 import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.LaptopModelDTO;
 import com.example.demo.dto.response.LaptopModelResponse;
+import com.example.demo.dto.response.LaptopResponse;
+import com.example.demo.dto.response.PagingResponse;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.LaptopModelService;
+import com.example.demo.mapper.LaptopMapper;
 import com.example.demo.mapper.LaptopModelMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -189,6 +196,58 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + id, "orderDetail", "*derDetail*", "allLaptopOnSale"));
 
         laptopModelRepository.delete(laptopModel);
+    }
+
+
+    @Override
+    public PagingResponse<?> getLaptopModelsWithPagination(int offset, int pageSize) {
+
+        Page<LaptopModel> result = laptopModelRepository.findAll(PageRequest.of(offset, pageSize));
+
+        List<LaptopModelResponse> laptopList = result.getContent().stream()
+                        .map(LaptopModelMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
+    }
+
+    @Override
+    public PagingResponse<?> getLaptopModelsWithPaginationAndSortByPriceASC(double price, int offset, int pageSize) {
+
+        Page<LaptopModel> result = laptopModelRepository.findAll(PageRequest.of(offset, pageSize, Sort.by("price").ascending()));
+        
+        List<LaptopModelResponse> laptopList = result.getContent().stream()
+                        .map(LaptopModelMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
+    }
+
+    @Override
+    public PagingResponse<?> getLaptopModelsWithPaginationAndSortByPriceDES(double price, int offset, int pageSize) {
+
+        Page<LaptopModel> result = laptopModelRepository.findAll(PageRequest.of(offset, pageSize, Sort.by("price").descending()));
+        
+        List<LaptopModelResponse> laptopList = result.getContent().stream()
+                        .map(LaptopModelMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
     }
 
 

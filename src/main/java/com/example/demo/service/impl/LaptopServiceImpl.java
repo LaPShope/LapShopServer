@@ -4,6 +4,7 @@ import com.example.demo.common.AuthUtil;
 import com.example.demo.common.ConvertDate;
 import com.example.demo.dto.LaptopDTO;
 import com.example.demo.dto.response.LaptopResponse;
+import com.example.demo.dto.response.PagingResponse;
 import com.example.demo.model.Laptop;
 import com.example.demo.model.LaptopModel;
 import com.example.demo.repository.LaptopQueryRepository;
@@ -15,12 +16,16 @@ import com.example.demo.mapper.LaptopMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.*;
 
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 
@@ -249,5 +254,71 @@ public class LaptopServiceImpl implements LaptopService {
     }
 
 
+    @Override
+    public PagingResponse<?> getLaptopsWithPagination(int offset, int pageSize) {
 
+        Page<Laptop> result = laptopRepository.findAll(PageRequest.of(offset, pageSize));
+
+        List<LaptopResponse> laptopList = result.getContent().stream()
+                        .map(LaptopMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
+    }
+
+    @Override
+    public PagingResponse<?> getLaptopsWithPaginationAndSortByPriceASC(double price, int offset, int pageSize) {
+
+        Page<Laptop> result = laptopRepository.findLaptopsByPriceSortedASC(price, PageRequest.of(offset, pageSize));
+
+        List<LaptopResponse> laptopList = result.getContent().stream()
+                        .map(LaptopMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
+    }
+
+    @Override
+    public PagingResponse<?> getLaptopsWithPaginationAndSortByPriceDES(double price, int offset, int pageSize) {
+
+        Page<Laptop> result = laptopRepository.findLaptopsByPriceSortedDES(price, PageRequest.of(offset, pageSize));
+
+        List<LaptopResponse> laptopList = result.getContent().stream()
+                        .map(LaptopMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
+    }
+
+    @Override
+    public PagingResponse<?> getLaptopsWithPaginationByBrand(int offset, int pageSize, String brand) {
+
+        Page<Laptop> result = laptopRepository.findAllByLaptopModelBrand(brand,PageRequest.of(offset, pageSize));
+
+        List<LaptopResponse> laptopList = result.getContent().stream()
+                        .map(LaptopMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
+    }
 }
