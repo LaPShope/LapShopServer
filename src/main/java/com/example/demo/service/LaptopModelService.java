@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.LaptopModelDTO;
 import com.example.demo.dto.response.LaptopModelResponse;
+import com.example.demo.dto.response.PagingResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -14,4 +15,10 @@ public interface LaptopModelService {
     LaptopModelResponse createLaptopModel(LaptopModelDTO laptopModelDTO);      // Tạo LaptopModel mới
     LaptopModelResponse updateLaptopModel(UUID id, LaptopModelDTO laptopModelDTO); // Cập nhật LaptopModel theo ID
     void deleteLaptopModel(UUID id);                            // Xóa LaptopModel theo ID
+
+    PagingResponse<?> getLaptopModelsWithPaginationAndSortByPriceASC(double price,int offset, int pageSize);
+
+    PagingResponse<?> getLaptopModelsWithPaginationAndSortByPriceDES(double price,int offset, int pageSize);
+
+    PagingResponse<?> getLaptopModelsWithPagination(int offset, int pageSize);
 }
