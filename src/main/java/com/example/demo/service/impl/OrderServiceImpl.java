@@ -220,7 +220,7 @@ public class OrderServiceImpl implements OrderService {
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
         if(!currentUserEmail.equals(existingOrder.getCustomer().getAccount().getEmail())){
-            throw new SecurityException("User is not authorized to update this orderDetail");
+            throw new SecurityException("User is not authorized to delete this order");
         }
 
         redisService.deleteByPatterns(List.of("allOder","*der*"));

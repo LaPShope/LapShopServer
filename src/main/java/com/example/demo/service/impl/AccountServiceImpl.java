@@ -290,7 +290,7 @@ public class AccountServiceImpl implements AccountService {
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
         if (!currentUserEmail.equals(existingAccount.getEmail())) {
-            throw new SecurityException("User is not authorized to delete this account");
+            throw new SecurityException("User is not authorized to update this account");
         }
 
         Optional<Account> existingAccount1 = accountRepository.findByEmail(updatedAccount.getEmail());
@@ -303,7 +303,7 @@ public class AccountServiceImpl implements AccountService {
 
         existingAccount.setName(updatedAccount.getName());
         existingAccount.setEmail(updatedAccount.getEmail());
-        existingAccount.setRole(updatedAccount.getRole());
+        // existingAccount.setRole(updatedAccount.getRole());
         existingAccount.setPassword(updatedAccount.getPassword());
 
         Account account = accountRepository.save(existingAccount);
@@ -324,6 +324,12 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account with ID " + id + " not found!"));
 
+        //kiem tra qua email
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if (!currentUserEmail.equals(account.getEmail())) {
+            throw new SecurityException("User is not authorized to update this account");
+        }
+
         Class<?> clazz = account.getClass();
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
@@ -337,22 +343,27 @@ public class AccountServiceImpl implements AccountService {
                 if (newValue != null) {
 
                     if (field.getType().isEnum()) {
-                        try {
-                            Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
-                            field.set(account, enumValue);
-                            if (enumValue.equals(Enums.Role.Admin)) {
-                                Admin admin = Admin.builder()
-//                                        .adminId(account)
-                                        .build();
-                                adminRepository.save(admin);
-                            } else if (enumValue.equals(Enums.Role.Customer)) {
-//                                account.setAdminId(null);
-                                adminRepository.deleteById(account.getId());
-                            }
-                        } catch (IllegalArgumentException e) {
-                            throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
-                        }
-                    } else {
+                        // try {
+                        //     Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
+                        //     field.set(account, enumValue);
+                        //     if (enumValue.equals(Enums.Role.Admin)) {
+                        //         Admin admin = Admin.builder()
+
+                        //                 .build();
+                        //         adminRepository.save(admin);
+                        //     } else if (enumValue.equals(Enums.Role.Customer)) {
+
+                        //         adminRepository.deleteById(account.getId());
+                        //     }
+                        // } catch (IllegalArgumentException e) {
+                        //     throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
+                        // }
+                    } else if("email".equals(fieldName)){
+                        String newEmail = newValue.toString();
+                        accountRepository.existsByEmail(newEmail).orElseThrow(() -> new EntityExistsException("Email already exist"));
+                        field.set(account, newEmail);
+                    }
+                    else {
                         field.set(account, newValue);
                     }
                 }
