@@ -304,4 +304,21 @@ public class LaptopServiceImpl implements LaptopService {
 
         return laptopResponses;
     }
+
+    @Override
+    public PagingResponse<?> getLaptopsWithPaginationByBrand(int offset, int pageSize, String brand) {
+
+        Page<Laptop> result = laptopRepository.findAllByLaptopModelBrand(brand,PageRequest.of(offset, pageSize));
+
+        List<LaptopResponse> laptopList = result.getContent().stream()
+                        .map(LaptopMapper :: convertToResponse)
+                        .collect(Collectors.toList());
+
+        PagingResponse<?> laptopResponses = PagingResponse.builder()
+                                                .recordCount(result.getNumberOfElements())
+                                                .response(laptopList)
+                                                .build();
+
+        return laptopResponses;
+    }
 }

@@ -28,4 +28,12 @@ public interface LaptopRepository extends JpaRepository<Laptop, UUID> {
     @Query("SELECT l FROM Laptop l JOIN l.laptopModel lm WHERE lm.price = ?1 ORDER BY lm.price DESC")
     Page<Laptop> findLaptopsByPriceSortedDES(double price, Pageable pageable);
 
+    @Query("""
+    SELECT l FROM Laptop l 
+    JOIN l.laptopModel lm 
+    WHERE lm.brand = ?1
+""")
+    Page<Laptop> findAllByLaptopModelBrand(String brand, Pageable pageable);
+
+
 }

@@ -139,4 +139,17 @@ public class LaptopController {
                 .build());
     }
 
+    // 11. Lấy Laptop với phân trang và theo Brand
+    @GetMapping("/pagination/brand")
+    public ResponseEntity<DataResponse<?>> getLaptopsWithPaginationByBrand(
+            @RequestParam int offset,
+            @RequestParam int pageSize,
+            @RequestParam String brand) {
+        return ResponseEntity.ok(DataResponse.builder()
+                .success(true)
+                .message("Laptops retrieved successfully with pagination and brand filter")
+                .data(laptopService.getLaptopsWithPaginationByBrand(offset, pageSize, brand))
+                .build());
+    }
+
 }

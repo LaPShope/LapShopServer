@@ -30,4 +30,6 @@ public interface LaptopService {
     PagingResponse<?> getLaptopsWithPaginationAndSortByPriceDES(double price,int offset, int pageSize);
 
     PagingResponse<?> getLaptopsWithPagination(int offset, int pageSize);
+
+    PagingResponse<?> getLaptopsWithPaginationByBrand(int offset, int pageSize,String brand);
 }
