@@ -324,12 +324,6 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Account with ID " + id + " not found!"));
 
-        //kiem tra qua email
-        String currentUserEmail = AuthUtil.AuthCheck();
-        if (!currentUserEmail.equals(account.getEmail())) {
-            throw new SecurityException("User is not authorized to delete this account");
-        }
-
         Class<?> clazz = account.getClass();
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
