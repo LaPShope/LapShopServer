@@ -149,6 +149,7 @@ public class AdminServiceImpl implements AdminService {
                                 // adminRepository.save(admin);
                             } else if (enumValue.equals(Enums.Role.Customer)) {
                                 adminRepository.deleteById(account.getId());
+                                account.setAdmin(null);
                             }
                         } catch (IllegalArgumentException e) {
                             throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
