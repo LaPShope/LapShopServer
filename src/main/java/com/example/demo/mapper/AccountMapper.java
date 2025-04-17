@@ -12,6 +12,7 @@ public class AccountMapper {
                 .password(account.getPassword())
                 .name(account.getName())
                 .role(account.getRole())
+                .isActive(account.getIsActive())
                 .build();
     }
 
@@ -22,6 +23,7 @@ public class AccountMapper {
                 .password(account.getPassword())
                 .name(account.getName())
                 .role(account.getRole())
+                .isActive(account.getIsActive())
                 .customer(CustomerMapper.convertToDTO(account.getCustomer()))
                 .build();
     }

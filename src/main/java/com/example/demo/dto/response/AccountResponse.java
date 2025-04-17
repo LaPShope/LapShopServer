@@ -2,6 +2,8 @@ package com.example.demo.dto.response;
 
 import com.example.demo.common.Enums;
 import com.example.demo.dto.CustomerDTO;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,4 +27,7 @@ public class AccountResponse {
     private Enums.Role role;
 
     private CustomerDTO customer;
+
+    @JsonProperty("is_active")
+    private boolean isActive;
 }

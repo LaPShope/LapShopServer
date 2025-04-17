@@ -41,6 +41,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.management.RuntimeErrorException;
+
 @Service
 public class AccountServiceImpl implements AccountService {
     private final RedisService redisService;
@@ -104,6 +106,7 @@ public class AccountServiceImpl implements AccountService {
                 .name(registerRequest.getName())
                 .password(registerRequest.getPassword())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
+                .isActive(true)
                 .role(Enums.Role.Customer)
                 .build();
 
@@ -118,6 +121,7 @@ public class AccountServiceImpl implements AccountService {
                 .email(accountExisting.getEmail())
                 .name(accountExisting.getName())
                 .password(accountExisting.getPassword())
+                .isActive(true)
                 .role(accountExisting.getRole())
                 .token(jwtService.generateToken(accountExisting.getEmail(), Enums.Role.Customer))
                 .build();
@@ -360,10 +364,18 @@ public class AccountServiceImpl implements AccountService {
                         // }
                     } else if("email".equals(fieldName)){
                         String newEmail = newValue.toString();
-                        accountRepository.existsByEmail(newEmail).orElseThrow(() -> new EntityExistsException("Email already exist"));
+
+                        if(newEmail.equals(account.getEmail())){
+                            continue;
+                        }
+
+                        if(accountRepository.existsByEmail(newEmail)){
+                            throw new RuntimeException("Email already exists");
+                        }
                         field.set(account, newEmail);
-                    }
-                    else {
+                    } else if("isActive".equals(fieldName)){
+                    
+                    } else {
                         field.set(account, newValue);
                     }
                 }
@@ -401,6 +413,7 @@ public class AccountServiceImpl implements AccountService {
         redisService.del("allAccount");
         redisService.del("account:" + account.getId());
 
-        accountRepository.deleteById(id);
+        account.setIsActive(false);
+        accountRepository.save(account);
     }
 }

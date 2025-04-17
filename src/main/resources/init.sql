@@ -5,6 +5,7 @@ CREATE TABLE `account` (
     `name` VARCHAR(191) NULL,
     `password` VARCHAR(191) NOT NULL,
     `role` ENUM('Customer', 'Admin') NOT NULL,
+    `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
 
     UNIQUE INDEX `account_email_key`(`email`),
     PRIMARY KEY (`id`)

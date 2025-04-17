@@ -1,6 +1,8 @@
 package com.example.demo.dto.response.auth;
 
 import com.example.demo.common.Enums;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,4 +24,7 @@ public class RegisterReponse {
     private Enums.Role role;
 
     private String token;
+
+    @JsonProperty("is_active")
+    private boolean isActive;
 }

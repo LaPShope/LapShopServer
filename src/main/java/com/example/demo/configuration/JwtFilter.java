@@ -21,7 +21,10 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 @Configuration
@@ -76,6 +79,19 @@ public class JwtFilter extends OncePerRequestFilter {
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 Account account = accountService.getAccount(email);
+
+                // Kiểm tra isActive
+                if (!account.getIsActive()) {
+                    ErrorMessage errResponse = ErrorMessage.builder()
+                            .success(false)
+                            .statusCode(Enums.ErrorKey.ErrorInternal)
+                            .message("User is not active")
+                            .data(null)
+                            .build();
+
+                    this.writeJsonResponse(response, 403, errResponse);
+                    return;
+                }
 
                 UserDetails userDetails = User.builder()
                         .username(account.getEmail())

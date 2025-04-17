@@ -102,6 +102,7 @@ public class AdminServiceImpl implements AdminService {
         existingAccount.setEmail(updatedAccount.getEmail());
         existingAccount.setRole(updatedAccount.getRole());
         existingAccount.setPassword(updatedAccount.getPassword());
+        existingAccount.setIsActive(updatedAccount.isActive());
 
         Account account = accountRepository.save(existingAccount);
 
@@ -131,6 +132,10 @@ public class AdminServiceImpl implements AdminService {
             String fieldName = entry.getKey();
             Object newValue = entry.getValue();
 
+            if("isActive".equals(fieldName) || "is_active".equals(fieldName)){
+                fieldName = "isActive";
+            }
+
             try {
                 Field field = clazz.getDeclaredField(fieldName);
                 field.setAccessible(true);
@@ -142,21 +147,34 @@ public class AdminServiceImpl implements AdminService {
                             Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
                             field.set(account, enumValue);
                             if (enumValue.equals(Enums.Role.Admin)) {
+                                if(adminRepository.findById(id).isPresent()){
+                                    continue;
+                                }
                                 Admin admin = Admin.builder()
                                         .account(account)
                                         .build();
                                 account.setAdmin(admin);
                                 // adminRepository.save(admin);
                             } else if (enumValue.equals(Enums.Role.Customer)) {
-                                adminRepository.deleteById(account.getId());
-                                account.setAdmin(null);
+                                if(!adminRepository.findById(id).isPresent()){
+                                    adminRepository.deleteById(account.getId());
+                                    account.setAdmin(null);
+                                }
+                                continue;
                             }
                         } catch (IllegalArgumentException e) {
                             throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
                         }
                     }else if("email".equals(fieldName)){
                         String newEmail = newValue.toString();
-                        accountRepository.existsByEmail(newEmail).orElseThrow(() -> new EntityExistsException("Email already exist"));
+
+                        if(newEmail.equals(account.getEmail())){
+                            continue;
+                        }
+
+                    if(accountRepository.existsByEmail(newEmail)){
+                        throw new RuntimeException("Email already exists");
+                    }
                         field.set(account, newEmail);
                     }else {
                         field.set(account, newValue);

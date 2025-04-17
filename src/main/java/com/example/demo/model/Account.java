@@ -30,6 +30,8 @@ public class Account  implements UserDetails {
     private String name;
 
     private String password;
+    @Column(name = "is_active")
+    private Boolean isActive;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,columnDefinition = "VARCHAR(255) DEFAULT 'CUSTOMER'")
