@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface ChatService {
     ChatResponse partialUpdateChat(UUID id, Map<String,Object> fieldsToUpdate);
 
-    List<ChatResponse> getAllChatsByAccountId(UUID accountId);
+    List<ChatResponse> getAllChatsByAccountId();
 
     ChatResponse getChatById(UUID id);
 

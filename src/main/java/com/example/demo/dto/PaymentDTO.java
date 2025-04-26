@@ -13,8 +13,8 @@ import java.util.UUID;
 public class PaymentDTO {
     private UUID id;
 
-    @JsonProperty("customer_id")
-    private UUID customerId;
+    // @JsonProperty("customer_id")
+    // private UUID customerId;
 
     @JsonProperty("order_id")
     private UUID orderId;

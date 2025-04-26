@@ -22,31 +22,26 @@ public class ChatController {
     }
 
     // Lấy tất cả chat
-    @GetMapping("/{accountId}")
-    public ResponseEntity<DataResponse<List<ChatResponse>>> getAllChatsByAccountId(@PathVariable UUID accountId) {
+    @GetMapping()
+    public ResponseEntity<DataResponse<List<ChatResponse>>> getAllChatsByAccountId() {
 
             return ResponseEntity.ok(DataResponse.<List<ChatResponse>>builder()
                     .success(true)
                     .message("Chat retrieved successfully")
-                    .data(chatService.getAllChatsByAccountId(accountId))
+                    .data(chatService.getAllChatsByAccountId())
                     .build());
     }
 
 
     // Lấy chat theo ID
-//    @GetMapping("/{id}")
-//    public ResponseEntity<?> getChatById(@PathVariable UUID id) {
-//        try {
-//            ChatDTO chatDTO = chatService.getChatById(id);
-//            return ResponseEntity.ok(chatDTO);
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body("Error: " + e.getMessage());
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Error: Unable to fetch chat. Server encountered an issue.");
-//        }
-//    }
+   @GetMapping("/{id}")
+   public ResponseEntity<?> getChatById(@PathVariable UUID id) {
+         return ResponseEntity.ok(DataResponse.<ChatResponse>builder()
+                .success(true)
+                .message("Chat retrieved successfully")
+                .data(chatService.getChatById(id))
+                .build());
+   }
 
     // Tạo một chat mới
     @PostMapping

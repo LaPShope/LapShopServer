@@ -9,7 +9,8 @@ import java.util.UUID;
 
 public interface CommentService {
     CommentResponse partialUpdateComment(UUID id, Map<String,Object> fieldsToUpdate);
-    List<CommentResponse> getAllCommentsByAccountId(UUID accountId);
+    List<CommentResponse> getAllCommentsByAccount();
+    List<CommentResponse> getAllCommentsByLaptopModelId(UUID laptopModelId);
     CommentResponse getCommentById(UUID id);
     CommentResponse createComment(CommentDTO commentDTO);
     CommentResponse updateComment(UUID id, CommentDTO updatedComment);

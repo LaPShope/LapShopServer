@@ -26,41 +26,50 @@ public class PaymentServiceImpl implements PaymentService {
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
     private final PaymentMethodRepository paymentMethodRepository;
+    private final AccountRepository accountRepository;
 
     public PaymentServiceImpl(
             RedisService redisService,
             PaymentRepository paymentRepository,
             CustomerRepository customerRepository,
             OrderRepository orderRepository,
-            PaymentMethodRepository paymentMethodRepository
+            PaymentMethodRepository paymentMethodRepository,
+            AccountRepository accountRepository
     ) {
         this.paymentRepository = paymentRepository;
         this.customerRepository = customerRepository;
         this.orderRepository = orderRepository;
         this.paymentMethodRepository = paymentMethodRepository;
         this.redisService = redisService;
+        this.accountRepository = accountRepository;
     }
 
     @Override
-    public List<PaymentResponse> getAllPaymentsByCustomerId(UUID id) {
-        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:" + id, new TypeReference<List<PaymentResponse>>() {
+    public List<PaymentResponse> getAllPaymentsByCustomer() {
+        String currentUserEmail = AuthUtil.AuthCheck();
+        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:"+currentUserEmail, new TypeReference<List<PaymentResponse>>() {
         });
         if (cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()) {
             return cachedPaymentResponses;
         }
 
-        List<PaymentResponse> paymentResponses = paymentRepository.findByCustomerId(id)
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
+
+
+        List<PaymentResponse> paymentResponses = paymentRepository.findByCustomerId(account.getId())
                 .stream()
                 .map(PaymentMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allPaymentByCustomerId:" + id, paymentResponses, 600);
+        redisService.setObject("allPaymentByCustomerId:" + currentUserEmail, paymentResponses, 600);
 
         return paymentResponses;
     }
 
     @Override
     public List<PaymentResponse> getAllPayments() {
+        AuthUtil.isAdmin();
         List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<List<PaymentResponse>>() {
         });
         if (cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()) {
@@ -78,9 +87,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponse getPaymentById(UUID id) {
-        PaymentResponse cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<PaymentResponse>() {
+        String currentUserEmail = AuthUtil.AuthCheck();
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
+        PaymentResponse cachedPaymentResponses = redisService.getObject("payment:"+id, new TypeReference<PaymentResponse>() {
         });
         if (cachedPaymentResponses != null) {
+           // Kiểm tra quyền truy cập
+            if (!cachedPaymentResponses.getCustomer().equals(account.getId())) {
+                throw new SecurityException("User is not authorized to view this payment");
+            }
             return cachedPaymentResponses;
         }
 
@@ -97,14 +113,12 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     @Override
     public PaymentResponse createPayment(PaymentDTO paymentDTO) {
-        Customer customer = customerRepository.findById(paymentDTO.getCustomerId())
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
-
-        //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if (!currentUserEmail.equals(customer.getAccount().getEmail())) {
-            throw new SecurityException("User is not authorized to create this payment");
-        }
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
+
+        Customer customer = customerRepository.findById(account.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
         Order order = orderRepository.findById(paymentDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
@@ -125,8 +139,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentResponse cachedPayment = PaymentMapper.convertToResponse(paymentExisting);
 
-        redisService.deleteByPatterns(List.of("allPayment", "allPaymentByCustomerId:" + paymentDTO.getCustomerId()));
-        redisService.setObject("payment:" + paymentDTO.getCustomerId(), cachedPayment, 600);
+        redisService.deleteByPatterns(List.of("allPayment", "allPaymentByCustomerId:" + account.getId()));
+        redisService.setObject("payment:" + account.getId(), cachedPayment, 600);
 
         return cachedPayment;
     }
@@ -143,10 +157,6 @@ public class PaymentServiceImpl implements PaymentService {
             throw new SecurityException("User is not authorized to update this payment");
         }
 
-        Customer customer = customerRepository.findById(paymentDTO.getCustomerId())
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
-        existingPayment.setCustomer(customer);
-
         Order order = orderRepository.findById(paymentDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
         existingPayment.setOrder(order);
@@ -155,8 +165,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new EntityNotFoundException("Payment Method not found!"));
 
         existingPayment.setCustomer(customer);
-        existingPayment.setOrder(order);
-        existingPayment.setPaymentMethod(paymentMethod);
         existingPayment.setType(paymentDTO.getType());
         existingPayment.setStatus(paymentDTO.getStatus());
 

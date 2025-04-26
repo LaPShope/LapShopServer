@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface OrderDetailService {
+    List<OrderDetailResponse> getAllOrderDetailsByAccount(); // Lấy danh sách OrderDetail theo ID đơn hàng
     OrderDetailResponse partialUpdateOrderDetail(UUID id, Map<String,Object> fieldsToUpdate);
     List<OrderDetailResponse> getAllOrderDetails();                     // Lấy danh sách tất cả OrderDetail
     OrderDetailResponse getOrderDetailById(UUID id);                    // Lấy OrderDetail theo ID

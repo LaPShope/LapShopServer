@@ -12,8 +12,8 @@ import java.util.UUID;
 @Builder
 public class CommentDTO {
     private UUID id;
-    @JsonProperty("account_id")
-    private UUID accountId;
+    // @JsonProperty("account_id")
+    // private UUID accountId;
     @JsonProperty("parent_id")
     private UUID parentId;
     private String body;

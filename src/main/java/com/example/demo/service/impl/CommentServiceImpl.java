@@ -36,19 +36,28 @@ public class CommentServiceImpl implements CommentService {
         this.redisService = redisService;
     }
 
-    // Lấy danh sách tất cả Comment
     @Override
-    public List<CommentResponse> getAllCommentsByAccountId(UUID accountId) {
+    public List<CommentResponse> getAllCommentsByLaptopModelId(UUID laptopModelId) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    // Lấy danh sách tất cả Comment cua Account
+    @Override
+    public List<CommentResponse> getAllCommentsByAccount() {
         List<CommentResponse> cachedCommentResponses = redisService.getObject("allComment", new TypeReference<List<CommentResponse>>() {});
         if(cachedCommentResponses != null && !cachedCommentResponses.isEmpty()){
             return cachedCommentResponses;
         }
 
-        List<CommentResponse> commentResponses = commentRepository.findByAccountId(accountId).stream()
+        String currentUserEmail = AuthUtil.AuthCheck();
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
+
+        List<CommentResponse> commentResponses = commentRepository.findByAccountId(account.getId()).stream()
                 .map(CommentMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allComment",commentResponses,600);
+        redisService.setObject("allComment"+currentUserEmail,commentResponses,600);
 
         return commentResponses;
     }
@@ -79,14 +88,9 @@ public class CommentServiceImpl implements CommentService {
             throw  new IllegalArgumentException("body cannot be null");
         }
 
-        Account account = accountRepository.findById(commentDTO.getAccountId())
-                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
-
-        //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(account.getEmail())){
-            throw new SecurityException("User is not authorized to create this comment");
-        }
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
         LaptopModel laptopModel = laptopModelRepository.findById(commentDTO.getLaptopModelId())
                 .orElseThrow(() -> new EntityNotFoundException("LaptopModel not found"));
@@ -110,7 +114,7 @@ public class CommentServiceImpl implements CommentService {
 
         CommentResponse cachedCommentResponse = CommentMapper.convertToResponse(commentExisting);
 
-        redisService.deleteByPatterns(List.of("allComment","allLaptopModel","laptopModel:"+commentDTO.getLaptopModelId()));
+        redisService.deleteByPatterns(List.of("allComment","allLaptopModel","laptopModel:"+commentDTO.getLaptopModelId(),"*comment*"));
         redisService.setObject("comment:"+cachedCommentResponse.getId(),cachedCommentResponse,600);
 
         return cachedCommentResponse;

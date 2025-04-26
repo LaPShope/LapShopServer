@@ -35,24 +35,26 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public List<ChatResponse> getAllChatsByAccountId(UUID accountId) {
+    public List<ChatResponse> getAllChatsByAccountId() {
+        String currentUserEmail = AuthUtil.AuthCheck();
 
-        List<ChatResponse> cachedMessages = redisService.getChatList("allChatAccountId:"+accountId);
-        if (!cachedMessages.isEmpty()) {
-            return cachedMessages;
+        List<ChatResponse> cachedMessage= redisService.getChatList("allChatAccountId:"+currentUserEmail);
+        if (!cachedMessage.isEmpty()) {
+            return cachedMessage;
         }
+        Account account = accountRepository.findByEmail(currentUserEmail).orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
-        Account account = accountRepository.findById(accountId).orElseThrow(() -> new EntityNotFoundException("Account not found"));
-
+        //truong hop la sender
         List<ChatResponse> chatResponsesList = chatRepository.findBySenderId(account).stream()
                 .map(ChatMapper::convertToResponse)
                 .collect(Collectors.toList());
 
+        //truong hop la receiver
         chatRepository.findByReceiverId(account).stream()
                 .map(ChatMapper::convertToResponse)
                 .forEach(chatResponsesList::add);
 
-        redisService.saveChatList("allChatAccountId:"+accountId, chatResponsesList, 1000);
+        redisService.saveChatList("allChatAccountId:"+currentUserEmail, chatResponsesList, 1000);
 
         return chatResponsesList;
     }
@@ -65,7 +67,12 @@ public class ChatServiceImpl implements ChatService {
         }
 
         Chat chat = chatRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Chat not found with ID: " + id));
+        .orElseThrow(() -> new EntityNotFoundException("Chat not found with ID: " + id));
+
+        String currentUserEmail = AuthUtil.AuthCheck();
+        if (!currentUserEmail.equals(chat.getSenderId().getEmail()) && !currentUserEmail.equals(chat.getReceiverId().getEmail())) {
+            throw new SecurityException("User is not authorized to view this chat");
+        }
 
         ChatResponse chatResponse = ChatMapper.convertToResponse(chat);
 
@@ -77,16 +84,13 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     @Override
     public ChatResponse createChat(ChatDTO chatDTO) {
-        Account sender = accountRepository.findById(chatDTO.getSenderId())
-                .orElseThrow(() -> new EntityNotFoundException("Sender Account not found"));
         Account receiver = accountRepository.findById(chatDTO.getReceiverId())
-                .orElseThrow(() -> new EntityNotFoundException("Receiver Account not found"));
+        .orElseThrow(() -> new EntityNotFoundException("Receiver Account not found"));
 
-        //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(sender.getEmail())){
-            throw new SecurityException("User is not authorized to create this chat");
-        }
+        
+        Account sender = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Sender Account not found"));
 
         Chat chat = Chat.builder()
                 .receiverId(receiver)
@@ -105,14 +109,7 @@ public class ChatServiceImpl implements ChatService {
 
         ChatResponse chatResponse = ChatMapper.convertToResponse(chatExisting);
 
-        List<ChatResponse> senderChatList = redisService.getChatList("allChatAccountId:"+chatDTO.getSenderId());
-        List<ChatResponse> receiverChatList = redisService.getChatList("allCChatAccountId:"+chatDTO.getReceiverId());
-
-        senderChatList.add(chatResponse);
-        receiverChatList.add(chatResponse);
-
-        // redisService.saveChatList("allChatAccountId:"+chatDTO.getSenderId(), senderChatList, 600);
-        // redisService.saveChatList("allCChatAccountId:"+chatDTO.getReceiverId(), receiverChatList, 600);
+        redisService.deleteByPatterns(List.of("allChatAccountId:"+chat.getSenderId().getEmail(),"allChatAccountId:"+chat.getReceiverId().getEmail(),"chat:"+chat.getId()));
 
         return chatResponse;
     }
@@ -125,15 +122,9 @@ public class ChatServiceImpl implements ChatService {
         
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(chat.getSenderId().getEmail())){
+        if(!currentUserEmail.equals(chat.getSenderId().getEmail()) && !currentUserEmail.equals(chat.getReceiverId().getEmail())){
             throw new SecurityException("User is not authorized to update this chat");
         }
-        
-        Account sender = accountRepository.findById(chatDTO.getSenderId())
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
-        Account receiver = accountRepository.findById(chatDTO.getReceiverId())
-                .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
-
         chat.setMessage(chatDTO.getMessage());
 
         chat.setCreateAt(new Date());
@@ -142,8 +133,7 @@ public class ChatServiceImpl implements ChatService {
 
         ChatResponse cachedChat = ChatMapper.convertToResponse(chat);
 
-        // updateChatInRedis("allChatAccountId:"+chatDTO.getReceiverId(), chatId, cachedChat);
-        // updateChatInRedis("allChatAccountId:"+chatDTO.getSenderId(), chatId, cachedChat);
+        redisService.deleteByPatterns(List.of("allChatAccountId:"+chat.getSenderId().getEmail(),"allChatAccountId:"+chat.getReceiverId().getEmail(),"chat:"+chat.getId()));
 
         return cachedChat;
     }
@@ -156,7 +146,7 @@ public class ChatServiceImpl implements ChatService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(chat.getSenderId().getEmail())){
+        if(!currentUserEmail.equals(chat.getSenderId().getEmail()) && !currentUserEmail.equals(chat.getReceiverId().getEmail())){
             throw new SecurityException("User is not authorized to update this chat");
         }
         
@@ -193,8 +183,8 @@ public class ChatServiceImpl implements ChatService {
 
         ChatResponse cachedChat = ChatMapper.convertToResponse(updatedChat);
 
-        // updateChatInRedis("allChatAccountId:" + chat.getReceiverId().getId(), id, cachedChat);
-        // updateChatInRedis("allChatAccountId:" + chat.getSenderId().getId(), id, cachedChat);
+        redisService.deleteByPatterns(List.of("allChatAccountId:"+chat.getSenderId().getEmail(),"allChatAccountId:"+chat.getReceiverId().getEmail(),"chat:"+chat.getId()));
+
 
         return cachedChat;
     }
@@ -210,14 +200,15 @@ public class ChatServiceImpl implements ChatService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(sender.getEmail())){
+        if(!currentUserEmail.equals(sender.getEmail()) && !currentUserEmail.equals(receiver.getEmail())){
             throw new SecurityException("User is not authorized to delete this chat");
         }
 
         sender.getChatSend().remove(chat);
         receiver.getChatReceive().remove(chat);
 
-        redisService.deleteByPatterns(List.of("allChatAccount:"+chat.getSenderId().getId(),"allChatAccount:"+chat.getReceiverId().getId()));
+        redisService.deleteByPatterns(List.of("allChatAccountId:"+chat.getSenderId().getEmail(),"allChatAccountId:"+chat.getReceiverId().getEmail(),"chat:"+chat.getId()));
+
 
         chatRepository.delete(chat);
     }

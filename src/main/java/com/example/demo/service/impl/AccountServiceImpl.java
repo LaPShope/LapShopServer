@@ -78,6 +78,10 @@ public class AccountServiceImpl implements AccountService {
         Account account = accountRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+        if (!account.getIsActive()) {
+            throw new IllegalStateException("Account is inactive");
+        }
+
         if (!new BCryptPasswordEncoder().matches(loginRequest.getPassword(), account.getPassword())) {
             throw new SecurityException("Invalid password");
         }
@@ -91,6 +95,7 @@ public class AccountServiceImpl implements AccountService {
                 .token(token)
                 .email(account.getEmail())
                 .role(account.getRole())
+                .isActive(account.getIsActive())
                 .build();
     }
 

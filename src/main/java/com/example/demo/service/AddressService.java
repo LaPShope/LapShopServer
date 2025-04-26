@@ -9,7 +9,7 @@ import com.example.demo.dto.response.AddressResponse;
 
 public interface AddressService {
     public AddressResponse partialUpdateAddress(UUID id, Map<String,Object> fieldsToUpdate );
-    public List<AddressResponse> getAllAddress(UUID customerId);
+    public List<AddressDTO> getAllAddress();
     public AddressResponse getAddressById(UUID id);
     public AddressResponse createAddress(AddressDTO addressDTO);
     public AddressResponse updateAddress(UUID idToUpdate, AddressDTO updatedAddressDTO);

@@ -11,6 +11,7 @@ import com.example.demo.repository.*;
 import com.example.demo.service.OrderService;
 import com.example.demo.mapper.OrderMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.stereotype.Service;
@@ -21,6 +22,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import io.netty.util.AbstractReferenceCounted;
+
 
 @Service
 
@@ -30,27 +33,31 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerRepository customerRepository; // Repository để kiểm tra Customer tồn tại
     private final OrderDetailRepository orderDetailRepository;
     private final PaymentRepository paymentRepository;
+    private final AccountRepository accountRepository; // Repository để kiểm tra Account tồn tại
 
-    public OrderServiceImpl(RedisService redisService, PaymentRepository paymentRepository,OrderRepository orderRepository, CustomerRepository customerRepository,OrderDetailRepository orderDetailRepository) {
+    public OrderServiceImpl(AccountRepository accountRepository, RedisService redisService, PaymentRepository paymentRepository,OrderRepository orderRepository, CustomerRepository customerRepository,OrderDetailRepository orderDetailRepository) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.orderDetailRepository=orderDetailRepository;
         this.paymentRepository=paymentRepository;
         this.redisService = redisService;
+        this.accountRepository = accountRepository;
     }
 
     @Override
     public List<OrderResponse> getAllOrders() {
-        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOder", new TypeReference<List<OrderResponse>>() {});
+        String currentUserEmail = AuthUtil.AuthCheck();
+        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOder"+currentUserEmail, new TypeReference<List<OrderResponse>>() {});
         if(cachedOrderResponses != null && !cachedOrderResponses.isEmpty()){
             return cachedOrderResponses;
         }
 
         List<OrderResponse> orderResponses = orderRepository.findAll().stream()
+                .filter(order -> order.getCustomer().getAccount().getEmail().equals(currentUserEmail))
                 .map(OrderMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allOrder",orderResponses,600);
+        redisService.setObject("allOrder"+currentUserEmail,orderResponses,600);
 
         return orderResponses;
     }
@@ -62,9 +69,15 @@ public class OrderServiceImpl implements OrderService {
         if (cachedOrderResponse != null){
             return cachedOrderResponse;
         }
-
+        
+        String currentUserEmail = AuthUtil.AuthCheck();
+        
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
+
+        if (!order.getCustomer().getAccount().getEmail().equals(currentUserEmail)) {
+            throw new SecurityException("User is not authorized to view this order");
+        }
 
         OrderResponse orderResponse = OrderMapper.convertToResponse(order);
 
@@ -76,14 +89,13 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public OrderResponse createOrder(OrderDTO orderDTO) {
-        Customer customer = customerRepository.findById(orderDTO.getCustomerId())
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
-
-        //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getAccount().getEmail())){
-            throw new SecurityException("User is not authorized to create this order");
-        }
+
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found!")).getAccount();
+
+        Customer customer = customerRepository.findById(account.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
         Order order = Order.builder()
                 .customer(customer)
@@ -117,35 +129,6 @@ public class OrderServiceImpl implements OrderService {
         }
 
         existingOrder.setStatus(orderDTO.getStatus());
-        existingOrder.setDateCreate(orderDTO.getDateCreate());
-//        //cap nhat danh sach orderdetail
-//        if (orderDTO.getOrderDetails() == null || orderDTO.getOrderDetails().isEmpty()) {
-//            existingOrder.getOrderDetailList().forEach(orderDetail -> orderDetail.setOrder(null));
-//        } else {
-//            List<OrderDetail> newOrderDetails = orderDTO.getOrderDetails().stream()
-//                    .map(orderDetailId -> orderDetailRepository.findById(orderDetailId)
-//                            .orElseThrow(() -> new EntityNotFoundException("OrderDetail not found"))).toList();
-//            //loai bo nhung orderdetail khong co trong danh sach dto
-//            existingOrder.getOrderDetailList().removeIf(orderDetail -> !newOrderDetails.contains(orderDetail));
-//            //them nhung orderdetail moi
-//            newOrderDetails.forEach(orderDetail -> {
-//                if (!existingOrder.getOrderDetailList().contains(orderDetail)) {
-//                    orderDetail.setOrder(existingOrder);
-//                    existingOrder.getOrderDetailList().add(orderDetail);
-//                }
-//            });
-//        }
-
-//        if (orderDTO.getPayments() == null || orderDTO.getPayments().isEmpty()) {
-//            existingOrder.getPayment().setOrder(null);
-//        } else {
-//            Payment newPayments =  paymentRepository.findById(orderDTO.getCustomerId())
-//                            .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
-//
-//            existingOrder.setPayment(newPayments);
-//
-//        }
-
         Order order = orderRepository.save(existingOrder);
 
         OrderResponse cachedorderResponse =  OrderMapper.convertToResponse(order);

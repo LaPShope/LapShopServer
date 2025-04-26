@@ -14,10 +14,15 @@ import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Builder
 @Entity
-@Table(name="account")
+@Table(name="account",
+        indexes = {
+                @Index(name = "idx_email", columnList = "email")
+        }
+)
 public class Account  implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

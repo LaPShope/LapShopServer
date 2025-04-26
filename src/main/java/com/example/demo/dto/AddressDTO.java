@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AddressDTO {
     private UUID id;
-    @JsonProperty("customer_id")
-    private UUID customerId;
+    // @JsonProperty("customer_id")
+    // private UUID customerId;
     private String city;
     private String district;
     private String ward;

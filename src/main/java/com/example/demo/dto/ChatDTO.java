@@ -12,8 +12,8 @@ import java.util.UUID;
 @Builder
 public class ChatDTO {
     private UUID id;
-    @JsonProperty("sender_id")
-    private UUID senderId;
+    // @JsonProperty("sender_id")
+    // private UUID senderId;
     @JsonProperty("receiver_id")
     private UUID receiverId;
     private String message;

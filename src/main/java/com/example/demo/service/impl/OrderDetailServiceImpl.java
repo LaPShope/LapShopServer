@@ -40,6 +40,24 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         this.redisService = redisService;
     }
 
+    @Override
+    public List<OrderDetailResponse> getAllOrderDetailsByAccount() {
+        String currentUserEmail = AuthUtil.AuthCheck();
+
+        List<OrderDetailResponse> cachedOderDetail = redisService.getObject("allOderDetailAccount"+currentUserEmail, new TypeReference<List<OrderDetailResponse>>() {});
+        if (cachedOderDetail != null && !cachedOderDetail.isEmpty()){
+            return cachedOderDetail;
+        }
+
+        List<OrderDetailResponse> orderDetailResponses = orderDetailRepository.findAll().stream()
+                .filter(orderDetail -> orderDetail.getOrder().getCustomer().getAccount().getEmail().equals(currentUserEmail))
+                .map(OrderDetailMapper::convertToResponse)
+                .collect(Collectors.toList());
+
+        redisService.setObject("allOderDetailAccount"+currentUserEmail,orderDetailResponses,600);
+
+        return orderDetailResponses;
+    }
     
     @Override
     public List<OrderDetailResponse> getAllOrderDetails() {

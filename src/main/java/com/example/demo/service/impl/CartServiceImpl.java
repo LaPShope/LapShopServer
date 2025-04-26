@@ -10,13 +10,18 @@ import com.example.demo.repository.LaptopOnCartRepository;
 import com.example.demo.service.CartService;
 import com.example.demo.mapper.CartMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.demo.repository.AccountRepository;
 
 @Service
 @Transactional
@@ -26,27 +31,32 @@ public class CartServiceImpl implements CartService {
     private final CustomerRepository customerRepository;
     private final LaptopOnCartRepository laptopOnCartRepository;
     private final RedisService redisService;
+    private final AccountRepository accountRepository;
 
-    public CartServiceImpl(RedisService redisService, CartRepository cartRepository, CustomerRepository customerRepository,LaptopOnCartRepository laptopOnCartRepository) {
+    public CartServiceImpl(AccountRepository accountRepository, RedisService redisService, CartRepository cartRepository, CustomerRepository customerRepository,LaptopOnCartRepository laptopOnCartRepository) {
         this.cartRepository = cartRepository;
         this.customerRepository = customerRepository;
         this.laptopOnCartRepository=laptopOnCartRepository;
         this.redisService = redisService;
+        this.accountRepository = accountRepository;
     }
 
     // Lấy tất cả Cart
     @Override
     public List<CartResponse> getAllCarts() {
-        List<CartResponse> cachedCarts = redisService.getObject("allCart", new TypeReference<List<CartResponse>>() {});
+        String currentUserEmail = AuthUtil.AuthCheck();
+
+        List<CartResponse> cachedCarts = redisService.getObject("allCartByCustomerEmail"+currentUserEmail, new TypeReference<List<CartResponse>>() {});
         if (cachedCarts != null && !cachedCarts.isEmpty()) {
             return cachedCarts;
         }
 
         List<CartResponse> cartResponses = cartRepository.findAll().stream()
+                .filter(cart -> cart.getCustomer().getAccount().getEmail().equals(currentUserEmail))
                 .map(CartMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allCart",cartResponses,600);
+        redisService.setObject("allCartByCustomerEmail"+currentUserEmail,cartResponses,600);
 
         return cartResponses;
     }
@@ -54,6 +64,8 @@ public class CartServiceImpl implements CartService {
     // Lấy Cart theo ID
     @Override
     public CartResponse getCartById(UUID id) {
+        String currentUserEmail = AuthUtil.AuthCheck();
+
         CartResponse cachedCart = redisService.getObject("cart:"+id, new TypeReference<CartResponse>() {});
         if (cachedCart != null) {
             return cachedCart;
@@ -61,6 +73,10 @@ public class CartServiceImpl implements CartService {
 
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
+
+        if(!cart.getCustomer().getAccount().getEmail().equals(currentUserEmail)) {
+            throw new SecurityException("User is not authorized to view this cart");
+        }
 
         CartResponse cartResponse = CartMapper.convertToResponse(cart);
 
@@ -70,19 +86,23 @@ public class CartServiceImpl implements CartService {
     }
 
     // Tạo mới Cart
+    @Transactional
     @Override
     public CartResponse createCart(CartDTO cartDTO) {
-        Customer customer = customerRepository.findById(cartDTO.getCustomerId())
+        String currentUserEmail = AuthUtil.AuthCheck();
+        // Customer customer = customerRepository.findById(cartDTO.getCustomerId())
+        //         .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
+
+        Account customer = accountRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
         //kiem tra user qua email
-        String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(customer.getAccount().getEmail())){
+        if(!currentUserEmail.equals(customer.getEmail())){
             throw new SecurityException("User is not authorized to create this cart ");
         }
 
         Cart cart = Cart.builder()
-                .customer(customer)
+                .customer(customer.getCustomer())
                 .build();
         Cart cartExisting = cartRepository.save(cart);
 
@@ -95,6 +115,7 @@ public class CartServiceImpl implements CartService {
     }
 
     // Cập nhật Cart theo ID
+    @Transactional
     @Override
     public CartResponse updateCart(UUID id, CartDTO cartDTO) {
         Cart cart = cartRepository.findById(id)

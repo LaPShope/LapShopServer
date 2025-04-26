@@ -22,12 +22,12 @@ public class CommentController {
     }
 
     // Lấy danh sách tất cả Comments
-    @GetMapping("by-account/{accountId}")
-    public ResponseEntity<?> getAllComments(@PathVariable UUID accountId) {
+    @GetMapping()
+    public ResponseEntity<?> getAllComments() {
         return ResponseEntity.ok(DataResponse.<List<CommentResponse>>builder()
                 .success(true)
                 .message("Comment retrieved successfully")
-                .data(commentService.getAllCommentsByAccountId(accountId))
+                .data(commentService.getAllCommentsByAccount())
                 .build());
     }
 

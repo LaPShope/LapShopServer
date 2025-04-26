@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface PaymentService {
-    List<PaymentResponse> getAllPaymentsByCustomerId(UUID id);
+    List<PaymentResponse> getAllPaymentsByCustomer();
     PaymentResponse partialUpdatePayment(UUID id, Map<String,Object> fieldsToUpdate);
     List<PaymentResponse> getAllPayments();
     PaymentResponse getPaymentById(UUID id);

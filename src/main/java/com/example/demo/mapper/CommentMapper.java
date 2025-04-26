@@ -13,7 +13,7 @@ public class CommentMapper {
     public static CommentDTO convertToDTO(Comment comment) {
         return CommentDTO.builder()
                 .id(comment.getId())
-                .accountId(comment.getAccount().getId())
+                // .accountId(comment.getAccount().getId())
                 .parentId(comment.getParent() == null ? null : comment.getParent().getId())
                 .body(comment.getBody())
                 .laptopModelId(comment.getLaptopModel().getId())

@@ -22,12 +22,12 @@ public class AddressController {
     }
 
     // Lấy tất cả địa chỉ của một khách hàng
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<DataResponse<List<AddressResponse>>> getAllAddress(@PathVariable UUID customerId) {
-        return ResponseEntity.ok(DataResponse.<List<AddressResponse>>builder()
+    @GetMapping()
+    public ResponseEntity<DataResponse<List<?>>> getAllAddress() {
+        return ResponseEntity.ok(DataResponse.<List<?>>builder()
                 .success(true)
                 .message("Addresses retrieved successfully")
-                .data(addressService.getAllAddress(customerId))
+                .data(addressService.getAllAddress())
                 .build());
     }
 
