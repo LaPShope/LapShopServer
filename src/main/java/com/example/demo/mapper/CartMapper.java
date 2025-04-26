@@ -13,7 +13,7 @@ public class CartMapper {
     public static CartDTO convertToDTO(Cart cart) {
         return CartDTO.builder()
                 .id(cart.getId())
-                .customerId(cart.getCustomer().getAccount().getId())
+                // .customerId(cart.getCustomer().getAccount().getId())
                 .laptopOnCartIds(Optional.ofNullable(cart.getLaptopOnCarts())
                         .orElse(Collections.emptyList())
                         .stream()

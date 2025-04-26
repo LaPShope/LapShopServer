@@ -33,15 +33,17 @@ public class OrderServiceImpl implements OrderService {
     private final CustomerRepository customerRepository; // Repository để kiểm tra Customer tồn tại
     private final OrderDetailRepository orderDetailRepository;
     private final PaymentRepository paymentRepository;
+    private final CartRepository cartRepository; // Repository để kiểm tra Cart tồn tại
     private final AccountRepository accountRepository; // Repository để kiểm tra Account tồn tại
 
-    public OrderServiceImpl(AccountRepository accountRepository, RedisService redisService, PaymentRepository paymentRepository,OrderRepository orderRepository, CustomerRepository customerRepository,OrderDetailRepository orderDetailRepository) {
+    public OrderServiceImpl(CartRepository cartRepository, AccountRepository accountRepository, RedisService redisService, PaymentRepository paymentRepository,OrderRepository orderRepository, CustomerRepository customerRepository,OrderDetailRepository orderDetailRepository) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.orderDetailRepository=orderDetailRepository;
         this.paymentRepository=paymentRepository;
         this.redisService = redisService;
         this.accountRepository = accountRepository;
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -97,6 +99,8 @@ public class OrderServiceImpl implements OrderService {
         Customer customer = customerRepository.findById(account.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
+        List<Cart> cart = customer.getCartList();
+
         Order order = Order.builder()
                 .customer(customer)
                 .dateCreate(new Date())
@@ -107,6 +111,28 @@ public class OrderServiceImpl implements OrderService {
                 .finalPrice(orderDTO.getFinalPrice())
                 .status(Enums.OrderStatus.Pending)
                 .build();
+
+        
+
+        if (cart != null) {
+            for (Cart item : cart) {
+                List<OrderDetail> items = item.getLaptopOnCarts().stream().map(laptopOnCart -> {
+                    OrderDetail orderDetail = OrderDetail.builder()
+                        .id(null)
+                        .order(order)
+                        .laptopModel(laptopOnCart.getLaptopModel())
+                        .quantity(laptopOnCart.getQuantity())
+                        .price(laptopOnCart.getLaptopModel().getPrice())
+                        .build();
+                    return orderDetail; 
+                }).collect(Collectors.toList());
+                
+                order.setOrderDetailList(items);
+                
+            }
+        }
+
+        customer.getCartList().clear();
 
         Order orderExisting = orderRepository.save(order);
 

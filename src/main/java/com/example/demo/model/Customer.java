@@ -59,7 +59,7 @@ public class Customer {
     @OneToMany(mappedBy = "customer",cascade = {CascadeType.PERSIST,
             CascadeType.DETACH,
             CascadeType.MERGE,
-            CascadeType.REFRESH})
+            CascadeType.REFRESH},orphanRemoval = true)
     private List<Cart> cartList;
 
 }

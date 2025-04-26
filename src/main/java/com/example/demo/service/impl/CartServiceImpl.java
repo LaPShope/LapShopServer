@@ -205,10 +205,8 @@ public class CartServiceImpl implements CartService {
         if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
             throw new SecurityException("User is not authorized to delete this cart");
         }
-    
-        cart.getLaptopOnCarts().removeIf(laptopOnCart -> true);
 
-        redisService.deleteByPatterns(List.of("allCart","cart:"+id));
+        redisService.deleteByPatterns(List.of("*allCart*","*art*"));
 
         cartRepository.delete(cart);
     }

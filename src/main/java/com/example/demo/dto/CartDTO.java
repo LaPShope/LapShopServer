@@ -14,8 +14,8 @@ import java.util.UUID;
 public class CartDTO {
     private UUID id;
 
-    @JsonProperty("customer_id")
-    private UUID customerId;
+    // @JsonProperty("customer_id")
+    // private UUID customerId;
     
     @JsonProperty("laptop_on_cart_id")
     private List<UUID> laptopOnCartIds;
