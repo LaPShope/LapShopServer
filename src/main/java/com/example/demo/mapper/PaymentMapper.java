@@ -8,7 +8,7 @@ public class PaymentMapper {
     public static PaymentDTO convertToDTO(Payment payment) {
         return PaymentDTO.builder()
                 .id(payment.getId())
-                .customerId(payment.getCustomer() != null ? payment.getCustomer().getAccount().getId() : null)
+//                .customerId(payment.getCustomer() != null ? payment.getCustomer().getAccount().getId() : null)
                 .orderId(payment.getOrder() != null ? payment.getOrder().getId() : null)
                 .paymentMethodId(payment.getPaymentMethod() != null ? payment.getPaymentMethod().getId() : null)
                 .type(payment.getType())

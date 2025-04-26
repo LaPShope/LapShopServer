@@ -38,7 +38,7 @@ public class OrderResponse {
     @JsonProperty("final_price")
     private BigDecimal finalPrice;
 
-    @JsonProperty("oder_details")
+    @JsonProperty("order_details")
     private List<OrderItem> orderDetails;
 
     private PaymentResponse payments;

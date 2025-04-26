@@ -33,8 +33,8 @@ public class CustomerMapper {
                 .cartList(customer.getCartList() == null ? Collections.emptyList() :
                         customer.getCartList().stream()
                         .map(CartMapper::convertToDTO).collect(Collectors.toList()))
-                .orderList(customer.getOderList() == null ? Collections.emptyList() :
-                        customer.getOderList().stream()
+                .orderList(customer.getOrderList() == null ? Collections.emptyList() :
+                        customer.getOrderList().stream()
                         .map(OrderMapper::convertToDTO).collect(Collectors.toList()))
                 .paymentList(customer.getPaymentList() == null ? Collections.emptyList() :
                         customer.getPaymentList().stream()

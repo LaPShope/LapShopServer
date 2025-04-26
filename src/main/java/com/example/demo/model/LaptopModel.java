@@ -33,7 +33,7 @@ public class LaptopModel {
     @Column(nullable = false)
     private String cpu;
 
-    @Column(nullable = false)
+    @Column(nullable = false,length=100)
     private String ram;
 
     @Column(nullable = false)

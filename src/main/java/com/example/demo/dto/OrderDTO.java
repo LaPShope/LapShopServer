@@ -22,6 +22,8 @@ public class OrderDTO {
     @JsonProperty("customer_id")
     private UUID customerId;
 
+    private String address;
+
     private Enums.OrderStatus status;
 
     @JsonProperty("date_create")
@@ -33,7 +35,7 @@ public class OrderDTO {
     @JsonProperty("final_price")
     private BigDecimal finalPrice;
 
-    @JsonProperty("oder_details")
+    @JsonProperty("order_details")
     private List<UUID> orderDetails;
 
     private List<UUID> payments;

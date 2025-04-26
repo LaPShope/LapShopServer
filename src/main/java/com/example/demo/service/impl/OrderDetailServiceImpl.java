@@ -44,9 +44,9 @@ public class OrderDetailServiceImpl implements OrderDetailService {
     public List<OrderDetailResponse> getAllOrderDetailsByAccount() {
         String currentUserEmail = AuthUtil.AuthCheck();
 
-        List<OrderDetailResponse> cachedOderDetail = redisService.getObject("allOderDetailAccount"+currentUserEmail, new TypeReference<List<OrderDetailResponse>>() {});
-        if (cachedOderDetail != null && !cachedOderDetail.isEmpty()){
-            return cachedOderDetail;
+        List<OrderDetailResponse> cachedOrderDetail = redisService.getObject("allOrderDetailAccount"+currentUserEmail, new TypeReference<List<OrderDetailResponse>>() {});
+        if (cachedOrderDetail != null && !cachedOrderDetail.isEmpty()){
+            return cachedOrderDetail;
         }
 
         List<OrderDetailResponse> orderDetailResponses = orderDetailRepository.findAll().stream()
@@ -54,32 +54,32 @@ public class OrderDetailServiceImpl implements OrderDetailService {
                 .map(OrderDetailMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allOderDetailAccount"+currentUserEmail,orderDetailResponses,600);
+        redisService.setObject("allOrderDetailAccount"+currentUserEmail,orderDetailResponses,600);
 
         return orderDetailResponses;
     }
     
     @Override
     public List<OrderDetailResponse> getAllOrderDetails() {
-        List<OrderDetailResponse> cachedOderDetail = redisService.getObject("allOderDetail", new TypeReference<List<OrderDetailResponse>>() {});
-        if (cachedOderDetail != null && !cachedOderDetail.isEmpty()){
-            return cachedOderDetail;
+        List<OrderDetailResponse> cachedOrderDetail = redisService.getObject("allOrderDetail", new TypeReference<List<OrderDetailResponse>>() {});
+        if (cachedOrderDetail != null && !cachedOrderDetail.isEmpty()){
+            return cachedOrderDetail;
         }
 
         List<OrderDetailResponse> orderDetailResponses = orderDetailRepository.findAll().stream()
                 .map(OrderDetailMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allOderDetail",orderDetailResponses,600);
+        redisService.setObject("allOrderDetail",orderDetailResponses,600);
 
         return orderDetailResponses;
     }
 
     @Override
     public OrderDetailResponse getOrderDetailById(UUID id) {
-        OrderDetailResponse cachedOderDetail = redisService.getObject("oderDetail:"+id, new TypeReference<OrderDetailResponse>() {});
-        if (cachedOderDetail != null){
-            return cachedOderDetail;
+        OrderDetailResponse cachedOrderDetail = redisService.getObject("orderDetail:"+id, new TypeReference<OrderDetailResponse>() {});
+        if (cachedOrderDetail != null){
+            return cachedOrderDetail;
         }
 
         OrderDetail orderDetail = orderDetailRepository.findById(id)
@@ -87,14 +87,14 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
         OrderDetailResponse orderDetailResponse = OrderDetailMapper.convertToResponse(orderDetail);
 
-        redisService.setObject("oderDetail:"+id,orderDetailResponse,600);
+        redisService.setObject("orderDetail:"+id,orderDetailResponse,600);
 
         return orderDetailResponse;
     }
 
     @Transactional
     @Override
-    public OrderDetailResponse createOrderDetail(OrderDetailDTO orderDetailDTO) {
+    public OrderDetailResponse createOrderDetail(OrderDetailDTO orderDetailDTO) { 
         Order order = orderRepository.findById(orderDetailDTO.getOrderId())
                 .orElseThrow(() -> new EntityNotFoundException("Order  not found!"));
 
@@ -152,7 +152,7 @@ public class OrderDetailServiceImpl implements OrderDetailService {
 
         OrderDetailResponse cachedOrderDetailResponse = OrderDetailMapper.convertToResponse(orderDetailExisting);
 
-        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","oderDetail:"+id,"order:"+cachedOrderDetailResponse.getOrder().getId()));
+        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","orderDetail:"+id,"order:"+cachedOrderDetailResponse.getOrder().getId()));
         redisService.setObject("orderDetail:"+id,cachedOrderDetailResponse,600);
 
         return cachedOrderDetailResponse;
@@ -198,7 +198,7 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         OrderDetail updatedOrderDetail = orderDetailRepository.save(orderDetail);
         OrderDetailResponse cachedOrderDetailResponse = OrderDetailMapper.convertToResponse(updatedOrderDetail);
 
-        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","oderDetail:"+id,"order:"+cachedOrderDetailResponse.getOrder().getId()));
+        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","orderDetail:"+id,"order:"+cachedOrderDetailResponse.getOrder().getId()));
         redisService.setObject("orderDetail:"+id,cachedOrderDetailResponse,600);
 
         return cachedOrderDetailResponse;
@@ -216,7 +216,7 @@ public class OrderDetailServiceImpl implements OrderDetailService {
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 
-        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","oderDetail:"+id,"order:"+existingOrderDetail.getOrder().getId()));
+        redisService.deleteByPatterns(List.of("allOrderDetail","allOrder","orderDetail:"+id,"order:"+existingOrderDetail.getOrder().getId()));
 
         orderDetailRepository.delete(existingOrderDetail);
     }

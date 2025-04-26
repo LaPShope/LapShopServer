@@ -30,8 +30,7 @@ CREATE TABLE `admin` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `laptop_model` (
-    `id` BINARY(16) NOT NULL,
+CREATE TABLE `laptop_model` (    `id` BINARY(16) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `brand` VARCHAR(191) NOT NULL,
     `cpu` VARCHAR(191) NOT NULL,

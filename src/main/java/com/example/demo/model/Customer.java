@@ -53,7 +53,7 @@ public class Customer {
             CascadeType.DETACH,
             CascadeType.MERGE,
             CascadeType.REFRESH})
-    private List<Order> oderList;
+    private List<Order> orderList;
 
     @JsonIgnore
     @OneToMany(mappedBy = "customer",cascade = {CascadeType.PERSIST,

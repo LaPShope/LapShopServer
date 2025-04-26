@@ -18,11 +18,7 @@ import java.util.UUID;
 @Setter
 @Builder
 @Entity
-@Table(name="account",
-        indexes = {
-                @Index(name = "idx_email", columnList = "email")
-        }
-)
+@Table(name="account")
 public class Account  implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -81,5 +77,10 @@ public class Account  implements UserDetails {
     @Override
     public String getUsername() {
         return this.name;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password; // thay bằng field chứa password
     }
 }

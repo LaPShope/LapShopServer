@@ -11,7 +11,7 @@ public class ChatMapper {
                 .message(chat.getMessage())
                 .createAt(chat.getCreateAt())
                 .receiverId(chat.getReceiverId().getId())
-                .senderId(chat.getSenderId().getId())
+//                .senderId(chat.getSenderId().getId())
                 .build();
 
     }

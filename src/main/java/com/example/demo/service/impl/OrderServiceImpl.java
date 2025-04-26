@@ -47,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderResponse> getAllOrders() {
         String currentUserEmail = AuthUtil.AuthCheck();
-        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOder"+currentUserEmail, new TypeReference<List<OrderResponse>>() {});
+        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOrder"+currentUserEmail, new TypeReference<List<OrderResponse>>() {});
         if(cachedOrderResponses != null && !cachedOrderResponses.isEmpty()){
             return cachedOrderResponses;
         }
@@ -92,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
         String currentUserEmail = AuthUtil.AuthCheck();
 
         Account account = accountRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Account not found!")).getAccount();
+                .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
 
         Customer customer = customerRepository.findById(account.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
@@ -102,6 +102,9 @@ public class OrderServiceImpl implements OrderService {
                 .dateCreate(new Date())
                 .orderDetailList(null)
                 .payment(null)
+                .address(orderDTO.getAddress())
+                .deliveryCost(orderDTO.getDeliveryCost())
+                .finalPrice(orderDTO.getFinalPrice())
                 .status(Enums.OrderStatus.Pending)
                 .build();
 
@@ -110,7 +113,7 @@ public class OrderServiceImpl implements OrderService {
         OrderResponse cachedOrderResponse = OrderMapper.convertToResponse(orderExisting);
 
         redisService.deleteByPatterns(List.of("allOrder"));
-        redisService.setObject("oder:"+orderDTO.getId(),cachedOrderResponse,600);
+        redisService.setObject("order:"+orderDTO.getId(),cachedOrderResponse,600);
 
         return cachedOrderResponse;
     }
@@ -133,8 +136,8 @@ public class OrderServiceImpl implements OrderService {
 
         OrderResponse cachedorderResponse =  OrderMapper.convertToResponse(order);
 
-        redisService.deleteByPatterns(List.of("allOder","*der*"));
-        redisService.setObject("oder:"+id,cachedorderResponse,600);
+        redisService.deleteByPatterns(List.of("allOrder","*der*"));
+        redisService.setObject("order:"+id,cachedorderResponse,600);
 
         return cachedorderResponse;
     }
@@ -189,8 +192,8 @@ public class OrderServiceImpl implements OrderService {
         Order updatedOrder = orderRepository.save(order);
         OrderResponse cachedorderResponse = OrderMapper.convertToResponse(updatedOrder);
 
-        redisService.deleteByPatterns(List.of("allOder","*der*"));
-        redisService.setObject("oder:"+id,cachedorderResponse,600);
+        redisService.deleteByPatterns(List.of("allOrder","*der*"));
+        redisService.setObject("order:"+id,cachedorderResponse,600);
 
         return cachedorderResponse;
     }
@@ -206,7 +209,7 @@ public class OrderServiceImpl implements OrderService {
             throw new SecurityException("User is not authorized to delete this order");
         }
 
-        redisService.deleteByPatterns(List.of("allOder","*der*"));
+        redisService.deleteByPatterns(List.of("allOrder","*der*"));
 
         orderRepository.delete(existingOrder);
     }

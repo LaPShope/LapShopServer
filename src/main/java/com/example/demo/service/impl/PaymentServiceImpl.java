@@ -124,7 +124,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
         PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentDTO.getPaymentMethodId())
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found!"));
+                .orElseThrow(() -> new EntityNotFoundException("Payment Method not found!"));
 
         Payment payment = Payment.builder()
                 .id(null)
@@ -164,7 +164,7 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentMethod paymentMethod = paymentMethodRepository.findById(paymentDTO.getPaymentMethodId())
                 .orElseThrow(() -> new EntityNotFoundException("Payment Method not found!"));
 
-        existingPayment.setCustomer(customer);
+//        existingPayment.setCustomer(customer);
         existingPayment.setType(paymentDTO.getType());
         existingPayment.setStatus(paymentDTO.getStatus());
 

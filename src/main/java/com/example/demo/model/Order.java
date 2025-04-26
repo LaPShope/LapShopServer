@@ -16,7 +16,7 @@ import java.util.UUID;
 @Setter
 @Builder
 @Entity
-@Table(name="order")
+@Table(name="`order`")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,6 +33,8 @@ public class Order {
 
     @Column(name = "date_create", nullable = false)
     private Date dateCreate;
+
+    private String address;
 
     @Column(name="delivery_cost")
     private BigDecimal deliveryCost;

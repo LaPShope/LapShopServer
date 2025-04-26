@@ -21,18 +21,18 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
-    @GetMapping("customer/{id}/payments")
-    public ResponseEntity<?> getAllPaymentsByCustomerId(@PathVariable UUID id) {
+    @GetMapping()
+    public ResponseEntity<?> getAllPaymentsByCustomerId() {
 
         return ResponseEntity.ok(DataResponse.<List<PaymentResponse>>builder()
                 .success(true)
                 .message("Payment retrieved successfully")
-                .data(paymentService.getAllPaymentsByCustomerId(id))
+                .data(paymentService.getAllPaymentsByCustomer())
                 .build());
     }
 
     // 1. Get all payments
-    @GetMapping
+    @GetMapping("/admin")
     public ResponseEntity<?> getAllPayments() {
 
         return ResponseEntity.ok(DataResponse.<List<PaymentResponse>>builder()

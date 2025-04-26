@@ -21,7 +21,7 @@ public class OrderDetail {
     private UUID id;
 
     @ManyToOne(cascade = { CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "oder_id")
+    @JoinColumn(name = "order_id")
     private Order order;
 
     @ManyToOne(cascade = { CascadeType.MERGE,CascadeType.PERSIST})
