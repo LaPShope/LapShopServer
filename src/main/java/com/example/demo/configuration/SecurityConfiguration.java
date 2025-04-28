@@ -51,6 +51,9 @@ public class SecurityConfiguration {
                 "/api/v1/accounts/reset-password",
                 "/api/v1/accounts/verify-email",
                 "/api/v1/accounts/verify-otp",
+                "/swagger-ui/**",
+                "/v3/api-docs/**"
+
         };
 
         String[] adminWhiteList = {

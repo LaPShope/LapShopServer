@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -117,20 +118,29 @@ public class OrderServiceImpl implements OrderService {
         if (cart != null) {
             for (Cart item : cart) {
                 List<OrderDetail> items = item.getLaptopOnCarts().stream().map(laptopOnCart -> {
+                    BigDecimal price = laptopOnCart.getLaptopModel().getPrice();
+                    BigDecimal quantity = new BigDecimal(laptopOnCart.getQuantity());
+                    BigDecimal totalItemPrice = price.multiply(quantity); // Multiply price by quantity
+
                     OrderDetail orderDetail = OrderDetail.builder()
                         .id(null)
                         .order(order)
                         .laptopModel(laptopOnCart.getLaptopModel())
                         .quantity(laptopOnCart.getQuantity())
-                        .price(laptopOnCart.getLaptopModel().getPrice())
+                        .price(totalItemPrice)
                         .build();
                     return orderDetail; 
                 }).collect(Collectors.toList());
                 
                 order.setOrderDetailList(items);
-                
             }
         }
+
+        BigDecimal recalculatedTotalPrice = order.getOrderDetailList().stream()
+            .map(orderDetail -> orderDetail.getPrice().multiply(new BigDecimal(orderDetail.getQuantity())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        order.setFinalPrice(recalculatedTotalPrice.add(order.getDeliveryCost()));
 
         customer.getCartList().clear();
 

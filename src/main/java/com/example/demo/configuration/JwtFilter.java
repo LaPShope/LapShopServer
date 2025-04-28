@@ -40,7 +40,9 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/v1/accounts/forgot-password",
             "/api/v1/accounts/reset-password",
             "/api/v1/accounts/verify-email",
-            "/api/v1/accounts/verify-otp"
+            "/api/v1/accounts/verify-otp",
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
     );
 
     public JwtFilter(JwtService jwtService, AccountService accountService) {
@@ -57,9 +59,15 @@ public class JwtFilter extends OncePerRequestFilter {
             String email = null;
 
 
-            if (acceptedNoAuth.contains(request.getRequestURI())) {
-                filterChain.doFilter(request, response);
-                return;
+            String path = request.getRequestURI();
+            if (acceptedNoAuth.contains(request.getRequestURI())
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-resources")
+                || path.startsWith("/webjars")
+                || path.startsWith("/favicon.ico")) {
+                    filterChain.doFilter(request, response);
+                    return;
             }
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {

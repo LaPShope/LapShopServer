@@ -47,7 +47,7 @@ public class LaptopOnCartController {
     // 3. Tạo mới LaptopOnCart
     @PostMapping
     public ResponseEntity<?> createLaptopOnCart(@RequestBody LaptopOnCartDTO laptopOnCartDTO) {
-
+        // System.out.println("LaptopOnCartDTO: " + laptopOnCartDTO);
         return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
                 .success(true)
                 .message("Sale created successfully")

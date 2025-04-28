@@ -23,7 +23,7 @@ public class LaptopOnCart {
     private Cart cart;
 
     @ManyToOne(cascade = { CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "laptop_on_cart",nullable = false)
+    @JoinColumn(name = "laptop_on_id",nullable = false)
     private LaptopModel laptopModel;
 
     @Column(nullable = false)
