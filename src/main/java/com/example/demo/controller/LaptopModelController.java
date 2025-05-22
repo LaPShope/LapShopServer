@@ -60,14 +60,11 @@ public class LaptopModelController {
     // 4. Cập nhật một LaptopModel
     @PutMapping("/{id}")
     public ResponseEntity<?> updateLaptopModel(@PathVariable UUID id, @RequestBody LaptopModelDTO laptopModelDTO) {
-
-
         return ResponseEntity.ok(DataResponse.<LaptopModelResponse>builder()
                 .success(true)
                 .message("LaptopModel updated successfully")
                 .data(laptopModelService.updateLaptopModel(id, laptopModelDTO))
                 .build());
-
     }
 
     @PatchMapping("/{id}")
@@ -82,8 +79,7 @@ public class LaptopModelController {
     // 5. Xóa một LaptopModel
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteLaptopModel(@PathVariable UUID id) {
-
-            laptopModelService.deleteLaptopModel(id);
+        laptopModelService.deleteLaptopModel(id);
         return ResponseEntity.ok(DataResponse.<LaptopModelDTO>builder()
                 .success(true)
                 .message("LaptopModel deleted successfully")
@@ -91,7 +87,7 @@ public class LaptopModelController {
 
     }
 
-        // 6. Lấy LaptopModels với phân trang
+    // 6. Lấy LaptopModels với phân trang
     @GetMapping("/pagination")
     public ResponseEntity<?> getLaptopModelsWithPagination(
             @RequestParam int offset,

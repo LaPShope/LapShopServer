@@ -189,15 +189,14 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
-
-        LaptopModel laptopModel = laptopModelRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Laptop Model not found"));
+        boolean isExist = laptopModelRepository.existsById(id);
+        if (!isExist) {
+            throw new EntityNotFoundException("Laptop Model with ID " + id + " not found");
+        }
 
         redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + id, "orderDetail", "*derDetail*", "allLaptopOnSale"));
-
-        laptopModelRepository.delete(laptopModel);
+        laptopModelRepository.deleteById(id);
     }
-
 
     @Override
     public PagingResponse<?> getLaptopModelsWithPagination(int offset, int pageSize) {
@@ -205,30 +204,29 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         Page<LaptopModel> result = laptopModelRepository.findAll(PageRequest.of(offset, pageSize));
 
         List<LaptopModelResponse> laptopList = result.getContent().stream()
-                        .map(LaptopModelMapper :: convertToResponse)
-                        .collect(Collectors.toList());
+                .map(LaptopModelMapper::convertToResponse)
+                .collect(Collectors.toList());
 
         PagingResponse<?> laptopResponses = PagingResponse.builder()
-                                                .recordCount(result.getNumberOfElements())
-                                                .response(laptopList)
-                                                .build();
+                .recordCount(result.getNumberOfElements())
+                .response(laptopList)
+                .build();
 
         return laptopResponses;
     }
 
     @Override
     public PagingResponse<?> getLaptopModelsWithPaginationAndSortByPriceASC(double price, int offset, int pageSize) {
-
         Page<LaptopModel> result = laptopModelRepository.findAll(PageRequest.of(offset, pageSize, Sort.by("price").ascending()));
-        
+
         List<LaptopModelResponse> laptopList = result.getContent().stream()
-                        .map(LaptopModelMapper :: convertToResponse)
-                        .collect(Collectors.toList());
+                .map(LaptopModelMapper::convertToResponse)
+                .collect(Collectors.toList());
 
         PagingResponse<?> laptopResponses = PagingResponse.builder()
-                                                .recordCount(result.getNumberOfElements())
-                                                .response(laptopList)
-                                                .build();
+                .recordCount(result.getNumberOfElements())
+                .response(laptopList)
+                .build();
 
         return laptopResponses;
     }
@@ -237,15 +235,15 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     public PagingResponse<?> getLaptopModelsWithPaginationAndSortByPriceDES(double price, int offset, int pageSize) {
 
         Page<LaptopModel> result = laptopModelRepository.findAll(PageRequest.of(offset, pageSize, Sort.by("price").descending()));
-        
+
         List<LaptopModelResponse> laptopList = result.getContent().stream()
-                        .map(LaptopModelMapper :: convertToResponse)
-                        .collect(Collectors.toList());
+                .map(LaptopModelMapper::convertToResponse)
+                .collect(Collectors.toList());
 
         PagingResponse<?> laptopResponses = PagingResponse.builder()
-                                                .recordCount(result.getNumberOfElements())
-                                                .response(laptopList)
-                                                .build();
+                .recordCount(result.getNumberOfElements())
+                .response(laptopList)
+                .build();
 
         return laptopResponses;
     }

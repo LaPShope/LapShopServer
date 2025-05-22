@@ -5,8 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 
 @SpringBootApplication
-public class  LapShopSpringBootApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(LapShopSpringBootApplication.class, args);
-	}
+public class LapShopSpringBootApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(LapShopSpringBootApplication.class, args);
+    }
 }

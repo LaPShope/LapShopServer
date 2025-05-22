@@ -212,7 +212,7 @@ public class AccountServiceImpl implements AccountService {
     // Lấy danh sách tài khoản
     @Override
     public List<AccountResponse> getAllAccounts() {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
@@ -237,7 +237,8 @@ public class AccountServiceImpl implements AccountService {
     // Lấy chi tiết một tài khoản
     @Override
     public AccountResponse getAccount(UUID id) {
-        AccountResponse cachedAccount = redisService.getObject("account:" + id, new TypeReference<AccountResponse>() {});
+        AccountResponse cachedAccount = redisService.getObject("account:" + id, new TypeReference<AccountResponse>() {
+        });
 
         if (cachedAccount != null) {
             return cachedAccount;
@@ -367,19 +368,19 @@ public class AccountServiceImpl implements AccountService {
                         // } catch (IllegalArgumentException e) {
                         //     throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
                         // }
-                    } else if("email".equals(fieldName)){
+                    } else if ("email".equals(fieldName)) {
                         String newEmail = newValue.toString();
 
-                        if(newEmail.equals(account.getEmail())){
+                        if (newEmail.equals(account.getEmail())) {
                             continue;
                         }
 
-                        if(accountRepository.existsByEmail(newEmail)){
+                        if (accountRepository.existsByEmail(newEmail)) {
                             throw new RuntimeException("Email already exists");
                         }
                         field.set(account, newEmail);
-                    } else if("isActive".equals(fieldName)){
-                    
+                    } else if ("isActive".equals(fieldName)) {
+
                     } else {
                         field.set(account, newValue);
                     }

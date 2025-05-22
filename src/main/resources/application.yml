@@ -1,3 +1,8 @@
+app:
+  vnpay:
+    url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    tmnCode: E6T2KFD0
+    secretKey: 5URIA8ICEHFHDW0P5YD7ZMCRLAK864XF
 
 spring:
   application:
