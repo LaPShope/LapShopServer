@@ -2,6 +2,7 @@ package com.example.demo.service.impl;
 
 import com.example.demo.common.VNPayConstant;
 import com.example.demo.common.VNPayHelper;
+import com.example.demo.dto.request.vnpay.VNPayOrderRequest;
 import com.example.demo.service.PaymentIntegrationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -49,66 +50,88 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
 //                throw new RuntimeException("Error: Bank not found with VNPAY");
 //            }
 
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+//            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
 
-            String createDate = VNPayHelper.generateDate(false);
-            String expireDate = VNPayHelper.generateDate(true);
+            Map<String, Object> payload = this.generateVNPayPayload(VNPayOrderRequest.builder()
+                    .orderInfo("mua san pham")
+                    .ipAddr(VNPayHelper.getIpAddress(request))
+                    .amount(100000 * 100)
+                    .build());
 
-            String secretHash = VNPayConstant.VNP_SECRETKEY;
-
-            Map<String, Object> payload = new HashMap<>() {
-                {
-                    put("vnp_Version", VNPayConstant.VNP_VERSION);
-                    put("vnp_Command", VNPayConstant.VNP_COMMAND_ORDER);
-                    put("vnp_TmnCode", VNPayConstant.VNP_TMNCODE);
-                    put("vnp_Amount", String.valueOf(100000 * 100));
-                    put("vnp_CurrCode", VNPayConstant.VNP_CURRENCY_CODE);
-                    put("vnp_TxnRef", UUID.randomUUID().toString());
-                    put("vnp_OrderInfo", "nap tien cho thue");
-                    put("vnp_OrderType", VNPayConstant.ORDER_TYPE);
-                    put("vnp_Locale", VNPayConstant.VNP_LOCALE);
-                    put("vnp_ReturnUrl", VNPayConstant.VNP_RETURN_URL);
-//                    put("vnp_IpAddr", VNPayHelper.getIpAddress(request));
-                    put("vnp_IpAddr", VNPayConstant.VNP_IP_ADDR);
-                    put("vnp_CreateDate", createDate);
-                    put("vnp_ExpireDate", expireDate);
-                }
-            };
-
-            String queryUrl = getQueryUrl(payload).get("queryUrl") + "&vnp_SecureHash=" + VNPayHelper.hmacSHA512(secretHash, getQueryUrl(payload).get("hashData"));
-
-            String paymentUrl = VNPayConstant.VNP_PAY_URL + "?" + queryUrl;
+            String queryUrl = this.generateQueryURL(payload);
+            String paymentUrl = this.generatePaymentURL(VNPayConstant.VNP_PAY_URL, queryUrl);
             payload.put("redirect_url", paymentUrl);
 
-//            Payment payment = Payment.builder()
-//                    .account(accountRepository.findById(account.getId()).orElseThrow(() -> new RuntimeException("User not found")))
-//                    .perform(perform)
-//                    .item(null)
-//                    .businessBank(businessBank)
-//                    .bankType(BankType.VNPAY)
-//                    .data(payload)
-//                    .status(Status.PENDING)
-//                    .dateCreated(Timestamp.valueOf(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(
-//                            formatter.parse(createDate))
-//                    ))
-//                    .dateExpired(
-//                            Timestamp.valueOf(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(
-//                                    formatter.parse(expireDate))
-//                            )
-//                    )
-//                    .build();
-
-//            paymentRepository.save(payment);
-
-//            System.out.println("pickseat:" + orderRequestDTO.getPerformId() + ":" + account.getId());
-//            RedisServiceImpl.expire("pickseat:" + orderRequestDTO.getPerformId() + ":" + account.getId(),
-//                    Duration.ofMinutes(12).getSeconds()
-//            );
             return payload;
         } catch (Exception ex) {
             throw new RuntimeException("Error: " + ex.getMessage());
         }
     }
+
+
+    private Map<String, Object> generateVNPayPayload(VNPayOrderRequest orderRequest) {
+        String createDate = VNPayHelper.generateDate(false);
+        String expireDate = VNPayHelper.generateDate(true);
+
+        return new HashMap<String, Object>() {
+            {
+                put("vnp_Version", VNPayConstant.VNP_VERSION);
+                put("vnp_Command", VNPayConstant.VNP_COMMAND_ORDER);
+                put("vnp_TmnCode", VNPayConstant.VNP_TMNCODE);
+                put("vnp_Amount", String.valueOf(orderRequest.getAmount()));
+                put("vnp_CurrCode", VNPayConstant.VNP_CURRENCY_CODE);
+                put("vnp_TxnRef", UUID.randomUUID().toString());
+                put("vnp_OrderInfo", orderRequest.getOrderInfo());
+                put("vnp_OrderType", VNPayConstant.ORDER_TYPE);
+                put("vnp_Locale", VNPayConstant.VNP_LOCALE);
+                put("vnp_ReturnUrl", VNPayConstant.VNP_RETURN_URL);
+                put("vnp_IpAddr", orderRequest.getIpAddr());
+                put("vnp_CreateDate", createDate);
+                put("vnp_ExpireDate", expireDate);
+            }
+        };
+    }
+
+    private String generateQueryURL(Map<String, Object> payload) throws UnsupportedEncodingException {
+        String secretHash = VNPayConstant.VNP_SECRETKEY;
+        try {
+            String queryUrl = this.getQueryUrl(payload).get("queryUrl") + "&vnp_SecureHash=" + VNPayHelper.hmacSHA512(secretHash, getQueryUrl(payload).get("hashData"));
+            return queryUrl;
+        } catch (Exception e) {
+            throw new RuntimeException("Error: " + e.getMessage());
+        }
+    }
+
+    private String generatePaymentURL(String VNPayURL, String queryURL) {
+        return VNPayURL + "?" + queryURL;
+    }
+
+//    @Transactional
+    public void handlePayment(Map<String, String> params) {
+        String vnpResponseCode = params.get("vnp_ResponseCode");
+        String vnpTxnRef = params.get("vnp_TxnRef");
+        String vnpAmount = params.get("vnp_Amount");
+        String vnpOrderInfo = params.get("vnp_OrderInfo");
+        String vnpTransactionNo = params.get("vnp_TransactionNo");
+        String vnpTransactionStatus = params.get("vnp_TransactionStatus");
+        String vnpPayDate = params.get("vnp_PayDate");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+
+        try {
+            switch (vnpResponseCode) {
+                case "00":
+                    break;
+                case "01":
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error: " + e.getMessage());
+        }
+    }
+
 
     private Map<String, String> getQueryUrl(Map<String, Object> payload) throws UnsupportedEncodingException {
         List<String> fieldNames = new ArrayList<>(payload.keySet());
@@ -120,7 +143,6 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
             String fieldName = (String) itr.next();
             String fieldValue = (String) payload.get(fieldName);
             if ((fieldValue != null) && (!fieldValue.isEmpty())) {
-
                 // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
@@ -137,7 +159,6 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
                 }
             }
         }
-
         return new HashMap<>() {
             {
                 put("queryUrl", query.toString());
@@ -145,66 +166,4 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
             }
         };
     }
-
-//    @Transactional
-//    public void handlePayment(Map<String, String> params) {
-//        String vnpResponseCode = params.get("vnp_ResponseCode");
-//        String vnpTxnRef = params.get("vnp_TxnRef");
-//        String vnpAmount = params.get("vnp_Amount");
-//        String vnpOrderInfo = params.get("vnp_OrderInfo");
-//        String vnpTransactionNo = params.get("vnp_TransactionNo");
-//        String vnpTransactionStatus = params.get("vnp_TransactionStatus");
-//        String vnpPayDate = params.get("vnp_PayDate");
-//        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-//
-//        Payment payment = paymentRepository.findByVnpTxnRef(vnpTxnRef).orElseThrow(() -> {
-//            throw new RuntimeException("Payment not found");
-//        });
-//        try {
-//
-//            switch (vnpResponseCode) {
-//                case "00":
-//                    payment.setStatus(Status.SUCCESS);
-//                    Set<String> seatIds = RedisServiceImpl.smembers("pickseat:" + payment.getPerform().getId() + ":" + payment.getAccount().getId());
-//                    for (String seatId : seatIds) {
-//                        try {
-//                            pickSeatRepository.save(PickSeat.builder()
-//                                    .account(payment.getAccount())
-//                                    .perform(payment.getPerform())
-//                                    .layoutSeat(cinemaLayoutSeatRepository.findById(UUID.fromString(seatId)).orElseThrow(() -> new RuntimeException("Seat not found")))
-//                                    .dateCreated(Timestamp.valueOf(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(
-//                                            formatter.parse(vnpPayDate))))
-//                                    .build());
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                            payment.setStatus(Status.FAILED);
-//                            paymentRepository.save(payment);
-//                            // make a request to refund
-//
-//                            throw new RuntimeException("Error: Some seats are already booked by others. Please try again.");
-//
-//                        }
-//                    }
-//
-//                    RedisServiceImpl.del("pickseat:" + payment.getPerform().getId() + ":" + payment.getAccount().getId());
-//                    break;
-//                case "01":
-//                    payment.setStatus(Status.PENDING);
-//                    break;
-//                default:
-//                    payment.setStatus(Status.FAILED);
-//                    RedisServiceImpl.del("pickseat:" + payment.getPerform().getId() + ":" + payment.getAccount().getId());
-//                    break;
-//            }
-//
-//            paymentRepository.save(payment);
-//
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            paymentRepository.save(payment);
-//
-//            throw new RuntimeException("Error: " + e.getMessage());
-//        }
-//    }
 }

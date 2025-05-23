@@ -118,6 +118,7 @@ public class VNPayHelper {
             if (ipAdress == null) {
 
                 ipAdress = request.getRemoteAddr();
+                System.out.println("ipAdress: " + ipAdress);
             }
         } catch (Exception e) {
 
