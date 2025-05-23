@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 @Transactional
 @Service
 public class ImageServiceImpl implements ImageService {
@@ -29,14 +30,15 @@ public class ImageServiceImpl implements ImageService {
     public ImageServiceImpl(RedisService redisService, ImageRepository imageRepository, LaptopModelRepository laptopModelRepository) {
         this.imageRepository = imageRepository;
         this.laptopModelRepository = laptopModelRepository;
-        this.redisService =redisService;
+        this.redisService = redisService;
     }
 
     // 1. Lấy danh sách tất cả Images
     @Override
     public List<ImageDTO> getAllImages() {
-        List<ImageDTO> cachedImage = redisService.getObject("allImage", new TypeReference<List<ImageDTO>>() {});
-        if(cachedImage != null && !cachedImage.isEmpty()){
+        List<ImageDTO> cachedImage = redisService.getObject("allImage", new TypeReference<List<ImageDTO>>() {
+        });
+        if (cachedImage != null && !cachedImage.isEmpty()) {
             return cachedImage;
         }
 
@@ -44,7 +46,7 @@ public class ImageServiceImpl implements ImageService {
                 .map(ImageMapper::convertToDTO)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allImage",imageDTOS,600);
+        redisService.setObject("allImage", imageDTOS, 600);
 
         return imageDTOS;
     }
@@ -52,8 +54,9 @@ public class ImageServiceImpl implements ImageService {
     // 2. Lấy Image theo ID
     @Override
     public ImageDTO getImageById(UUID id) {
-        ImageDTO cachedImage = redisService.getObject("allImage", new TypeReference<ImageDTO>() {});
-        if(cachedImage != null){
+        ImageDTO cachedImage = redisService.getObject("allImage", new TypeReference<ImageDTO>() {
+        });
+        if (cachedImage != null) {
             return cachedImage;
         }
 
@@ -61,7 +64,7 @@ public class ImageServiceImpl implements ImageService {
                 .orElseThrow(() -> new RuntimeException("Image not found with ID: " + id));
         ImageDTO imageDTO = ImageMapper.convertToDTO(image);
 
-        redisService.setObject("image:"+id,imageDTO,600);
+        redisService.setObject("image:" + id, imageDTO, 600);
 
         return imageDTO;
     }
@@ -69,7 +72,7 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public ImageDTO createImage(ImageDTO imageDTO) {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
@@ -79,28 +82,27 @@ public class ImageServiceImpl implements ImageService {
                 .build();
 
         if (imageDTO.getLaptopModelIds() != null && !imageDTO.getLaptopModelIds().isEmpty()) {
-            List<LaptopModel> laptopModels = imageDTO.getLaptopModelIds().stream()
+            List<LaptopModel> laptopModels = imageDTO.getLaptopModelIds()
+                    .stream()
                     .map(laptopModelId -> laptopModelRepository.findById(laptopModelId)
-                            .orElseThrow(() -> new EntityNotFoundException("LaptopModel not found")))
+                            .orElseThrow(() -> new EntityNotFoundException("LaptopModel with ID " + laptopModelId + " not found")))
                     .collect(Collectors.toList());
             image.setLaptopModelList(laptopModels);
-        }else{
-            throw  new IllegalArgumentException("LaptopModel cannot be null");
         }
-        Image imageExisting = imageRepository.save(image);
 
+        Image imageExisting = imageRepository.save(image);
         ImageDTO cachedImage = ImageMapper.convertToDTO(imageExisting);
 
-        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
-        redisService.setObject("image:"+imageDTO.getId(),cachedImage,600);
+        redisService.deleteByPatterns(List.of("allImage", "*laptopModel*"));
+        redisService.setObject("image:" + imageDTO.getId(), cachedImage, 600);
 
         return cachedImage;
     }
 
     @Transactional
     @Override
-    public ImageDTO updateImage(UUID imageId, ImageDTO imageDTO){
-        if(!AuthUtil.isAdmin()){
+    public ImageDTO updateImage(UUID imageId, ImageDTO imageDTO) {
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
@@ -108,10 +110,9 @@ public class ImageServiceImpl implements ImageService {
                 .orElseThrow(() -> new EntityNotFoundException("Image not found"));
         imageExisting.setImageUrl(imageDTO.getImageUrl());
 
-        if(imageDTO.getLaptopModelIds() == null){
+        if (imageDTO.getLaptopModelIds() == null) {
             throw new IllegalArgumentException("LaptopModel cannot be null");
-        }
-        else{
+        } else {
             List<LaptopModel> laptopModels = imageDTO.getLaptopModelIds().stream()
                     .map(laptopModelId -> laptopModelRepository.findById(laptopModelId)
                             .orElseThrow(() -> new EntityNotFoundException("LaptopModel not found")))
@@ -122,8 +123,8 @@ public class ImageServiceImpl implements ImageService {
         Image image = imageRepository.save(imageExisting);
         ImageDTO cachedImage = ImageMapper.convertToDTO(image);
 
-        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
-        redisService.setObject("image:"+imageDTO.getId(),cachedImage,600);
+        redisService.deleteByPatterns(List.of("allImage", "*aptopModel*"));
+        redisService.setObject("image:" + imageDTO.getId(), cachedImage, 600);
 
         return cachedImage;
     }
@@ -131,11 +132,11 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public ImageDTO partialUpdateImage(UUID id, Map<String, Object> fieldsToUpdate) {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
-        
+
         Image image = imageRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Image with ID " + id + " not found!"));
 
@@ -162,8 +163,8 @@ public class ImageServiceImpl implements ImageService {
         Image updatedImage = imageRepository.save(image);
         ImageDTO cachedImage = ImageMapper.convertToDTO(updatedImage);
 
-        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
-        redisService.setObject("image:"+id,cachedImage,600);
+        redisService.deleteByPatterns(List.of("allImage", "*aptopModel*"));
+        redisService.setObject("image:" + id, cachedImage, 600);
 
         return cachedImage;
     }
@@ -171,7 +172,7 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     @Override
     public void deleteImage(UUID id) {
-        if(!AuthUtil.isAdmin()){
+        if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
         }
 
@@ -180,7 +181,7 @@ public class ImageServiceImpl implements ImageService {
 
         image.setLaptopModelList(null);
 
-        redisService.deleteByPatterns(List.of("allImage","*aptopModel*"));
+        redisService.deleteByPatterns(List.of("allImage", "*aptopModel*"));
 
         imageRepository.delete(image);
     }
