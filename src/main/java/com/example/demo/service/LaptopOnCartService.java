@@ -8,15 +8,14 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface LaptopOnCartService {
-    LaptopOnCartResponse partialUpdateLaptopOnCart(UUID id, Map<String,Object> fieldsToUpdate);
+//    LaptopOnCartResponse partialUpdateLaptopOnCart(UUID id, Map<String,Object> fieldsToUpdate);
 
     List<LaptopOnCartResponse> getAllLaptopOnCarts();
 
-    LaptopOnCartResponse getLaptopOnCartById(UUID id);
+    LaptopOnCartResponse getLaptopOnCartByCartIdAndLaptopModelId(UUID cartId, UUID laptopModelId);
 
     LaptopOnCartResponse createLaptopOnCart(LaptopOnCartDTO laptopOnCartDTO);
 
-    LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO);
-
-    void deleteLaptopOnCart(UUID id);
+    //    LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO);
+    void deleteLaptopOnCart(UUID cartId, UUID laptopModelId);
 }

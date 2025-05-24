@@ -28,12 +28,12 @@ public class OpenApiConfig {
     }
 
     @Bean
-public GroupedOpenApi publicApi() {
+    public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
-            .group("public")
-            // .packagesToScan("com.example.demo.controller")
-            .pathsToMatch("/**")
-            .build();
+                .group("public")
+                // .packagesToScan("com.example.demo.controller")
+                .pathsToMatch("/**")
+                .build();
     }
 
 }

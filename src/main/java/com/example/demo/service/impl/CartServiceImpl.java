@@ -33,20 +33,21 @@ public class CartServiceImpl implements CartService {
     private final RedisService redisService;
     private final AccountRepository accountRepository;
 
-    public CartServiceImpl(AccountRepository accountRepository, RedisService redisService, CartRepository cartRepository, CustomerRepository customerRepository,LaptopOnCartRepository laptopOnCartRepository) {
+    public CartServiceImpl(AccountRepository accountRepository, RedisService redisService, CartRepository cartRepository, CustomerRepository customerRepository, LaptopOnCartRepository laptopOnCartRepository) {
         this.cartRepository = cartRepository;
         this.customerRepository = customerRepository;
-        this.laptopOnCartRepository=laptopOnCartRepository;
+        this.laptopOnCartRepository = laptopOnCartRepository;
         this.redisService = redisService;
         this.accountRepository = accountRepository;
     }
 
     // Lấy tất cả Cart
     @Override
-    public List<CartResponse> getAllCarts() {
+    public List<CartResponse> getAllCartsOnCustomer() {
         String currentUserEmail = AuthUtil.AuthCheck();
 
-        List<CartResponse> cachedCarts = redisService.getObject("allCartByCustomerEmail"+currentUserEmail, new TypeReference<List<CartResponse>>() {});
+        List<CartResponse> cachedCarts = redisService.getObject("allCartByCustomerEmail" + currentUserEmail, new TypeReference<List<CartResponse>>() {
+        });
         if (cachedCarts != null && !cachedCarts.isEmpty()) {
             return cachedCarts;
         }
@@ -56,7 +57,7 @@ public class CartServiceImpl implements CartService {
                 .map(CartMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allCartByCustomerEmail"+currentUserEmail,cartResponses,600);
+        redisService.setObject("allCartByCustomerEmail" + currentUserEmail, cartResponses, 600);
 
         return cartResponses;
     }
@@ -66,7 +67,8 @@ public class CartServiceImpl implements CartService {
     public CartResponse getCartById(UUID id) {
         String currentUserEmail = AuthUtil.AuthCheck();
 
-        CartResponse cachedCart = redisService.getObject("cart:"+id, new TypeReference<CartResponse>() {});
+        CartResponse cachedCart = redisService.getObject("cart:" + id, new TypeReference<CartResponse>() {
+        });
         if (cachedCart != null) {
             return cachedCart;
         }
@@ -74,13 +76,13 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
 
-        if(!cart.getCustomer().getAccount().getEmail().equals(currentUserEmail)) {
+        if (!cart.getCustomer().getAccount().getEmail().equals(currentUserEmail)) {
             throw new SecurityException("User is not authorized to view this cart");
         }
 
         CartResponse cartResponse = CartMapper.convertToResponse(cart);
 
-        redisService.setObject("cart:"+id,cartResponse,600);
+        redisService.setObject("cart:" + id, cartResponse, 600);
 
         return cartResponse;
     }
@@ -90,26 +92,27 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartResponse createCart(CartDTO cartDTO) {
         String currentUserEmail = AuthUtil.AuthCheck();
-        // Customer customer = customerRepository.findById(cartDTO.getCustomerId())
-        //         .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
         Account customer = accountRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
         //kiem tra user qua email
-        if(!currentUserEmail.equals(customer.getEmail())){
+        if (!currentUserEmail.equals(customer.getEmail())) {
             throw new SecurityException("User is not authorized to create this cart ");
         }
 
-        Cart cart = Cart.builder()
-                .customer(customer.getCustomer())
-                .build();
-        Cart cartExisting = cartRepository.save(cart);
+        Cart cartExisting = cartRepository.save(
+                Cart.builder()
+                        .customer(customer
+                                .getCustomer()
+                        )
+                        .build()
+        );
 
         CartResponse cachedCart = CartMapper.convertToResponse(cartExisting);
 
         redisService.deleteByPatterns(List.of("allCart"));
-        redisService.setObject("cart:"+cachedCart.getId(),cachedCart,600);
+        redisService.setObject("cart:" + cachedCart.getId(), cachedCart, 600);
 
         return cachedCart;
     }
@@ -123,7 +126,7 @@ public class CartServiceImpl implements CartService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this cart");
         }
         // Customer customer = customerRepository.findById(cartDTO.getCustomerId())
@@ -133,12 +136,15 @@ public class CartServiceImpl implements CartService {
         //loai bo toan bo laptopOnCart
         cart.getLaptopOnCarts().removeIf(laptop -> true);
         //lay laptopOnCart moi
-        List<LaptopOnCart> laptopOnCarts = Optional.ofNullable(cartDTO.getLaptopOnCartIds())
+        List<LaptopOnCart> laptopOnCarts = Optional.ofNullable(cartDTO.getLaptopOnCartsDTOs())
                 .orElse(Collections.emptyList())
                 .stream()
-                .map(laptopOnCartId -> laptopOnCartRepository.findById(laptopOnCartId)
-                        .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart not found ")))
-                .toList();
+                .map(item -> laptopOnCartRepository
+                        .findByCartIdAndLaptopModelId(
+                                item.getCartId(),
+                                item.getLaptopModelId()
+                        ).orElseThrow(() -> new EntityNotFoundException("LaptopOnCart not found!"))
+                ).toList();
 
         cart.getLaptopOnCarts().addAll(laptopOnCarts);
 
@@ -146,10 +152,10 @@ public class CartServiceImpl implements CartService {
 
         CartResponse cartResponse = CartMapper.convertToResponse(cartExisting);
 
-        redisService.deleteByPatterns(List.of("allCart","cart:"+id));
-        redisService.setObject("cart:"+id,cartResponse,6000);
+        redisService.deleteByPatterns(List.of("allCart", "cart:" + id));
+        redisService.setObject("cart:" + id, cartResponse, 6000);
 
-        return  cartResponse;
+        return cartResponse;
     }
 
     @Transactional
@@ -160,10 +166,10 @@ public class CartServiceImpl implements CartService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this cart");
         }
-    
+
         Class<?> clazz = cart.getClass();
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
@@ -187,8 +193,8 @@ public class CartServiceImpl implements CartService {
         Cart updatedCart = cartRepository.save(cart);
         CartResponse cartResponse = CartMapper.convertToResponse(updatedCart);
 
-        redisService.deleteByPatterns(List.of("allCart","cart:"+id));
-        redisService.setObject("cart:"+id,cartResponse,600);
+        redisService.deleteByPatterns(List.of("allCart", "cart:" + id));
+        redisService.setObject("cart:" + id, cartResponse, 600);
 
         return cartResponse;
     }
@@ -202,11 +208,11 @@ public class CartServiceImpl implements CartService {
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to delete this cart");
         }
 
-        redisService.deleteByPatterns(List.of("*allCart*","*art*"));
+        redisService.deleteByPatterns(List.of("*allCart*", "*art*"));
 
         cartRepository.delete(cart);
     }

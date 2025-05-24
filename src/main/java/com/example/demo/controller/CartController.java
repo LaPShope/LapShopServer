@@ -24,28 +24,26 @@ public class CartController {
     // 1. API: Lấy tất cả Cart
     @GetMapping
     public ResponseEntity<DataResponse<List<CartResponse>>> getAllCarts() {
-
-            return ResponseEntity.ok(DataResponse.<List<CartResponse>>builder()
-                    .success(true)
-                    .message("Cart retrieved successfully")
-                    .data(cartService.getAllCarts())
-                    .build());
+        return ResponseEntity.ok(DataResponse.<List<CartResponse>>builder()
+                .success(true)
+                .message("Cart retrieved successfully")
+                .data(cartService.getAllCartsOnCustomer())
+                .build());
     }
 
     // Lấy Cart theo ID
     @GetMapping("/{id}")
     public ResponseEntity<DataResponse<CartResponse>> getCartById(@PathVariable("id") UUID id) {
-            return ResponseEntity.ok(DataResponse.<CartResponse>builder()
-                    .success(true)
-                    .message("Addresses retrieved successfully")
-                    .data(cartService.getCartById(id))
-                    .build());
+        return ResponseEntity.ok(DataResponse.<CartResponse>builder()
+                .success(true)
+                .message("Addresses retrieved successfully")
+                .data(cartService.getCartById(id))
+                .build());
     }
 
     //  API: Tạo mới Cart
     @PostMapping
     public ResponseEntity<?> createCart(@RequestBody CartDTO cartDTO) {
-
         return ResponseEntity.ok(DataResponse.<CartResponse>builder()
                 .success(true)
                 .message("Addresses created successfully")
@@ -79,10 +77,10 @@ public class CartController {
     // 5. API: Xóa Cart theo ID
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCart(@PathVariable("id") UUID id) {
-            cartService.deleteCart(id);
-            return ResponseEntity.ok(DataResponse.builder()
-                    .success(true)
-                    .message("Addresses deleted successfully")
-                    .build());
+        cartService.deleteCart(id);
+        return ResponseEntity.ok(DataResponse.builder()
+                .success(true)
+                .message("Addresses deleted successfully")
+                .build());
     }
 }

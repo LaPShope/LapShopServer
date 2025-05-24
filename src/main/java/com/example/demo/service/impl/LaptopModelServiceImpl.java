@@ -3,19 +3,16 @@ package com.example.demo.service.impl;
 import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.LaptopModelDTO;
 import com.example.demo.dto.response.LaptopModelResponse;
-import com.example.demo.dto.response.LaptopResponse;
 import com.example.demo.dto.response.PagingResponse;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.service.LaptopModelService;
-import com.example.demo.mapper.LaptopMapper;
 import com.example.demo.mapper.LaptopModelMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,20 +25,20 @@ import java.util.stream.Collectors;
 @Service
 
 public class LaptopModelServiceImpl implements LaptopModelService {
-
     private final LaptopModelRepository laptopModelRepository;
+    private final ImageRepository imageRepository;
     private final RedisService redisService;
 
-    public LaptopModelServiceImpl(RedisService redisService, LaptopModelRepository laptopModelRepository) {
+    public LaptopModelServiceImpl(RedisService redisService, LaptopModelRepository laptopModelRepository, ImageRepository imageRepository) {
         this.laptopModelRepository = laptopModelRepository;
         this.redisService = redisService;
+        this.imageRepository = imageRepository;
     }
 
     // 1. Lấy tất cả LaptopModel
     @Transactional
     @Override
     public List<LaptopModelResponse> getAllLaptopModels() {
-
         List<LaptopModelResponse> cachedLaptopResponses = redisService.getObject("allLaptopModel", new TypeReference<List<LaptopModelResponse>>() {
         });
         if (cachedLaptopResponses != null && !cachedLaptopResponses.isEmpty()) {
@@ -185,6 +182,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
     // 5. Xóa LaptopModel
 
     @Override
+    @Transactional
     public void deleteLaptopModel(UUID id) {
         if (!AuthUtil.isAdmin()) {
             throw new SecurityException("User is not an Admin");
@@ -194,7 +192,8 @@ public class LaptopModelServiceImpl implements LaptopModelService {
             throw new EntityNotFoundException("Laptop Model with ID " + id + " not found");
         }
 
-        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + id, "orderDetail", "*derDetail*", "allLaptopOnSale"));
+        System.out.println("Deleting LaptopModel with ID: " + id);
+//        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + id, "orderDetail", "*derDetail*", "allLaptopOnSale"));
         laptopModelRepository.deleteById(id);
     }
 
@@ -214,6 +213,7 @@ public class LaptopModelServiceImpl implements LaptopModelService {
 
         return laptopResponses;
     }
+
 
     @Override
     public PagingResponse<?> getLaptopModelsWithPaginationAndSortByPriceASC(double price, int offset, int pageSize) {
@@ -248,5 +248,32 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         return laptopResponses;
     }
 
+    @Override
+    @Transactional
+    public LaptopModelResponse addImageToLaptopModel(UUID laptopModelId, UUID imageId) {
+        if (!AuthUtil.isAdmin()) {
+            throw new SecurityException("User is not an Admin");
+        }
 
+        LaptopModel laptopModel = laptopModelRepository
+                .findById(laptopModelId)
+                .orElseThrow(() -> new EntityNotFoundException("LaptopModel with ID " + laptopModelId + " not found"));
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new EntityNotFoundException("Image with ID " + imageId + " not found"));
+
+        // check image exist in laptopModel
+        if (laptopModel.getImageList().contains(image)) {
+            throw new IllegalArgumentException("Image with ID " + imageId + " already exists in LaptopModel with ID " + laptopModelId);
+        }
+
+        laptopModel.getImageList().add(image);
+        image.getLaptopModelList().add(laptopModel);
+        laptopModelRepository.save(laptopModel);
+
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModel);
+        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + laptopModelId, "*derDetail*", "allLaptopOnSale"));
+        redisService.setObject("laptopModel:" + laptopModelId, laptopModelResponse, 600);
+        redisService.setObject("image:" + imageId, image, 600);
+        return laptopModelResponse;
+    }
 }

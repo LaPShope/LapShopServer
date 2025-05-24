@@ -24,24 +24,30 @@ public class LaptopOnCartController {
     // 1. Lấy tất cả LaptopOnCart
     @GetMapping
     public ResponseEntity<?> getAllLaptopOnCarts() {
-
         return ResponseEntity.ok(DataResponse.<List<LaptopOnCartResponse>>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
-                .data( laptopOnCartService.getAllLaptopOnCarts())
+                .data(laptopOnCartService.getAllLaptopOnCarts())
                 .build());
     }
 
     // 2. Lấy LaptopOnCart theo ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getLaptopOnCartById(@PathVariable UUID id) {
+    @GetMapping("/detail")
+    public ResponseEntity<Object> getLaptopOnCartByCartIdAndLaptopModelId(
+            @RequestParam(
+                    value = "cart-id",
+                    required = true
+            ) UUID cartId,
+            @RequestParam(
+                    value = "laptop-model-id",
+                    required = true
+            ) UUID laptopModelId) {
 
         return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
-                .data(laptopOnCartService.getLaptopOnCartById(id))
+                .data(laptopOnCartService.getLaptopOnCartByCartIdAndLaptopModelId(cartId, laptopModelId))
                 .build());
-
     }
 
     // 3. Tạo mới LaptopOnCart
@@ -57,35 +63,41 @@ public class LaptopOnCartController {
     }
 
     // 4. Cập nhật LaptopOnCart
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateLaptopOnCart(@PathVariable UUID id, @RequestBody LaptopOnCartDTO laptopOnCartDTO) {
-
-        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
-                .success(true)
-                .message("Sale updated successfully")
-                .data(laptopOnCartService.updateLaptopOnCart(id, laptopOnCartDTO))
-                .build());
-
-    }
+//    @PutMapping("/{id}")
+//    public ResponseEntity<?> updateLaptopOnCart(@PathVariable UUID id, @RequestBody LaptopOnCartDTO laptopOnCartDTO) {
+//
+//        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
+//                .success(true)
+//                .message("Sale updated successfully")
+//                .data(laptopOnCartService.updateLaptopOnCart(id, laptopOnCartDTO))
+//                .build());
+//
+//    }
 
     // 5. Xóa LaptopOnCart
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteLaptopOnCart(@PathVariable UUID id) {
-
-            laptopOnCartService.deleteLaptopOnCart(id);
+    @DeleteMapping()
+    public ResponseEntity<?> deleteLaptopOnCart(
+            @RequestParam(
+                    value = "cart-id",
+                    required = true
+            ) UUID cartId,
+            @RequestParam(
+                    value = "laptop-model-id",
+                    required = true
+            ) UUID laptopModelId) {
+        laptopOnCartService.deleteLaptopOnCart(cartId, laptopModelId);
         return ResponseEntity.ok(DataResponse.<LaptopOnCartDTO>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
                 .build());
-
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> partialUpdateLaptopOnCart(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
-        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
-                .success(true)
-                .message("Laptop updated successfully")
-                .data(laptopOnCartService.partialUpdateLaptopOnCart(id, fieldsToUpdate))
-                .build());
-    }
+//    @PatchMapping("/{id}")
+//    public ResponseEntity<?> partialUpdateLaptopOnCart(@PathVariable UUID id, @RequestBody Map<String, Object> fieldsToUpdate) {
+//        return ResponseEntity.ok(DataResponse.<LaptopOnCartResponse>builder()
+//                .success(true)
+//                .message("Laptop updated successfully")
+//                .data(laptopOnCartService.partialUpdateLaptopOnCart(id, fieldsToUpdate))
+//                .build());
+//    }
 }

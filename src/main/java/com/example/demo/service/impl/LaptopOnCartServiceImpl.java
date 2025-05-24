@@ -17,9 +17,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -46,9 +45,10 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
     // 1. Lấy tất cả LaptopOnCart
     @Override
     public List<LaptopOnCartResponse> getAllLaptopOnCarts() {
-        List<LaptopOnCartResponse> cachedLaptopOnCart = redisService.getObject("allLaptopOnCart", new TypeReference<List<LaptopOnCartResponse>>(){});
+        List<LaptopOnCartResponse> cachedLaptopOnCart = redisService.getObject("allLaptopOnCart", new TypeReference<>() {
+        });
 
-        if(cachedLaptopOnCart != null && !cachedLaptopOnCart.isEmpty()){
+        if (cachedLaptopOnCart != null && !cachedLaptopOnCart.isEmpty()) {
             return cachedLaptopOnCart;
         }
 
@@ -56,27 +56,29 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
                 .map(LaptopOnCartMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allLaptopOnCart",laptopOnCartResponses,600);
+        redisService.setObject("allLaptopOnCart", laptopOnCartResponses, 600);
 
         return laptopOnCartResponses;
     }
 
     // 2. Lấy LaptopOnCart theo ID
     @Override
-    public LaptopOnCartResponse getLaptopOnCartById(UUID id) {
-        LaptopOnCartResponse cachedLaptopOnCart = redisService.getObject("allLaptopOnCart", new TypeReference<LaptopOnCartResponse>(){});
+    public LaptopOnCartResponse getLaptopOnCartByCartIdAndLaptopModelId(UUID cartId, UUID laptopModelId) {
+        LaptopOnCartResponse cachedLaptopOnCart = redisService.getObject("allLaptopOnCart", new TypeReference<>() {
+        });
 
-        if(cachedLaptopOnCart != null){
+        if (cachedLaptopOnCart != null) {
             return cachedLaptopOnCart;
         }
-        LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("LaptopOnCart with ID " + id + " not found!"));
+
+        LaptopOnCart laptopOnCart = laptopOnCartRepository.findByCartIdAndLaptopModelId(cartId, laptopModelId)
+                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with Cart ID " + cartId + " and Laptop Model ID " + laptopModelId + " not found!"));
 
         LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(laptopOnCart);
 
-        redisService.setObject("laptopOnCart:"+id,laptopOnCartResponse,600);
+        redisService.setObject("laptopOnCart:" + laptopOnCart.getId().getCartId() + laptopOnCart.getId().getLaptopModelId(), laptopOnCartResponse, 600);
 
-        return  laptopOnCartResponse;
+        return laptopOnCartResponse;
     }
 
     // 3. Tạo mới LaptopOnCart
@@ -87,7 +89,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(cart.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to create this laptopOnCart");
         }
 
@@ -104,114 +106,113 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         LaptopOnCartResponse cachedLaptopOnCart = LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
 
-        redisService.deleteByPatterns(List.of("*art:"+laptopOnCart.getCart().getId()+"*","allLaptopOnCart"));
-        redisService.setObject("laptopOnCartId:",cachedLaptopOnCart,600);
+        redisService.deleteByPatterns(List.of("*art:" + laptopOnCart.getCart().getId() + "*", "allLaptopOnCart"));
+        redisService.setObject("laptopOnCartId:", cachedLaptopOnCart, 600);
 
         return cachedLaptopOnCart;
     }
 
     // 4. Cập nhật LaptopOnCart
-    @Transactional
-    @Override
-    public LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO) {
-        LaptopOnCartResponse cachLaptopOnCartResponse = redisService.getObject("laptopOnCart:" + id, new TypeReference<LaptopOnCartResponse>() {});
-        if(cachLaptopOnCartResponse != null){
-            return cachLaptopOnCartResponse;
-        }
+//    @Transactional
+//    public LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO) {
+//        LaptopOnCartResponse cachLaptopOnCartResponse = redisService.getObject("laptopOnCart:" + id, new TypeReference<LaptopOnCartResponse>() {
+//        });
+//        if (cachLaptopOnCartResponse != null) {
+//            return cachLaptopOnCartResponse;
+//        }
+//
+//        LaptopOnCart laptopOnCart = laptopOnCartRepository.findByCartIdAndLaptopModelId(laptopOnCartDTO.getCartId(), laptopOnCartDTO.getLaptopModelId())
+//                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
+//
+//        //kiem tra qua email
+//        String currentUserEmail = AuthUtil.AuthCheck();
+//        if (!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())) {
+//            throw new SecurityException("User is not authorized to update this laptopOnCart");
+//        }
+//
+//        Cart cart = cartRepository.findById(laptopOnCartDTO.getCartId())
+//                .orElseThrow(() -> new EntityNotFoundException("Cart with ID " + laptopOnCartDTO.getCartId() + " not found!"));
+//
+//        LaptopModel laptopModel = laptopModelRepository.findById(laptopOnCartDTO.getLaptopModelId())
+//                .orElseThrow(() -> new EntityNotFoundException("Laptop Model with ID " + laptopOnCartDTO.getLaptopModelId() + " not found!"));
+//
+//        laptopOnCart.setCart(cart);
+//        laptopOnCart.setLaptopModel(laptopModel);
+//        laptopOnCart.setQuantity(laptopOnCartDTO.getQuantity());
+//
+//        LaptopOnCart laptopOnCartExisting = laptopOnCartRepository.save(laptopOnCart);
+//
+//        LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
+//
+//        redisService.deleteByPatterns(List.of("*art:" + id + "*", "allLaptopOnCart"));
+//        redisService.setObject("laptopOnCart:" + id, laptopOnCartResponse, 600);
+//
+//        return laptopOnCartResponse;
+//    }
 
-        LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
-
-        //kiem tra qua email
-        String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())){
-            throw new SecurityException("User is not authorized to update this laptopOnCart");
-        }
-
-        Cart cart = cartRepository.findById(laptopOnCartDTO.getCartId())
-                .orElseThrow(() -> new EntityNotFoundException("Cart with ID " + laptopOnCartDTO.getCartId() + " not found!"));
-
-        LaptopModel laptopModel = laptopModelRepository.findById(laptopOnCartDTO.getLaptopModelId())
-                .orElseThrow(() -> new EntityNotFoundException("Laptop Model with ID " + laptopOnCartDTO.getLaptopModelId() + " not found!"));
-
-        laptopOnCart.setCart(cart);
-        laptopOnCart.setLaptopModel(laptopModel);
-        laptopOnCart.setQuantity(laptopOnCartDTO.getQuantity());
-
-        LaptopOnCart laptopOnCartExisting = laptopOnCartRepository.save(laptopOnCart);
-
-        LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
-
-        redisService.deleteByPatterns(List.of("*art:"+id+"*","allLaptopOnCart"));
-        redisService.setObject("laptopOnCart:"+id,laptopOnCartResponse,600);
-
-        return laptopOnCartResponse;
-    }
-
-    @Override
-    public LaptopOnCartResponse partialUpdateLaptopOnCart(UUID id, Map<String, Object> fieldsToUpdate) {
-        LaptopOnCartResponse cachLaptopOnCartResponse = redisService.getObject("laptopOnCart:" + id, new TypeReference<LaptopOnCartResponse>() {});
-        if(cachLaptopOnCartResponse != null){
-            return cachLaptopOnCartResponse;
-        }
-
-        LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
-
-        //kiem tra qua email
-        String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())){
-            throw new SecurityException("User is not authorized to update this laptopOnCart");
-        }
-
-        Class<?> clazz = laptopOnCart.getClass();
-
-        for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
-            String fieldName = entry.getKey();
-            Object newValue = entry.getValue();
-
-            try {
-                Field field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-
-                if (newValue != null) {
-                    if (field.getType().equals(Integer.class)) {
-                        field.set(laptopOnCart, Integer.parseInt(newValue.toString()));
-                    }
-                    field.set(laptopOnCart, newValue);
-                }
-            } catch (NoSuchFieldException e) {
-                throw new IllegalArgumentException("Field not found: " + fieldName);
-            } catch (IllegalAccessException e) {
-                throw new IllegalArgumentException("Unable to update field: " + fieldName, e);
-            }
-        }
-
-        LaptopOnCart updatedLaptopOnCart = laptopOnCartRepository.save(laptopOnCart);
-        LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(updatedLaptopOnCart);
-
-        redisService.deleteByPatterns(List.of("*art:"+id+"*","allLaptopOnCart"));
-        redisService.setObject("laptopOnCart:"+id,laptopOnCartResponse,600);
-
-        return laptopOnCartResponse;
-    }
+//    public LaptopOnCartResponse partialUpdateLaptopOnCart(UUID id, Map<String, Object> fieldsToUpdate) {
+//        LaptopOnCartResponse cachLaptopOnCartResponse = redisService.getObject("laptopOnCart:" + id, new TypeReference<LaptopOnCartResponse>() {
+//        });
+//        if (cachLaptopOnCartResponse != null) {
+//            return cachLaptopOnCartResponse;
+//        }
+//
+//        LaptopOnCart laptopOnCart = laptopOnCartRepository.findByCartIdAndLaptopModelId(laptopOnCartDTO.getCartId(), laptopOnCartDTO.getLaptopModelId())
+//                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
+//
+//        //kiem tra qua email
+//        String currentUserEmail = AuthUtil.AuthCheck();
+//        if (!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())) {
+//            throw new SecurityException("User is not authorized to update this laptopOnCart");
+//        }
+//
+//        Class<?> clazz = laptopOnCart.getClass();
+//
+//        for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
+//            String fieldName = entry.getKey();
+//            Object newValue = entry.getValue();
+//
+//            try {
+//                Field field = clazz.getDeclaredField(fieldName);
+//                field.setAccessible(true);
+//
+//                if (newValue != null) {
+//                    if (field.getType().equals(Integer.class)) {
+//                        field.set(laptopOnCart, Integer.parseInt(newValue.toString()));
+//                    }
+//                    field.set(laptopOnCart, newValue);
+//                }
+//            } catch (NoSuchFieldException e) {
+//                throw new IllegalArgumentException("Field not found: " + fieldName);
+//            } catch (IllegalAccessException e) {
+//                throw new IllegalArgumentException("Unable to update field: " + fieldName, e);
+//            }
+//        }
+//
+//        LaptopOnCart updatedLaptopOnCart = laptopOnCartRepository.save(laptopOnCart);
+//        LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(updatedLaptopOnCart);
+//
+//        redisService.deleteByPatterns(List.of("*art:" + id + "*", "allLaptopOnCart"));
+//        redisService.setObject("laptopOnCart:" + id, laptopOnCartResponse, 600);
+//
+//        return laptopOnCartResponse;
+//    }
 
     // 5. Xóa LaptopOnCart
     @Override
-    public void deleteLaptopOnCart(UUID id) {
-        LaptopOnCart laptopOnCart = laptopOnCartRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with ID " + id + " not found!"));
+    public void deleteLaptopOnCart(UUID cartId, UUID laptopModelId) {
+        LaptopOnCart laptopOnCart = laptopOnCartRepository
+                .findByCartIdAndLaptopModelId(cartId, laptopModelId)
+                .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with Cart ID " + cartId + " and Laptop Model ID " + laptopModelId + " not found!"));
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(laptopOnCart.getCart().getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this laptopOnCart");
         }
 
-        redisService.deleteByPatterns(List.of("*art:"+id+"*","allLaptopOnCart"));
+        redisService.deleteByPatterns(List.of("*art:" + cartId + "*", "allLaptopOnCart"));
 
         laptopOnCartRepository.delete(laptopOnCart);
     }
-
-
 }

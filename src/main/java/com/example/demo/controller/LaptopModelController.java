@@ -24,7 +24,6 @@ public class LaptopModelController {
     // 1. Lấy danh sách tất cả LaptopModels
     @GetMapping
     public ResponseEntity<?> getAllLaptopModels() {
-
         return ResponseEntity.ok(DataResponse.<List<LaptopModelResponse>>builder()
                 .success(true)
                 .message("LaptopModel retrieved successfully")
@@ -35,7 +34,6 @@ public class LaptopModelController {
     // 2. Lấy LaptopModel theo ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getLaptopModelById(@PathVariable UUID id) {
-
         return ResponseEntity.ok(DataResponse.<LaptopModelResponse>builder()
                 .success(true)
                 .message("LaptopModel retrieved successfully")
@@ -128,4 +126,14 @@ public class LaptopModelController {
                 .build());
     }
 
+    @PostMapping("/add-image")
+    public ResponseEntity<?> addImageToLaptopModel(@RequestParam(value = "laptop-model-id", required = true) UUID laptopModelId, @RequestParam(value = "image-id", required = true) UUID imageId) {
+        System.out.println("laptopModelId = " + laptopModelId);
+        System.out.println("imageId = " + imageId);
+        return ResponseEntity.ok(DataResponse.builder()
+                .success(true)
+                .message("Image added to LaptopModel successfully")
+                .data(laptopModelService.addImageToLaptopModel(laptopModelId, imageId))
+                .build());
+    }
 }

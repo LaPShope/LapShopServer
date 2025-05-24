@@ -14,22 +14,23 @@ import java.util.UUID;
 @Setter
 @Builder
 @Entity
-@Table(name="cart")
+@Table(name = "cart")
 public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "customer_id")
+    // make it unique
+    @JoinColumn(name = "customer_id", unique = true, nullable = false)
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Customer customer;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "cart",cascade = {CascadeType.PERSIST,
-                                            CascadeType.DETACH,
-                                            CascadeType.REMOVE,
-                                            CascadeType.MERGE,
-                                            CascadeType.REFRESH},orphanRemoval = true)
+    @OneToMany(mappedBy = "cart", cascade = {CascadeType.PERSIST,
+            CascadeType.DETACH,
+            CascadeType.REMOVE,
+            CascadeType.MERGE,
+            CascadeType.REFRESH}, orphanRemoval = true)
     private List<LaptopOnCart> laptopOnCarts;
 }

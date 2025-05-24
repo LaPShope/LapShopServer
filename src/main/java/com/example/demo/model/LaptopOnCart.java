@@ -5,28 +5,28 @@ import lombok.*;
 
 import java.util.UUID;
 
-@AllArgsConstructor
+@Entity
+@Table(name = "laptop_on_cart")
 @NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Builder
-@Entity
-@Table(name="laptop_on_cart")
 public class LaptopOnCart {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "BINARY(16)")
-    private UUID id;
 
-    @ManyToOne(cascade = { CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "cart_id",nullable = false)
+    @EmbeddedId
+    private LaptopOnCartKey id;
+
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @MapsId("cartId") // maps to id.cartId
+    @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
-    @ManyToOne(cascade = { CascadeType.MERGE,CascadeType.PERSIST})
-    @JoinColumn(name = "laptop_on_id",nullable = false)
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @MapsId("laptopModelId") // maps to id.laptopModelId
+    @JoinColumn(name = "laptop_model_id", nullable = false)
     private LaptopModel laptopModel;
 
     @Column(nullable = false)
     private Integer quantity;
-
 }

@@ -8,7 +8,6 @@ import com.example.demo.model.LaptopOnCart;
 public class LaptopOnCartMapper {
     public static LaptopOnCartDTO convertToDTO(LaptopOnCart laptopOnCart) {
         return LaptopOnCartDTO.builder()
-                .id(laptopOnCart.getId())
                 .cartId(laptopOnCart.getCart().getId())
                 .laptopModelId(laptopOnCart.getLaptopModel().getId())
                 .quantity(laptopOnCart.getQuantity())
@@ -17,7 +16,6 @@ public class LaptopOnCartMapper {
 
     public static LaptopOnCartResponse convertToResponse(LaptopOnCart laptopOnCart) {
         return LaptopOnCartResponse.builder()
-                .id(laptopOnCart.getId())
                 .cart(CartMapper.convertToDTO(laptopOnCart.getCart()))
                 .laptopModel(LaptopModelMapper.convertToDTO(laptopOnCart.getLaptopModel()))
                 .quantity(laptopOnCart.getQuantity())
@@ -26,7 +24,6 @@ public class LaptopOnCartMapper {
 
     public static CartItem convertToItem(LaptopOnCart laptopOnCart) {
         return CartItem.builder()
-                .id(laptopOnCart.getId())
                 .cartId(laptopOnCart.getCart().getId())
                 .laptopModel(LaptopModelMapper.convertToDTO(laptopOnCart.getLaptopModel()))
                 .quantity(laptopOnCart.getQuantity())

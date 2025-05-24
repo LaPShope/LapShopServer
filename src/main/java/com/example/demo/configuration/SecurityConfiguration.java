@@ -53,7 +53,6 @@ public class SecurityConfiguration {
                 "/api/v1/accounts/verify-otp",
                 "/swagger-ui/**",
                 "/v3/api-docs/**"
-
         };
 
         String[] adminWhiteList = {
@@ -65,6 +64,7 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/laptop-models/pagination").permitAll()
                         .requestMatchers(whitelist).permitAll()
                         .requestMatchers(adminWhiteList).hasAnyAuthority(Enums.Role.Admin.value())
                         .anyRequest().authenticated()

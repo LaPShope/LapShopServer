@@ -13,7 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LaptopOnCartDTO {
-    private UUID id;
     @JsonProperty("cart_id")
     private UUID cartId;
     @JsonProperty("laptop_model_id")
