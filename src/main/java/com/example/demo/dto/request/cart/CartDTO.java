@@ -1,5 +1,6 @@
-package com.example.demo.dto;
+package com.example.demo.dto.request.cart;
 
+import com.example.demo.dto.LaptopOnCartDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 

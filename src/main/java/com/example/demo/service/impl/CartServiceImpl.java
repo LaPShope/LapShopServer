@@ -1,12 +1,12 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.common.AuthUtil;
-import com.example.demo.dto.CartDTO;
+import com.example.demo.dto.request.cart.AddLaptopToCart;
+import com.example.demo.dto.request.cart.CartDTO;
+import com.example.demo.dto.response.LaptopModelResponse;
 import com.example.demo.dto.response.cart.CartResponse;
 import com.example.demo.model.*;
-import com.example.demo.repository.CartRepository;
-import com.example.demo.repository.CustomerRepository;
-import com.example.demo.repository.LaptopOnCartRepository;
+import com.example.demo.repository.*;
 import com.example.demo.service.CartService;
 import com.example.demo.mapper.CartMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,8 +21,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.demo.repository.AccountRepository;
-
 @Service
 @Transactional
 public class CartServiceImpl implements CartService {
@@ -32,13 +30,15 @@ public class CartServiceImpl implements CartService {
     private final LaptopOnCartRepository laptopOnCartRepository;
     private final RedisService redisService;
     private final AccountRepository accountRepository;
+    private final LaptopModelRepository laptopModelRepository;
 
-    public CartServiceImpl(AccountRepository accountRepository, RedisService redisService, CartRepository cartRepository, CustomerRepository customerRepository, LaptopOnCartRepository laptopOnCartRepository) {
+    public CartServiceImpl(AccountRepository accountRepository, RedisService redisService, CartRepository cartRepository, CustomerRepository customerRepository, LaptopOnCartRepository laptopOnCartRepository, LaptopModelRepository laptopModelRepository) {
         this.cartRepository = cartRepository;
         this.customerRepository = customerRepository;
         this.laptopOnCartRepository = laptopOnCartRepository;
         this.redisService = redisService;
         this.accountRepository = accountRepository;
+        this.laptopModelRepository = laptopModelRepository;
     }
 
     // Lấy tất cả Cart
@@ -217,5 +217,53 @@ public class CartServiceImpl implements CartService {
         cartRepository.delete(cart);
     }
 
+    @Override
+    public CartResponse addLaptopToCart(AddLaptopToCart requestBody) {
+        String currentUserEmail = AuthUtil.AuthCheck();
 
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
+
+        Cart cart = cartRepository.findByCustomerId(account.getId())
+                .orElseGet(() -> cartRepository.save(
+                        Cart.builder()
+                                .customer(account.getCustomer())
+                                .build()
+                ));
+
+        Optional<LaptopOnCart> laptopOnCartOpt = laptopOnCartRepository
+                .findByCartIdAndLaptopModelId(
+                        cart.getId(), requestBody.getLaptopModelId());
+
+        LaptopOnCart laptopOnCart;
+        if (laptopOnCartOpt.isEmpty()) {
+            LaptopModel laptopModel = laptopModelRepository.findById(requestBody.getLaptopModelId())
+                    .orElseThrow(() -> new EntityNotFoundException("Laptop model not found!"));
+
+            laptopOnCart = LaptopOnCart.builder()
+                    .id(LaptopOnCartKey.builder()
+                            .cartId(cart.getId())
+                            .laptopModelId(laptopModel.getId())
+                            .build()
+                    )
+                    .cart(cart)
+                    .laptopModel(laptopModel)
+                    .quantity(requestBody.getQuantity())
+                    .build();
+
+            laptopOnCart = laptopOnCartRepository.save(laptopOnCart);
+            cart.getLaptopOnCarts().add(laptopOnCart);
+        } else {
+            laptopOnCart = laptopOnCartOpt.get();
+            laptopOnCart.setQuantity(requestBody.getQuantity());
+            laptopOnCartRepository.save(laptopOnCart);
+        }
+
+        CartResponse cartResponse = CartMapper.convertToResponse(cart);
+
+        redisService.deleteByPatterns(List.of("allCart", "cart:" + cart.getId()));
+        redisService.setObject("cart:" + cart.getId(), cartResponse, 600);
+
+        return cartResponse;
+    }
 }

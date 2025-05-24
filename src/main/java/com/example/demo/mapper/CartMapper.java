@@ -1,6 +1,6 @@
 package com.example.demo.mapper;
 
-import com.example.demo.dto.CartDTO;
+import com.example.demo.dto.request.cart.CartDTO;
 import com.example.demo.dto.response.cart.CartResponse;
 import com.example.demo.model.Cart;
 

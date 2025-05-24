@@ -1,6 +1,6 @@
 package com.example.demo.dto.response;
 
-import com.example.demo.dto.CartDTO;
+import com.example.demo.dto.request.cart.CartDTO;
 import com.example.demo.dto.LaptopModelDTO;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

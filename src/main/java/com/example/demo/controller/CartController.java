@@ -1,7 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.common.DataResponse;
-import com.example.demo.dto.CartDTO;
+import com.example.demo.dto.request.cart.AddLaptopToCart;
+import com.example.demo.dto.request.cart.CartDTO;
 import com.example.demo.dto.response.cart.CartResponse;
 import com.example.demo.service.CartService;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +49,15 @@ public class CartController {
                 .success(true)
                 .message("Addresses created successfully")
                 .data(cartService.createCart(cartDTO))
+                .build());
+    }
+
+    @PostMapping("/add-laptop-to-cart")
+    public ResponseEntity<?> addLaptopToCart(@RequestBody AddLaptopToCart requestBody) {
+        return ResponseEntity.ok(DataResponse.<CartResponse>builder()
+                .success(true)
+                .message("Laptop added to cart successfully")
+                .data(cartService.addLaptopToCart(requestBody))
                 .build());
     }
 
