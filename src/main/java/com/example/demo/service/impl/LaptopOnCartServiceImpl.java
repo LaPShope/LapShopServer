@@ -2,6 +2,7 @@ package com.example.demo.service.impl;
 
 import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.LaptopOnCartDTO;
+import com.example.demo.dto.request.cart.DeleteLaptopOnCartResponse;
 import com.example.demo.dto.response.LaptopOnCartResponse;
 import com.example.demo.model.Cart;
 import com.example.demo.model.LaptopModel;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -56,7 +56,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
                 .map(LaptopOnCartMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allLaptopOnCart", laptopOnCartResponses, 600);
+//        redisService.setObject("allLaptopOnCart", laptopOnCartResponses, 600);
 
         return laptopOnCartResponses;
     }
@@ -76,7 +76,7 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         LaptopOnCartResponse laptopOnCartResponse = LaptopOnCartMapper.convertToResponse(laptopOnCart);
 
-        redisService.setObject("laptopOnCart:" + laptopOnCart.getId().getCartId() + laptopOnCart.getId().getLaptopModelId(), laptopOnCartResponse, 600);
+//        redisService.setObject("laptopOnCart:" + laptopOnCart.getId().getCartId() + laptopOnCart.getId().getLaptopModelId(), laptopOnCartResponse, 600);
 
         return laptopOnCartResponse;
     }
@@ -106,8 +106,8 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
         LaptopOnCartResponse cachedLaptopOnCart = LaptopOnCartMapper.convertToResponse(laptopOnCartExisting);
 
-        redisService.deleteByPatterns(List.of("*art:" + laptopOnCart.getCart().getId() + "*", "allLaptopOnCart"));
-        redisService.setObject("laptopOnCartId:", cachedLaptopOnCart, 600);
+//        redisService.deleteByPatterns(List.of("*art:" + laptopOnCart.getCart().getId() + "*", "allLaptopOnCart"));
+//        redisService.setObject("laptopOnCartId:", cachedLaptopOnCart, 600);
 
         return cachedLaptopOnCart;
     }
@@ -200,7 +200,8 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
 
     // 5. Xóa LaptopOnCart
     @Override
-    public void deleteLaptopOnCart(UUID cartId, UUID laptopModelId) {
+    public DeleteLaptopOnCartResponse deleteLaptopOnCart(UUID cartId, UUID laptopModelId) {
+        System.out.println(cartId + " " + laptopModelId);
         LaptopOnCart laptopOnCart = laptopOnCartRepository
                 .findByCartIdAndLaptopModelId(cartId, laptopModelId)
                 .orElseThrow(() -> new EntityNotFoundException("LaptopOnCart with Cart ID " + cartId + " and Laptop Model ID " + laptopModelId + " not found!"));
@@ -211,8 +212,13 @@ public class LaptopOnCartServiceImpl implements LaptopOnCartService {
             throw new SecurityException("User is not authorized to update this laptopOnCart");
         }
 
-        redisService.deleteByPatterns(List.of("*art:" + cartId + "*", "allLaptopOnCart"));
+//        redisService.deleteByPatterns(List.of("*art:" + cartId + "*", "allLaptopOnCart"));
 
         laptopOnCartRepository.delete(laptopOnCart);
+
+        return DeleteLaptopOnCartResponse.builder()
+                .cartId(cartId)
+                .laptopModelId(laptopModelId)
+                .build();
     }
 }

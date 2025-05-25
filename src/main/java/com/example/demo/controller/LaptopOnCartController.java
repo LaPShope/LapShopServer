@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.common.DataResponse;
 import com.example.demo.dto.LaptopOnCartDTO;
+import com.example.demo.dto.request.cart.DeleteLaptopOnCartResponse;
 import com.example.demo.dto.response.LaptopOnCartResponse;
 import com.example.demo.service.LaptopOnCartService;
 import org.springframework.http.ResponseEntity;
@@ -35,11 +36,11 @@ public class LaptopOnCartController {
     @GetMapping("/detail")
     public ResponseEntity<Object> getLaptopOnCartByCartIdAndLaptopModelId(
             @RequestParam(
-                    value = "cart-id",
+                    value = "cart_id",
                     required = true
             ) UUID cartId,
             @RequestParam(
-                    value = "laptop-model-id",
+                    value = "laptop_model_id",
                     required = true
             ) UUID laptopModelId) {
 
@@ -78,17 +79,18 @@ public class LaptopOnCartController {
     @DeleteMapping()
     public ResponseEntity<?> deleteLaptopOnCart(
             @RequestParam(
-                    value = "cart-id",
+                    value = "cart_id",
                     required = true
             ) UUID cartId,
             @RequestParam(
-                    value = "laptop-model-id",
+                    value = "laptop_model_id",
                     required = true
             ) UUID laptopModelId) {
-        laptopOnCartService.deleteLaptopOnCart(cartId, laptopModelId);
-        return ResponseEntity.ok(DataResponse.<LaptopOnCartDTO>builder()
+        DeleteLaptopOnCartResponse result = laptopOnCartService.deleteLaptopOnCart(cartId, laptopModelId);
+        return ResponseEntity.ok(DataResponse.<DeleteLaptopOnCartResponse>builder()
                 .success(true)
                 .message("Sale retrieved successfully")
+                .data(result)
                 .build());
     }
 

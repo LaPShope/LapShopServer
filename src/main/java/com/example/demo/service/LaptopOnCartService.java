@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.LaptopOnCartDTO;
+import com.example.demo.dto.request.cart.DeleteLaptopOnCartResponse;
 import com.example.demo.dto.response.LaptopOnCartResponse;
 
 import java.util.List;
@@ -17,5 +18,5 @@ public interface LaptopOnCartService {
     LaptopOnCartResponse createLaptopOnCart(LaptopOnCartDTO laptopOnCartDTO);
 
     //    LaptopOnCartResponse updateLaptopOnCart(UUID id, LaptopOnCartDTO laptopOnCartDTO);
-    void deleteLaptopOnCart(UUID cartId, UUID laptopModelId);
+    DeleteLaptopOnCartResponse deleteLaptopOnCart(UUID cartId, UUID laptopModelId);
 }

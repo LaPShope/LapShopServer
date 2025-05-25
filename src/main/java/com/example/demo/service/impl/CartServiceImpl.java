@@ -50,11 +50,11 @@ public class CartServiceImpl implements CartService {
             throw new EntityNotFoundException("Account not found for email: " + currentUserEmail);
         }
 
-        CartResponse cachedCarts = redisService.getObject("allCartByCustomerEmail" + currentUserEmail, new TypeReference<CartResponse>() {
-        });
-        if (cachedCarts != null) {
-            return cachedCarts;
-        }
+//        CartResponse cachedCarts = redisService.getObject("allCartByCustomerEmail" + currentUserEmail, new TypeReference<CartResponse>() {
+//        });
+//        if (cachedCarts != null) {
+//            return cachedCarts;
+//        }
 
         Optional<Cart> cart = cartRepository.findByCustomerId(account.get().getId());
         if (cart.isEmpty()) {
@@ -67,7 +67,7 @@ public class CartServiceImpl implements CartService {
 
         CartResponse cartResponse = CartMapper.convertToResponse(cart.get());
 
-        redisService.setObject("allCartByCustomerEmail" + currentUserEmail, cartResponse, 600);
+//        redisService.setObject("allCartByCustomerEmail" + currentUserEmail, cartResponse, 600);
         return cartResponse;
     }
 
