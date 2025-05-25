@@ -43,23 +43,32 @@ public class CartServiceImpl implements CartService {
 
     // Lấy tất cả Cart
     @Override
-    public List<CartResponse> getAllCartsOnCustomer() {
+    public CartResponse getAllCartsOnCustomer() {
         String currentUserEmail = AuthUtil.AuthCheck();
+        Optional<Account> account = accountRepository.findByEmail(currentUserEmail);
+        if (account.isEmpty()) {
+            throw new EntityNotFoundException("Account not found for email: " + currentUserEmail);
+        }
 
-        List<CartResponse> cachedCarts = redisService.getObject("allCartByCustomerEmail" + currentUserEmail, new TypeReference<List<CartResponse>>() {
+        CartResponse cachedCarts = redisService.getObject("allCartByCustomerEmail" + currentUserEmail, new TypeReference<CartResponse>() {
         });
-        if (cachedCarts != null && !cachedCarts.isEmpty()) {
+        if (cachedCarts != null) {
             return cachedCarts;
         }
 
-        List<CartResponse> cartResponses = cartRepository.findAll().stream()
-                .filter(cart -> cart.getCustomer().getAccount().getEmail().equals(currentUserEmail))
-                .map(CartMapper::convertToResponse)
-                .collect(Collectors.toList());
+        Optional<Cart> cart = cartRepository.findByCustomerId(account.get().getId());
+        if (cart.isEmpty()) {
+            throw new EntityNotFoundException("Cart not found for customer with email: " + currentUserEmail);
+        }
+//        List<CartResponse> cartResponses = cart.stream()
+//                .filter(cart -> cart.getCustomer().getAccount().getEmail().equals(currentUserEmail))
+//                .map(CartMapper::convertToResponse)
+//                .collect(Collectors.toList());
 
-        redisService.setObject("allCartByCustomerEmail" + currentUserEmail, cartResponses, 600);
+        CartResponse cartResponse = CartMapper.convertToResponse(cart.get());
 
-        return cartResponses;
+        redisService.setObject("allCartByCustomerEmail" + currentUserEmail, cartResponse, 600);
+        return cartResponse;
     }
 
     // Lấy Cart theo ID
@@ -73,8 +82,7 @@ public class CartServiceImpl implements CartService {
             return cachedCart;
         }
 
-        Cart cart = cartRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
+        Cart cart = cartRepository.findById(id).orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
 
         if (!cart.getCustomer().getAccount().getEmail().equals(currentUserEmail)) {
             throw new SecurityException("User is not authorized to view this cart");
@@ -93,21 +101,14 @@ public class CartServiceImpl implements CartService {
     public CartResponse createCart(CartDTO cartDTO) {
         String currentUserEmail = AuthUtil.AuthCheck();
 
-        Account customer = accountRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
+        Account customer = accountRepository.findByEmail(currentUserEmail).orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
         //kiem tra user qua email
         if (!currentUserEmail.equals(customer.getEmail())) {
             throw new SecurityException("User is not authorized to create this cart ");
         }
 
-        Cart cartExisting = cartRepository.save(
-                Cart.builder()
-                        .customer(customer
-                                .getCustomer()
-                        )
-                        .build()
-        );
+        Cart cartExisting = cartRepository.save(Cart.builder().customer(customer.getCustomer()).build());
 
         CartResponse cachedCart = CartMapper.convertToResponse(cartExisting);
 
@@ -121,8 +122,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @Override
     public CartResponse updateCart(UUID id, CartDTO cartDTO) {
-        Cart cart = cartRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Cart not found!"));
+        Cart cart = cartRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cart not found!"));
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
@@ -136,15 +136,7 @@ public class CartServiceImpl implements CartService {
         //loai bo toan bo laptopOnCart
         cart.getLaptopOnCarts().removeIf(laptop -> true);
         //lay laptopOnCart moi
-        List<LaptopOnCart> laptopOnCarts = Optional.ofNullable(cartDTO.getLaptopOnCartsDTOs())
-                .orElse(Collections.emptyList())
-                .stream()
-                .map(item -> laptopOnCartRepository
-                        .findByCartIdAndLaptopModelId(
-                                item.getCartId(),
-                                item.getLaptopModelId()
-                        ).orElseThrow(() -> new EntityNotFoundException("LaptopOnCart not found!"))
-                ).toList();
+        List<LaptopOnCart> laptopOnCarts = Optional.ofNullable(cartDTO.getLaptopOnCartsDTOs()).orElse(Collections.emptyList()).stream().map(item -> laptopOnCartRepository.findByCartIdAndLaptopModelId(item.getCartId(), item.getLaptopModelId()).orElseThrow(() -> new EntityNotFoundException("LaptopOnCart not found!"))).toList();
 
         cart.getLaptopOnCarts().addAll(laptopOnCarts);
 
@@ -161,8 +153,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @Override
     public CartResponse partialUpdateCart(UUID id, Map<String, Object> fieldsToUpdate) {
-        Cart cart = cartRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Cart with ID " + id + " not found!"));
+        Cart cart = cartRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Cart with ID " + id + " not found!"));
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
@@ -203,8 +194,7 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @Override
     public void deleteCart(UUID id) {
-        Cart cart = cartRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
+        Cart cart = cartRepository.findById(id).orElseThrow(() -> new RuntimeException("Cart with ID " + id + " not found!"));
 
         //kiem tra user qua email
         String currentUserEmail = AuthUtil.AuthCheck();
@@ -221,35 +211,17 @@ public class CartServiceImpl implements CartService {
     public CartResponse addLaptopToCart(AddLaptopToCart requestBody) {
         String currentUserEmail = AuthUtil.AuthCheck();
 
-        Account account = accountRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
+        Account account = accountRepository.findByEmail(currentUserEmail).orElseThrow(() -> new EntityNotFoundException("Account not found!"));
 
-        Cart cart = cartRepository.findByCustomerId(account.getId())
-                .orElseGet(() -> cartRepository.save(
-                        Cart.builder()
-                                .customer(account.getCustomer())
-                                .build()
-                ));
+        Cart cart = cartRepository.findByCustomerId(account.getId()).orElseGet(() -> cartRepository.save(Cart.builder().customer(account.getCustomer()).build()));
 
-        Optional<LaptopOnCart> laptopOnCartOpt = laptopOnCartRepository
-                .findByCartIdAndLaptopModelId(
-                        cart.getId(), requestBody.getLaptopModelId());
+        Optional<LaptopOnCart> laptopOnCartOpt = laptopOnCartRepository.findByCartIdAndLaptopModelId(cart.getId(), requestBody.getLaptopModelId());
 
         LaptopOnCart laptopOnCart;
         if (laptopOnCartOpt.isEmpty()) {
-            LaptopModel laptopModel = laptopModelRepository.findById(requestBody.getLaptopModelId())
-                    .orElseThrow(() -> new EntityNotFoundException("Laptop model not found!"));
+            LaptopModel laptopModel = laptopModelRepository.findById(requestBody.getLaptopModelId()).orElseThrow(() -> new EntityNotFoundException("Laptop model not found!"));
 
-            laptopOnCart = LaptopOnCart.builder()
-                    .id(LaptopOnCartKey.builder()
-                            .cartId(cart.getId())
-                            .laptopModelId(laptopModel.getId())
-                            .build()
-                    )
-                    .cart(cart)
-                    .laptopModel(laptopModel)
-                    .quantity(requestBody.getQuantity())
-                    .build();
+            laptopOnCart = LaptopOnCart.builder().id(LaptopOnCartKey.builder().cartId(cart.getId()).laptopModelId(laptopModel.getId()).build()).cart(cart).laptopModel(laptopModel).quantity(requestBody.getQuantity()).build();
 
             laptopOnCart = laptopOnCartRepository.save(laptopOnCart);
             cart.getLaptopOnCarts().add(laptopOnCart);

@@ -21,6 +21,7 @@ public class LaptopModelMapper {
                 .color(laptopModel.getColor())
                 .price(laptopModel.getPrice())
                 .description(laptopModel.getDescription())
+                .images(ImageMapper.convertToDTO(laptopModel.getImageList()))
                 .build();
     }
 

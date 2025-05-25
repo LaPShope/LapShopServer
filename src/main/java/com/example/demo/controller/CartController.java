@@ -24,8 +24,8 @@ public class CartController {
 
     // 1. API: Lấy tất cả Cart
     @GetMapping
-    public ResponseEntity<DataResponse<List<CartResponse>>> getAllCarts() {
-        return ResponseEntity.ok(DataResponse.<List<CartResponse>>builder()
+    public ResponseEntity<DataResponse<CartResponse>> getAllCarts() {
+        return ResponseEntity.ok(DataResponse.<CartResponse>builder()
                 .success(true)
                 .message("Cart retrieved successfully")
                 .data(cartService.getAllCartsOnCustomer())

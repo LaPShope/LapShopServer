@@ -4,6 +4,7 @@ import com.example.demo.common.Enums;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -23,6 +24,7 @@ public class LaptopModelDTO {
     private Enums.Color color;
     private BigDecimal price;
     private String description;
+    private List<ImageDTO> images;
 //    @JsonProperty("comment_ids")
 //    private List<UUID> commentIds;
 //    @JsonProperty("image_ids")

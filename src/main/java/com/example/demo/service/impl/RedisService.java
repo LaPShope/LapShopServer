@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
 
@@ -37,7 +38,7 @@ public class RedisService {
             String jsonString = objectMapper.writeValueAsString(object);
             redisTemplate.opsForValue().set(key, jsonString, expireSeconds, TimeUnit.SECONDS);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException( e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -52,10 +53,11 @@ public class RedisService {
         if (jsonString == null) {
             return null;
         }
+        System.out.println("JSON String: " + jsonString);
         try {
             return objectMapper.readValue(jsonString, typeRef);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Lỗi khi chuyển JSON thành object", e);
+            throw new RuntimeException("Lỗi khi chuyển JSON thành object " + e.getMessage());
         }
     }
 
@@ -75,7 +77,8 @@ public class RedisService {
             return List.of(); // Trả về danh sách rỗng nếu không có dữ liệu
         }
         try {
-            return objectMapper.readValue(json, new TypeReference<List<ChatResponse>>() {});
+            return objectMapper.readValue(json, new TypeReference<List<ChatResponse>>() {
+            });
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Lỗi khi chuyển JSON thành danh sách ChatResponse", e);
         }

@@ -12,7 +12,7 @@ public interface CartService {
 
     CartResponse partialUpdateCart(UUID id, Map<String, Object> fieldsToUpdate);
 
-    List<CartResponse> getAllCartsOnCustomer(); // Lấy tất cả Cart
+    CartResponse getAllCartsOnCustomer(); // Lấy tất cả Cart
 
     CartResponse getCartById(UUID id); // Lấy Cart theo ID
 
