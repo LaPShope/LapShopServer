@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.common.DataResponse;
 import com.example.demo.dto.LaptopModelDTO;
+import com.example.demo.dto.request.laptopmodel.AddImagesToLaptopModelRequest;
 import com.example.demo.dto.response.LaptopModelResponse;
 import com.example.demo.service.LaptopModelService;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +46,6 @@ public class LaptopModelController {
     // 3. Tạo mới một LaptopModel
     @PostMapping
     public ResponseEntity<?> createLaptopModel(@RequestBody LaptopModelDTO laptopModelDTO) {
-
 
         return ResponseEntity.ok(DataResponse.<LaptopModelResponse>builder()
                 .success(true)
@@ -134,6 +134,15 @@ public class LaptopModelController {
                 .success(true)
                 .message("Image added to LaptopModel successfully")
                 .data(laptopModelService.addImageToLaptopModel(laptopModelId, imageId))
+                .build());
+    }
+
+    @PostMapping("/add-images-migrate")
+    public ResponseEntity<?> addImagesToLaptopModelV2(@RequestBody(required = true) AddImagesToLaptopModelRequest request) {
+        return ResponseEntity.ok(DataResponse.builder()
+                .success(true)
+                .message("Image added to LaptopModel successfully")
+                .data(laptopModelService.addImageToLaptopModelV2(request.getLaptopModelId(), request.getImageIds()))
                 .build());
     }
 }

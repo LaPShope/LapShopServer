@@ -28,4 +28,6 @@ public interface LaptopModelService {
     PagingResponse<?> getLaptopModelsWithPagination(int offset, int pageSize);
 
     LaptopModelResponse addImageToLaptopModel(UUID laptopModelId, UUID imageId);
+
+    LaptopModelResponse addImageToLaptopModelV2(UUID laptopModelId, List<UUID> imageIds);
 }

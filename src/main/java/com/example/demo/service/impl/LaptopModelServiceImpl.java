@@ -276,4 +276,43 @@ public class LaptopModelServiceImpl implements LaptopModelService {
         redisService.setObject("image:" + imageId, image, 600);
         return laptopModelResponse;
     }
+
+    @Override
+    @Transactional
+    public LaptopModelResponse addImageToLaptopModelV2(UUID laptopModelId, List<UUID> imageIds) {
+        if (!AuthUtil.isAdmin()) {
+            throw new SecurityException("User is not an Admin");
+        }
+
+        LaptopModel laptopModel = laptopModelRepository
+                .findById(laptopModelId)
+                .orElseThrow(() -> new EntityNotFoundException("LaptopModel with ID " + laptopModelId + " not found"));
+
+        // Remove this laptopModel from all old images' laptopModelList
+        for (Image oldImage : new ArrayList<>(laptopModel.getImageList())) {
+            oldImage.getLaptopModelList().remove(laptopModel);
+        }
+
+        // Fetch new images and set them
+        List<Image> newImages = imageRepository.findAllById(imageIds);
+        laptopModel.setImageList(new ArrayList<>(newImages));
+
+        // Add this laptopModel to each new image's laptopModelList
+        for (Image image : newImages) {
+            if (!image.getLaptopModelList().contains(laptopModel)) {
+                image.getLaptopModelList().add(laptopModel);
+            }
+        }
+
+        laptopModelRepository.save(laptopModel);
+
+        LaptopModelResponse laptopModelResponse = LaptopModelMapper.convertToResponse(laptopModel);
+        redisService.deleteByPatterns(List.of("allLaptopModel", "allImage", "allSale", "laptopModel:" + laptopModelId, "*derDetail*", "allLaptopOnSale"));
+        redisService.setObject("laptopModel:" + laptopModelId, laptopModelResponse, 600);
+        for (UUID imageId : imageIds) {
+            redisService.setObject("image:" + imageId, newImages.stream().filter(img -> img.getId().equals(imageId)).findFirst().orElse(null), 600);
+        }
+
+        return laptopModelResponse;
+    }
 }

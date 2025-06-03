@@ -3,7 +3,6 @@ package com.example.demo.service.impl;
 import com.example.demo.common.AuthUtil;
 import com.example.demo.dto.request.cart.AddLaptopToCart;
 import com.example.demo.dto.request.cart.CartDTO;
-import com.example.demo.dto.response.LaptopModelResponse;
 import com.example.demo.dto.response.cart.CartResponse;
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -208,33 +206,57 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public CartResponse addLaptopToCart(AddLaptopToCart requestBody) {
         String currentUserEmail = AuthUtil.AuthCheck();
 
-        Account account = accountRepository.findByEmail(currentUserEmail).orElseThrow(() -> new EntityNotFoundException("Account not found!"));
+        Account account = accountRepository
+                .findByEmail(currentUserEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
 
-        Cart cart = cartRepository.findByCustomerId(account.getId()).orElseGet(() -> cartRepository.save(Cart.builder().customer(account.getCustomer()).build()));
+        Optional<Cart> cart = cartRepository.findByCustomerId(account.getId());
 
-        Optional<LaptopOnCart> laptopOnCartOpt = laptopOnCartRepository.findByCartIdAndLaptopModelId(cart.getId(), requestBody.getLaptopModelId());
+        if (cart.isEmpty()) {
+
+            Cart newCart = Cart.builder()
+                    .customer(account.getCustomer())
+                    .build();
+            cart = Optional.of(cartRepository.save(newCart));
+        }
+
+        System.out.println("Saved cart: " + cart.get().getId());
+
+        Optional<LaptopOnCart> laptopOnCartOpt = laptopOnCartRepository
+                .findByCartIdAndLaptopModelId(cart.get().getId(), requestBody.getLaptopModelId());
 
         LaptopOnCart laptopOnCart;
         if (laptopOnCartOpt.isEmpty()) {
-            LaptopModel laptopModel = laptopModelRepository.findById(requestBody.getLaptopModelId()).orElseThrow(() -> new EntityNotFoundException("Laptop model not found!"));
+            LaptopModel laptopModel = laptopModelRepository
+                    .findById(requestBody.getLaptopModelId()).orElseThrow(() -> new EntityNotFoundException("Laptop model not found!"));
 
-            laptopOnCart = LaptopOnCart.builder().id(LaptopOnCartKey.builder().cartId(cart.getId()).laptopModelId(laptopModel.getId()).build()).cart(cart).laptopModel(laptopModel).quantity(requestBody.getQuantity()).build();
+            laptopOnCart = LaptopOnCart.builder()
+                    .id(
+                            LaptopOnCartKey.builder()
+                                    .cartId(cart.get().getId())
+                                    .laptopModelId(laptopModel.getId()).build()
+                    )
+                    .cart(cart.get())
+                    .laptopModel(laptopModel)
+                    .quantity(requestBody.getQuantity())
+                    .build();
 
             laptopOnCart = laptopOnCartRepository.save(laptopOnCart);
-            cart.getLaptopOnCarts().add(laptopOnCart);
+            cart.get().getLaptopOnCarts().add(laptopOnCart);
         } else {
             laptopOnCart = laptopOnCartOpt.get();
             laptopOnCart.setQuantity(requestBody.getQuantity());
             laptopOnCartRepository.save(laptopOnCart);
         }
 
-        CartResponse cartResponse = CartMapper.convertToResponse(cart);
+        CartResponse cartResponse = CartMapper.convertToResponse(cart.orElse(null));
 
-        redisService.deleteByPatterns(List.of("allCart", "cart:" + cart.getId()));
-        redisService.setObject("cart:" + cart.getId(), cartResponse, 600);
+        redisService.deleteByPatterns(List.of("allCart", "cart:" + cart.get().getId()));
+        redisService.setObject("cart:" + cart.get().getId(), cartResponse, 600);
 
         return cartResponse;
     }
