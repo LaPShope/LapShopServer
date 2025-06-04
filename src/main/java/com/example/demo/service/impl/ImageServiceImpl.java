@@ -38,6 +38,7 @@ public class ImageServiceImpl implements ImageService {
     public List<ImageDTO> getAllImages() {
         List<ImageDTO> cachedImage = redisService.getObject("allImage", new TypeReference<List<ImageDTO>>() {
         });
+
         if (cachedImage != null && !cachedImage.isEmpty()) {
             return cachedImage;
         }
