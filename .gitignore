@@ -36,6 +36,7 @@ volumes/
 ### java spring
 src/main/resources/application.yml
 src/main/resources/credentials.json
+tokens/StoredCredential
 
 ## docker
 src/dockerfiles
