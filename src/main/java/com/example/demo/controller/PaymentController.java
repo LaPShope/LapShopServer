@@ -72,7 +72,10 @@ public class PaymentController {
 
     @PostMapping("/{type}")
     public ResponseEntity<DataResponse<Map<String, Object>>> createPayment(
-            HttpServletRequest request, @PathVariable String type) throws Exception {
+            @PathVariable String type,
+            @RequestBody PaymentDTO paymentDTO,
+            HttpServletRequest request
+    ) throws Exception {
         type = type.toUpperCase();
 
         switch (type) {
@@ -82,7 +85,6 @@ public class PaymentController {
                         .data(paymentIntegrationService.createOrder(request))
                         .build();
                 return ResponseEntity.ok(dataResponse);
-
             case "MOMO":
                 throw new Exception("Momo payment is not supported yet");
 
@@ -97,13 +99,11 @@ public class PaymentController {
     // 4. Update payment by ID
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePayment(@PathVariable UUID id, @RequestBody PaymentDTO paymentDTO) {
-
         return ResponseEntity.ok(DataResponse.<PaymentResponse>builder()
                 .success(true)
                 .message("Payment updated successfully")
                 .data(paymentService.updatePayment(id, paymentDTO))
                 .build());
-
     }
 
     @PatchMapping("/{id}")
@@ -114,7 +114,6 @@ public class PaymentController {
                 .data(paymentService.partialUpdatePayment(id, fieldsToUpdate))
                 .build());
     }
-
 
     // 5. Delete payment by ID
     @DeleteMapping("/{id}")

@@ -31,6 +31,8 @@ public class OrderResponse {
     @JsonProperty("date_create")
     private Date dateCreate;
 
+    private String address;
+
     
     @JsonProperty("delivery_cost")
     private BigDecimal deliveryCost;

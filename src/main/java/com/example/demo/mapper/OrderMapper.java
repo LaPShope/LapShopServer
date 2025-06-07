@@ -34,6 +34,7 @@ public class OrderMapper {
                 .id(order.getId())
                 .customer(CustomerMapper.convertToDTO(order.getCustomer()))
                 .dateCreate(order.getDateCreate())
+                .address(order.getAddress())
                 .status(order.getStatus())
                 .finalPrice(order.getFinalPrice())
                 .deliveryCost(order.getDeliveryCost())
@@ -47,5 +48,4 @@ public class OrderMapper {
                         : PaymentMapper.convertToResponse(order.getPayment()))
                 .build();
     }
-
 }

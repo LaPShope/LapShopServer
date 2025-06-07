@@ -37,11 +37,11 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository; // Repository để kiểm tra Cart tồn tại
     private final AccountRepository accountRepository; // Repository để kiểm tra Account tồn tại
 
-    public OrderServiceImpl(CartRepository cartRepository, AccountRepository accountRepository, RedisService redisService, PaymentRepository paymentRepository,OrderRepository orderRepository, CustomerRepository customerRepository,OrderDetailRepository orderDetailRepository) {
+    public OrderServiceImpl(CartRepository cartRepository, AccountRepository accountRepository, RedisService redisService, PaymentRepository paymentRepository, OrderRepository orderRepository, CustomerRepository customerRepository, OrderDetailRepository orderDetailRepository) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
-        this.orderDetailRepository=orderDetailRepository;
-        this.paymentRepository=paymentRepository;
+        this.orderDetailRepository = orderDetailRepository;
+        this.paymentRepository = paymentRepository;
         this.redisService = redisService;
         this.accountRepository = accountRepository;
         this.cartRepository = cartRepository;
@@ -50,8 +50,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderResponse> getAllOrders() {
         String currentUserEmail = AuthUtil.AuthCheck();
-        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOrder"+currentUserEmail, new TypeReference<List<OrderResponse>>() {});
-        if(cachedOrderResponses != null && !cachedOrderResponses.isEmpty()){
+        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOrder" + currentUserEmail, new TypeReference<List<OrderResponse>>() {
+        });
+        if (cachedOrderResponses != null && !cachedOrderResponses.isEmpty()) {
             return cachedOrderResponses;
         }
 
@@ -60,7 +61,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(OrderMapper::convertToResponse)
                 .collect(Collectors.toList());
 
-        redisService.setObject("allOrder"+currentUserEmail,orderResponses,600);
+        redisService.setObject("allOrder" + currentUserEmail, orderResponses, 600);
 
         return orderResponses;
     }
@@ -68,13 +69,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse getOrderById(UUID id) {
-        OrderResponse cachedOrderResponse = redisService.getObject("order:" + id, new TypeReference<OrderResponse>() {});;
-        if (cachedOrderResponse != null){
+        OrderResponse cachedOrderResponse = redisService.getObject("order:" + id, new TypeReference<OrderResponse>() {
+        });
+        ;
+        if (cachedOrderResponse != null) {
             return cachedOrderResponse;
         }
-        
+
         String currentUserEmail = AuthUtil.AuthCheck();
-        
+
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found!"));
 
@@ -84,7 +87,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderResponse orderResponse = OrderMapper.convertToResponse(order);
 
-        redisService.setObject("order:"+id,orderResponse,600);
+        redisService.setObject("order:" + id, orderResponse, 600);
 
         return orderResponse;
     }
@@ -113,8 +116,6 @@ public class OrderServiceImpl implements OrderService {
                 .status(Enums.OrderStatus.Pending)
                 .build();
 
-        
-
         if (cart != null) {
             for (Cart item : cart) {
                 List<OrderDetail> items = item.getLaptopOnCarts().stream().map(laptopOnCart -> {
@@ -123,22 +124,22 @@ public class OrderServiceImpl implements OrderService {
                     BigDecimal totalItemPrice = price.multiply(quantity); // Multiply price by quantity
 
                     OrderDetail orderDetail = OrderDetail.builder()
-                        .id(null)
-                        .order(order)
-                        .laptopModel(laptopOnCart.getLaptopModel())
-                        .quantity(laptopOnCart.getQuantity())
-                        .price(totalItemPrice)
-                        .build();
-                    return orderDetail; 
+                            .id(null)
+                            .order(order)
+                            .laptopModel(laptopOnCart.getLaptopModel())
+                            .quantity(laptopOnCart.getQuantity())
+                            .price(totalItemPrice)
+                            .build();
+                    return orderDetail;
                 }).collect(Collectors.toList());
-                
+
                 order.setOrderDetailList(items);
             }
         }
 
         BigDecimal recalculatedTotalPrice = order.getOrderDetailList().stream()
-            .map(orderDetail -> orderDetail.getPrice().multiply(new BigDecimal(orderDetail.getQuantity())))
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(orderDetail -> orderDetail.getPrice().multiply(new BigDecimal(orderDetail.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         order.setFinalPrice(recalculatedTotalPrice.add(order.getDeliveryCost()));
 
@@ -149,7 +150,7 @@ public class OrderServiceImpl implements OrderService {
         OrderResponse cachedOrderResponse = OrderMapper.convertToResponse(orderExisting);
 
         redisService.deleteByPatterns(List.of("allOrder"));
-        redisService.setObject("order:"+orderDTO.getId(),cachedOrderResponse,600);
+        redisService.setObject("order:" + orderDTO.getId(), cachedOrderResponse, 600);
 
         return cachedOrderResponse;
     }
@@ -163,17 +164,17 @@ public class OrderServiceImpl implements OrderService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(existingOrder.getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(existingOrder.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 
         existingOrder.setStatus(orderDTO.getStatus());
         Order order = orderRepository.save(existingOrder);
 
-        OrderResponse cachedorderResponse =  OrderMapper.convertToResponse(order);
+        OrderResponse cachedorderResponse = OrderMapper.convertToResponse(order);
 
-        redisService.deleteByPatterns(List.of("allOrder","*der*"));
-        redisService.setObject("order:"+id,cachedorderResponse,600);
+        redisService.deleteByPatterns(List.of("allOrder", "*der*"));
+        redisService.setObject("order:" + id, cachedorderResponse, 600);
 
         return cachedorderResponse;
     }
@@ -185,7 +186,7 @@ public class OrderServiceImpl implements OrderService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(order.getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(order.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to update this orderDetail");
         }
 
@@ -194,8 +195,8 @@ public class OrderServiceImpl implements OrderService {
 
         for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
             String fieldName = entry.getKey();
-            if(fieldName.equals("date_create")){
-                fieldName= ConvertSnakeToCamel.snakeToCamel(fieldName);
+            if (fieldName.equals("date_create")) {
+                fieldName = ConvertSnakeToCamel.snakeToCamel(fieldName);
             }
             Object newValue = entry.getValue();
 
@@ -212,8 +213,8 @@ public class OrderServiceImpl implements OrderService {
                             throw new IllegalArgumentException("Invalid enum value for field: " + fieldName);
                         }
                     } else if (field.getType().equals(Date.class)) {
-                            Date parsedDate = ConvertDate.convertToDate(newValue);
-                            field.set(order, parsedDate);
+                        Date parsedDate = ConvertDate.convertToDate(newValue);
+                        field.set(order, parsedDate);
                     } else {
                         field.set(order, newValue);
                     }
@@ -228,8 +229,8 @@ public class OrderServiceImpl implements OrderService {
         Order updatedOrder = orderRepository.save(order);
         OrderResponse cachedorderResponse = OrderMapper.convertToResponse(updatedOrder);
 
-        redisService.deleteByPatterns(List.of("allOrder","*der*"));
-        redisService.setObject("order:"+id,cachedorderResponse,600);
+        redisService.deleteByPatterns(List.of("allOrder", "*der*"));
+        redisService.setObject("order:" + id, cachedorderResponse, 600);
 
         return cachedorderResponse;
     }
@@ -241,11 +242,11 @@ public class OrderServiceImpl implements OrderService {
 
         //kiem tra qua email
         String currentUserEmail = AuthUtil.AuthCheck();
-        if(!currentUserEmail.equals(existingOrder.getCustomer().getAccount().getEmail())){
+        if (!currentUserEmail.equals(existingOrder.getCustomer().getAccount().getEmail())) {
             throw new SecurityException("User is not authorized to delete this order");
         }
 
-        redisService.deleteByPatterns(List.of("allOrder","*der*"));
+        redisService.deleteByPatterns(List.of("allOrder", "*der*"));
 
         orderRepository.delete(existingOrder);
     }
