@@ -68,27 +68,25 @@ public class DriveUploader {
 
 
     public String uploadImageToDrive(MultipartFile multipartFile) throws Exception {
-        Drive driveService = getDriveService(); // same as above
+        Drive driveService = getDriveService();
 
         File fileMetadata = new File();
         fileMetadata.setName(multipartFile.getOriginalFilename());
 
-        // Save temp file
         java.io.File tempFile = java.io.File.createTempFile("upload", multipartFile.getOriginalFilename());
         multipartFile.transferTo(tempFile);
 
         FileContent mediaContent = new FileContent(multipartFile.getContentType(), tempFile);
 
         File uploadedFile = driveService.files().create(fileMetadata, mediaContent)
-                .setFields("id, webViewLink")
+                .setFields("id")
                 .execute();
 
-        // Make public
         Permission permission = new Permission()
                 .setType("anyone")
                 .setRole("reader");
         driveService.permissions().create(uploadedFile.getId(), permission).execute();
 
-        return uploadedFile.getWebViewLink(); // or use: https://drive.google.com/uc?id=FILE_ID
-    }
+        // ✅ Return formatted view URL
+        return "https://drive.google.com/uc?export=view&id=" + uploadedFile.getId();    }
 }

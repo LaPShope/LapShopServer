@@ -217,14 +217,11 @@ public class CartServiceImpl implements CartService {
         Optional<Cart> cart = cartRepository.findByCustomerId(account.getId());
 
         if (cart.isEmpty()) {
-
             Cart newCart = Cart.builder()
                     .customer(account.getCustomer())
                     .build();
             cart = Optional.of(cartRepository.save(newCart));
         }
-
-        System.out.println("Saved cart: " + cart.get().getId());
 
         Optional<LaptopOnCart> laptopOnCartOpt = laptopOnCartRepository
                 .findByCartIdAndLaptopModelId(cart.get().getId(), requestBody.getLaptopModelId());
@@ -246,7 +243,8 @@ public class CartServiceImpl implements CartService {
                     .build();
 
             laptopOnCart = laptopOnCartRepository.save(laptopOnCart);
-            cart.get().getLaptopOnCarts().add(laptopOnCart);
+
+            cart.get().addLaptopOnCart(laptopOnCart);
         } else {
             laptopOnCart = laptopOnCartOpt.get();
             laptopOnCart.setQuantity(requestBody.getQuantity());
@@ -255,8 +253,8 @@ public class CartServiceImpl implements CartService {
 
         CartResponse cartResponse = CartMapper.convertToResponse(cart.orElse(null));
 
-        redisService.deleteByPatterns(List.of("allCart", "cart:" + cart.get().getId()));
-        redisService.setObject("cart:" + cart.get().getId(), cartResponse, 600);
+//        redisService.deleteByPatterns(List.of("allCart", "cart:" + cart.get().getId()));
+//        redisService.setObject("cart:" + cart.get().getId(), cartResponse, 600);
 
         return cartResponse;
     }

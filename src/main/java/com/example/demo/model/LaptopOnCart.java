@@ -13,7 +13,6 @@ import java.util.UUID;
 @Setter
 @Builder
 public class LaptopOnCart {
-
     @EmbeddedId
     private LaptopOnCartKey id;
 

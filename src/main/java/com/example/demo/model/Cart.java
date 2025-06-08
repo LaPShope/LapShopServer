@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,4 +34,14 @@ public class Cart {
             CascadeType.MERGE,
             CascadeType.REFRESH}, orphanRemoval = true)
     private List<LaptopOnCart> laptopOnCarts;
+
+
+    public void addLaptopOnCart(LaptopOnCart laptopOnCart) {
+        if (laptopOnCarts == null) {
+            laptopOnCarts = new ArrayList<>();
+        }
+
+        laptopOnCart.setCart(this);
+        laptopOnCarts.add(laptopOnCart);
+    }
 }

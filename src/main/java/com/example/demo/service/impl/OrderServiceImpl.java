@@ -143,8 +143,6 @@ public class OrderServiceImpl implements OrderService {
 
         order.setFinalPrice(recalculatedTotalPrice.add(order.getDeliveryCost()));
 
-        customer.getCartList().clear();
-
         Order orderExisting = orderRepository.save(order);
 
         OrderResponse cachedOrderResponse = OrderMapper.convertToResponse(orderExisting);
