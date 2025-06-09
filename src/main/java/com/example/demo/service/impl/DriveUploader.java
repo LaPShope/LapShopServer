@@ -88,5 +88,6 @@ public class DriveUploader {
         driveService.permissions().create(uploadedFile.getId(), permission).execute();
 
         // ✅ Return formatted view URL
-        return "https://drive.google.com/uc?export=view&id=" + uploadedFile.getId();    }
+        return "https://drive.google.com/uc?export=view&id=" + uploadedFile.getId();
+    }
 }

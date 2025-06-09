@@ -47,7 +47,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<PaymentResponse> getAllPaymentsByCustomer() {
         String currentUserEmail = AuthUtil.AuthCheck();
-        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:"+currentUserEmail, new TypeReference<List<PaymentResponse>>() {
+        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:" + currentUserEmail, new TypeReference<List<PaymentResponse>>() {
         });
         if (cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()) {
             return cachedPaymentResponses;
@@ -90,10 +90,10 @@ public class PaymentServiceImpl implements PaymentService {
         String currentUserEmail = AuthUtil.AuthCheck();
         Account account = accountRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found!"));
-        PaymentResponse cachedPaymentResponses = redisService.getObject("payment:"+id, new TypeReference<PaymentResponse>() {
+        PaymentResponse cachedPaymentResponses = redisService.getObject("payment:" + id, new TypeReference<PaymentResponse>() {
         });
         if (cachedPaymentResponses != null) {
-           // Kiểm tra quyền truy cập
+            // Kiểm tra quyền truy cập
             if (!cachedPaymentResponses.getCustomer().equals(account.getId())) {
                 throw new SecurityException("User is not authorized to view this payment");
             }
@@ -203,7 +203,7 @@ public class PaymentServiceImpl implements PaymentService {
                 if (newValue != null) {
                     if (field.getType().isEnum()) {
                         try {
-                            Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString().toUpperCase());
+                            Object enumValue = Enum.valueOf((Class<Enum>) field.getType(), newValue.toString());
                             field.set(payment, enumValue);
                         } catch (IllegalArgumentException e) {
                             throw new IllegalArgumentException("Invalid enum value '" + newValue + "' for field: " + fieldName);

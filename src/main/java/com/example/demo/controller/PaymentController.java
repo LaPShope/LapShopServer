@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.common.DataResponse;
 import com.example.demo.dto.PaymentDTO;
+import com.example.demo.dto.request.payment.CreateTransaction;
 import com.example.demo.dto.response.PaymentResponse;
 import com.example.demo.service.PaymentIntegrationService;
 import com.example.demo.service.PaymentService;
@@ -73,7 +74,8 @@ public class PaymentController {
     @PostMapping("/{type}")
     public ResponseEntity<DataResponse<Map<String, Object>>> createPayment(
             @PathVariable String type,
-            @RequestBody PaymentDTO paymentDTO,
+            @RequestBody CreateTransaction createTransaction,
+//            @RequestBody PaymentDTO paymentDTO,
             HttpServletRequest request
     ) throws Exception {
         type = type.toUpperCase();
@@ -82,7 +84,7 @@ public class PaymentController {
             case "VNPAY":
                 DataResponse<Map<String, Object>> dataResponse = DataResponse.<Map<String, Object>>builder()
                         .message("Add payment successfully").success(true)
-                        .data(paymentIntegrationService.createOrder(request))
+                        .data(paymentIntegrationService.createOrder(request, createTransaction))
                         .build();
                 return ResponseEntity.ok(dataResponse);
             case "MOMO":

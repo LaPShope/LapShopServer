@@ -2,10 +2,14 @@ package com.example.demo.service.impl;
 
 import com.example.demo.common.VNPayConstant;
 import com.example.demo.common.VNPayHelper;
+import com.example.demo.dto.request.payment.CreateTransaction;
 import com.example.demo.dto.request.vnpay.VNPayOrderRequest;
+import com.example.demo.model.Order;
+import com.example.demo.repository.OrderRepository;
 import com.example.demo.service.PaymentIntegrationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -16,9 +20,16 @@ import java.util.*;
 
 @Service
 public class VNPayServiceImpl implements PaymentIntegrationService {
+
+    private final OrderRepository orderRepository;
+
+    public VNPayServiceImpl(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
+
     @Override
     @Transactional
-    public Map<String, Object> createOrder(HttpServletRequest request) throws UnsupportedEncodingException {
+    public Map<String, Object> createOrder(HttpServletRequest request, CreateTransaction createTransaction) throws UnsupportedEncodingException {
         try {
 //            Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -51,6 +62,10 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
 //            }
 
 //            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+            Optional<Order> order = orderRepository.findById(createTransaction.getOrderId());
+            if (order.isEmpty()) {
+                throw new RuntimeException("Order not found");
+            }
 
             Map<String, Object> payload = this.generateVNPayPayload(VNPayOrderRequest.builder()
                     .orderInfo("mua san pham")
@@ -106,7 +121,7 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
         return VNPayURL + "?" + queryURL;
     }
 
-//    @Transactional
+    //    @Transactional
     public void handlePayment(Map<String, String> params) {
         String vnpResponseCode = params.get("vnp_ResponseCode");
         String vnpTxnRef = params.get("vnp_TxnRef");
