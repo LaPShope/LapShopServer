@@ -50,11 +50,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderResponse> getAllOrders() {
         String currentUserEmail = AuthUtil.AuthCheck();
-        List<OrderResponse> cachedOrderResponses = redisService.getObject("allOrder" + currentUserEmail, new TypeReference<List<OrderResponse>>() {
-        });
-        if (cachedOrderResponses != null && !cachedOrderResponses.isEmpty()) {
-            return cachedOrderResponses;
-        }
 
         List<OrderResponse> orderResponses = orderRepository.findAll().stream()
                 .filter(order -> order.getCustomer().getAccount().getEmail().equals(currentUserEmail))
