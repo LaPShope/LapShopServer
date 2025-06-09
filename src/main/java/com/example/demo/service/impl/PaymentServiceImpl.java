@@ -69,13 +69,6 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public List<PaymentResponse> getAllPayments() {
-        AuthUtil.isAdmin();
-        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPayment", new TypeReference<List<PaymentResponse>>() {
-        });
-        if (cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()) {
-            return cachedPaymentResponses;
-        }
-
         List<PaymentResponse> paymentResponses = paymentRepository.findAll().stream()
                 .map(PaymentMapper::convertToResponse)
                 .collect(Collectors.toList());

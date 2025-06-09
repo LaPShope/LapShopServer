@@ -61,7 +61,6 @@ public class OrderServiceImpl implements OrderService {
         return orderResponses;
     }
 
-
     @Override
     public OrderResponse getOrderById(UUID id) {
         OrderResponse cachedOrderResponse = redisService.getObject("order:" + id, new TypeReference<OrderResponse>() {

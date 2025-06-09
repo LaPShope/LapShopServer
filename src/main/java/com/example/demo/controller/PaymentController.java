@@ -49,8 +49,6 @@ public class PaymentController {
     // 2. Get payment by ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getPaymentById(@PathVariable UUID id) {
-
-
         return ResponseEntity.ok(DataResponse.<PaymentResponse>builder()
                 .success(true)
                 .message("Payment retrieved successfully")
@@ -62,14 +60,12 @@ public class PaymentController {
     // Create a new payment
     @PostMapping
     public ResponseEntity<?> createPayment(@RequestBody PaymentDTO paymentDTO) {
-
         return ResponseEntity.ok(DataResponse.<PaymentResponse>builder()
                 .success(true)
                 .message("Payment created successfully")
                 .data(paymentService.createPayment(paymentDTO))
                 .build());
     }
-
 
     @PostMapping("/{type}")
     public ResponseEntity<DataResponse<Map<String, Object>>> createPayment(
