@@ -47,11 +47,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<PaymentResponse> getAllPaymentsByCustomer() {
         String currentUserEmail = AuthUtil.AuthCheck();
-        List<PaymentResponse> cachedPaymentResponses = redisService.getObject("allPaymentByCustomerId:" + currentUserEmail, new TypeReference<List<PaymentResponse>>() {
-        });
-        if (cachedPaymentResponses != null && !cachedPaymentResponses.isEmpty()) {
-            return cachedPaymentResponses;
-        }
 
         Account account = accountRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found!"));

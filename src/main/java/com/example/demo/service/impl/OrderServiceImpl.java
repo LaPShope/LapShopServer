@@ -128,7 +128,10 @@ public class OrderServiceImpl implements OrderService {
                 }).collect(Collectors.toList());
 
                 order.setOrderDetailList(items);
+                item.setLaptopOnCarts(List.of());
             }
+
+            // delete laptop_on_cart after creating order
         }
 
         BigDecimal recalculatedTotalPrice = order.getOrderDetailList().stream()

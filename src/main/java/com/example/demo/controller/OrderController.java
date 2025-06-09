@@ -45,7 +45,6 @@ public class OrderController {
     // Tạo mới một Order
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderDTO orderDTO) {
-            ;
         return ResponseEntity.ok(DataResponse.<OrderResponse>builder()
                 .success(true)
                 .message("Order created successfully")
@@ -77,7 +76,7 @@ public class OrderController {
     // Xóa Order theo ID
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteOrder(@PathVariable UUID id) {
-            orderService.deleteOrder(id);
+        orderService.deleteOrder(id);
         return ResponseEntity.ok(DataResponse.builder()
                 .success(true)
                 .message("Order created successfully")
