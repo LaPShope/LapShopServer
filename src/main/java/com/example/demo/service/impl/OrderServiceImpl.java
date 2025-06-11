@@ -65,7 +65,6 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getOrderById(UUID id) {
         OrderResponse cachedOrderResponse = redisService.getObject("order:" + id, new TypeReference<OrderResponse>() {
         });
-        ;
         if (cachedOrderResponse != null) {
             return cachedOrderResponse;
         }
@@ -128,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
                 }).collect(Collectors.toList());
 
                 order.setOrderDetailList(items);
-                item.setLaptopOnCarts(List.of());
+                item.getLaptopOnCarts().clear();
             }
 
             // delete laptop_on_cart after creating order

@@ -35,6 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final AccountService accountService;
 
     private final List<String> acceptedNoAuth = List.of(
+            "/api/v1/payments/ipn",
             "/api/v1/accounts/login",
             "/api/v1/accounts/register",
             "/api/v1/accounts/forgot-password",

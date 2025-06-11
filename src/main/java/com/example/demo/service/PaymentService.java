@@ -9,10 +9,18 @@ import java.util.UUID;
 
 public interface PaymentService {
     List<PaymentResponse> getAllPaymentsByCustomer();
-    PaymentResponse partialUpdatePayment(UUID id, Map<String,Object> fieldsToUpdate);
+
+    PaymentResponse partialUpdatePayment(UUID id, Map<String, Object> fieldsToUpdate);
+
     List<PaymentResponse> getAllPayments();
+
     PaymentResponse getPaymentById(UUID id);
+
     PaymentResponse createPayment(PaymentDTO paymentDTO);
+
     PaymentResponse updatePayment(UUID id, PaymentDTO paymentDTO);
+
     void deletePayment(UUID id);
+
+    void handlePayment(Map<String, String> params);
 }

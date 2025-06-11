@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.common.AuthUtil;
+import com.example.demo.common.Enums;
 import com.example.demo.dto.PaymentDTO;
 import com.example.demo.dto.response.PaymentResponse;
 import com.example.demo.model.*;
@@ -14,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -234,5 +237,77 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.delete(existingPayment);
     }
 
+    @Override
+    public void handlePayment(Map<String, String> params) {
+        String vnpResponseCode = params.get("vnp_ResponseCode");
+        String vnpTxnRef = params.get("vnp_TxnRef");
+        String vnpAmount = params.get("vnp_Amount");
+        String vnpOrderInfo = params.get("vnp_OrderInfo");
+        String vnpTransactionNo = params.get("vnp_TransactionNo");
+        String vnpTransactionStatus = params.get("vnp_TransactionStatus");
+        String vnpPayDate = params.get("vnp_PayDate");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        System.out.printf(
+                "vnp_ResponseCode: %s, vnp_TxnRef: %s, vnp_Amount: %s, vnp_OrderInfo: %s, vnp_TransactionNo: %s, vnp_TransactionStatus: %s, vnp_PayDate: %s%n",
+                vnpResponseCode, vnpTxnRef, vnpAmount, vnpOrderInfo, vnpTransactionNo, vnpTransactionStatus, vnpPayDate
+        );
 
+//        Payment payment = paymentRepository.findByVnpTxnRef(vnpTxnRef).orElseThrow(() -> {
+//            throw new RuntimeException("Payment not found");
+//        });
+        Optional<Order> order = orderRepository.findById(UUID.fromString(vnpTxnRef));
+        if (order.isEmpty()) {
+            throw new RuntimeException("Order not found for transaction reference: " + vnpTxnRef);
+        }
+
+//        PaymentMethod tmp = paymentMethodRepository.save(PaymentMethod.builder()
+//                .id(UUID.fromString(vnpTxnRef))
+//                .data(Map.of(
+//                        "vnp_ResponseCode", vnpResponseCode,
+//                        "vnp_TxnRef", vnpTxnRef,
+//                        "vnp_Amount", vnpAmount,
+//                        "vnp_OrderInfo", vnpOrderInfo,
+//                        "vnp_TransactionNo", vnpTransactionNo,
+//                        "vnp_TransactionStatus", vnpTransactionStatus,
+//                        "vnp_PayDate", vnpPayDate
+//                ))
+//                .type(Enums.PaymentType.VNPay)
+//                .build());
+        Optional<PaymentMethod> tmp = paymentMethodRepository.findById(UUID.fromString("110d2134-9a49-42cb-9053-c458bdf97283"));
+        if (tmp.isEmpty()) {
+            throw new RuntimeException("Payment Method not found for ID: 110d2134-9a49-42cb-9053-c458bdf97283");
+        }
+
+        Payment payment = Payment.builder()
+                .order(order.get())
+                .paymentMethod(null)
+                .type(Enums.PaymentType.VNPay)
+                .customer(order.get().getCustomer())
+                .paymentMethod(tmp.get())
+                .type(Enums.PaymentType.VNPay)
+                .build();
+
+        try {
+            switch (vnpResponseCode) {
+                case "00":
+                    payment.setStatus(Enums.PaymentStatus.Success);
+                    break;
+                case "01":
+                    payment.setStatus(Enums.PaymentStatus.Pending);
+                    break;
+                default:
+                    payment.setStatus(Enums.PaymentStatus.Failed);
+//                    RedisServiceImpl.del("pickseat:" + payment.getPerform().getId() + ":" + payment.getAccount().getId());
+                    break;
+            }
+
+            paymentRepository.save(payment);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            paymentRepository.save(payment);
+
+            throw new RuntimeException("Error: " + e.getMessage());
+        }
+    }
 }

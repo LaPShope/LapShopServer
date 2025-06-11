@@ -123,4 +123,13 @@ public class PaymentController {
                 .message("Payment updated successfully")
                 .build());
     }
+
+    @GetMapping("/ipn")
+    public ResponseEntity<?> handlePayment(@RequestParam Map<String, String> params) {
+        paymentService.handlePayment(params);
+        return ResponseEntity.ok(DataResponse.builder()
+                .message("Payment handled successfully")
+                .success(true)
+                .build());
+    }
 }

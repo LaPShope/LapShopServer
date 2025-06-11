@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -61,16 +62,16 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
 //                throw new RuntimeException("Error: Bank not found with VNPAY");
 //            }
 
-//            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
             Optional<Order> order = orderRepository.findById(createTransaction.getOrderId());
             if (order.isEmpty()) {
                 throw new RuntimeException("Order not found");
             }
 
             Map<String, Object> payload = this.generateVNPayPayload(VNPayOrderRequest.builder()
-                    .orderInfo("mua san pham")
+                    .orderId(createTransaction.getOrderId())
+                    .orderInfo("Mua san pham - Ma don hang: " + createTransaction.getOrderId())
                     .ipAddr(VNPayHelper.getIpAddress(request))
-                    .amount(100000 * 100)
+                    .amount(order.get().getFinalPrice().multiply(BigDecimal.valueOf(100000)).longValue()) // Convert to VND
                     .build());
 
             String queryUrl = this.generateQueryURL(payload);
@@ -95,7 +96,7 @@ public class VNPayServiceImpl implements PaymentIntegrationService {
                 put("vnp_TmnCode", VNPayConstant.VNP_TMNCODE);
                 put("vnp_Amount", String.valueOf(orderRequest.getAmount()));
                 put("vnp_CurrCode", VNPayConstant.VNP_CURRENCY_CODE);
-                put("vnp_TxnRef", UUID.randomUUID().toString());
+                put("vnp_TxnRef", orderRequest.getOrderId().toString());
                 put("vnp_OrderInfo", orderRequest.getOrderInfo());
                 put("vnp_OrderType", VNPayConstant.ORDER_TYPE);
                 put("vnp_Locale", VNPayConstant.VNP_LOCALE);
