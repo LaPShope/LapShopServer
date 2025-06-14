@@ -30,4 +30,5 @@ public interface AccountService {
     public void forgotPassword(String email);
     public ResetPasswordReponse changePassword(ResetPasswordRequest resetPasswordRequest);
     public ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest);
+    public AccountResponse generateAdmin(AccountDTO accountDTO);
 }

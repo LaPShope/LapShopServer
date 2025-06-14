@@ -10,6 +10,5 @@ import lombok.Setter;
 @Setter
 public class ResetPasswordRequest {
     private String token;
-    @JsonProperty("new_password")
     private String newPassword;
 }

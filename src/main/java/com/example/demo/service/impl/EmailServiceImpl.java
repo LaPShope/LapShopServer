@@ -57,6 +57,18 @@ public class EmailServiceImpl implements EmailService {
         this.coreSend(to, subject, body);
     }
 
+    public void sendAccount(String to, String email, String password) throws MessagingException {
+        String subject = "Your Account Credentials";
+        String body = "<p>Dear User,</p>" +
+                "<p>Your account has been created successfully.</p>" +
+                "<p>Email: <b>" + email + "</b></p>" +
+                "<p>Password: <b>" + password + "</b></p>" +
+                "<p>Please keep your credentials safe and do not share them with anyone.</p>" +
+                "<p>Best regards,<br>LapShope</p>";
+
+        this.coreSend(to, subject, body);
+    }
+
     private void coreSend(String to, String subject, String body) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);

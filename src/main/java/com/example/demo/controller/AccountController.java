@@ -93,6 +93,18 @@ public class AccountController {
                 );
     }
 
+    @PostMapping("/generate-admin")
+    public ResponseEntity<DataResponse<?>> generateAdminAccount(@RequestBody AccountDTO accountDTO) {
+        AccountResponse accountResponse = accountService.generateAdmin(accountDTO);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(DataResponse.<AccountResponse>builder()
+                        .success(true)
+                        .message("Admin account created successfully!")
+                        .data(accountResponse)
+                        .build());
+    }
+
     @PostMapping("/change-password")
     public ResponseEntity<DataResponse<?>> changePassword(@RequestBody ChangePasswordRequest request) {
         accountService.changePassword(request);

@@ -175,14 +175,17 @@ public class AccountServiceImpl implements AccountService {
 
         redisService.del(resetPasswordRequest.getToken());
 
+        System.out.println("Resetting password for account: " + account.getEmail() + " with new password: " + resetPasswordRequest.getNewPassword());
+
         if (resetPasswordRequest.getNewPassword() != null && !resetPasswordRequest.getNewPassword().isEmpty()) {
-            account.setPassword(passwordEncoder.encode(resetPasswordRequest.getNewPassword()));
+            System.out.println("Encoding password hehehe " + resetPasswordRequest.getNewPassword());
+            account.setPassword(new BCryptPasswordEncoder().encode(resetPasswordRequest.getNewPassword()));
             accountRepository.save(account);
         }
 
         return ResetPasswordReponse.builder()
                 .email(account.getEmail())
-                .jwtToken(jwtService.generateToken(account.getEmail(), account.getRole()))
+                .newPassword(resetPasswordRequest.getNewPassword())
                 .build();
     }
 
@@ -206,6 +209,56 @@ public class AccountServiceImpl implements AccountService {
         return ChangePasswordResponse.builder()
                 .email(account.getEmail())
                 .token(jwtService.generateToken(account.getEmail(), account.getRole()))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public AccountResponse generateAdmin(AccountDTO accountDTO) {
+        if (!AuthUtil.isAdmin()) {
+            throw new SecurityException("User is not an Admin");
+        }
+
+        if (accountRepository.findByEmail(accountDTO.getEmail()).isPresent()) {
+            throw new EntityExistsException("Email already exists!");
+        }
+
+        String passwordUsed = "12345678";
+        Account account = Account.builder()
+                .email(accountDTO.getEmail())
+                .name(accountDTO.getName())
+                .password(passwordEncoder.encode(passwordUsed))
+                .role(Enums.Role.Admin)
+                .isActive(true)
+                .build();
+
+        Admin admin = Admin.builder()
+                .account(account)
+                .build();
+        Customer customer = new Customer();
+
+        adminRepository.save(admin);
+        Account accountExisting = accountRepository.save(account);
+        customer.setAccount(accountExisting);
+        accountExisting.setCustomer(customer);
+        accountRepository.save(accountExisting);
+
+        try {
+            this.emailService.sendAccount(
+                    accountDTO.getEmail(),
+                    accountDTO.getEmail(),
+                    passwordUsed
+            );
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send email", e);
+        }
+
+        return AccountResponse.builder()
+                .id(accountExisting.getId())
+                .email(accountExisting.getEmail())
+                .name(accountExisting.getName())
+                .role(accountExisting.getRole())
+                .isActive(accountExisting.getIsActive())
                 .build();
     }
 
