@@ -31,6 +31,15 @@ public class OrderController {
                 .build());
     }
 
+    @GetMapping("/customer")
+    public ResponseEntity<?> getAllOrdersOnCustomer() {
+        return ResponseEntity.ok(DataResponse.<List<OrderResponse>>builder()
+                .success(true)
+                .message("Orders retrieved successfully")
+                .data(orderService.getAllOrdersByCustomer())
+                .build());
+    }
+
     // Fetch Order theo ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getOrderById(@PathVariable UUID id) {

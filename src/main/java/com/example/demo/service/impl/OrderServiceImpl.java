@@ -96,7 +96,8 @@ public class OrderServiceImpl implements OrderService {
         Customer customer = customerRepository.findById(account.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found!"));
 
-        List<Cart> cart = customer.getCartList();
+        List<Cart> carts = customer.getCartList();
+
 
         Order order = Order.builder()
                 .customer(customer)
@@ -109,8 +110,8 @@ public class OrderServiceImpl implements OrderService {
                 .status(Enums.OrderStatus.Pending)
                 .build();
 
-        if (cart != null) {
-            for (Cart item : cart) {
+        if (carts != null) {
+            for (Cart item : carts) {
                 List<OrderDetail> items = item.getLaptopOnCarts().stream().map(laptopOnCart -> {
                     BigDecimal price = laptopOnCart.getLaptopModel().getPrice();
                     BigDecimal quantity = new BigDecimal(laptopOnCart.getQuantity());
@@ -125,6 +126,10 @@ public class OrderServiceImpl implements OrderService {
                             .build();
                     return orderDetail;
                 }).collect(Collectors.toList());
+
+                if (items.size() == 0) {
+                    throw new IllegalArgumentException("Cart is empty, cannot create order");
+                }
 
                 order.setOrderDetailList(items);
                 item.getLaptopOnCarts().clear();
@@ -171,6 +176,19 @@ public class OrderServiceImpl implements OrderService {
         redisService.setObject("order:" + id, cachedorderResponse, 600);
 
         return cachedorderResponse;
+    }
+
+    @Override
+    public List<OrderResponse> getAllOrdersByCustomer() {
+        String email = AuthUtil.AuthCheck();
+        Optional<Account> account = accountRepository.findByEmail(email);
+        if (account.isEmpty()) {
+            throw new EntityNotFoundException("Account with email " + email + " not found!");
+        }
+
+        return account.get().getCustomer()
+                .getOrderList()
+                .stream().map(OrderMapper::convertToResponse).toList();
     }
 
     @Override

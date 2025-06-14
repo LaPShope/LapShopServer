@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface OrderService {
+
+    List<OrderResponse> getAllOrdersByCustomer(); // Lấy danh sách Orders theo Customer
+
     OrderResponse partialUpdateOrder(UUID id, Map<String,Object> fieldsToUpdate);
 
     List<OrderResponse> getAllOrders(); // Lấy danh sách tất cả Orders
